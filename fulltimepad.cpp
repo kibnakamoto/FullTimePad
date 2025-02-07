@@ -49,6 +49,21 @@ class FullTimePad
 		{25, 22, 27, 24, 29, 26, 31, 28, 1, 30, 3, 0, 5, 2, 7, 4, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19, 16, 21, 18, 23, 20}, 
 		{31, 28, 1, 30, 3, 0, 5, 2, 7, 4, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19, 16, 21, 18, 23, 20, 25, 22, 27, 24, 29, 26}, 
 		{1, 30, 3, 0, 5, 2, 7, 4, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19, 16, 21, 18, 23, 20, 25, 22, 27, 24, 29, 26, 31, 28}
+
+		// random permutation: more collissions
+//		{4, 13, 11, 3, 31, 0, 9, 29, 6, 1, 14, 12, 18, 8, 17, 28, 23, 2, 10, 21, 27, 25, 30, 20, 26, 7, 5, 22, 24, 19, 15, 16},
+//		{20, 5, 25, 11, 16, 7, 6, 10, 27, 24, 22, 26, 13, 1, 2, 8, 23, 0, 29, 4, 12, 28, 15, 18, 14, 30, 9, 19, 31, 3, 17, 21}, 
+//		{7, 31, 13, 6, 25, 20, 11, 29, 18, 0, 8, 19, 10, 17, 21, 12, 16, 3, 2, 9, 4, 30, 24, 5, 23, 15, 22, 28, 26, 27, 14, 1},
+//		{23, 30, 31, 25, 21, 19, 28, 3, 8, 13, 18, 2, 17, 0, 14, 4, 11, 22, 24, 16, 6, 15, 9, 27, 20, 26, 5, 12, 7, 10, 29, 1},
+//		{22, 18, 15, 1, 4, 26, 3, 21, 23, 29, 11, 16, 10, 14, 12, 8, 0, 24, 13, 30, 6, 19, 2, 17, 9, 5, 7, 20, 31, 25, 27, 28},
+//		{14, 15, 13, 9, 23, 16, 8, 20, 1, 12, 29, 2, 27, 17, 4, 31, 0, 10, 26, 30, 11, 19, 6, 3, 24, 25, 22, 5, 7, 28, 21, 18},
+//		{11, 7, 3, 5, 6, 20, 25, 23, 30, 0, 22, 15, 27, 10, 12, 21, 19, 13, 8, 24, 29, 31, 4, 1, 28, 16, 26, 9, 2, 14, 18, 17},
+//		{7, 13, 19, 8, 28, 23, 16, 0, 5, 10, 24, 31, 18, 4, 1, 30, 2, 27, 12, 11, 26, 15, 3, 6, 22, 21, 14, 9, 29, 20, 17, 25},
+//		{16, 1, 8, 28, 7, 2, 18, 30, 13, 24, 29, 11, 4, 22, 20, 3, 23, 0, 10, 26, 21, 5, 27, 25, 12, 17, 9, 14, 19, 15, 31, 6},
+//		{29, 9, 10, 12, 15, 4, 25, 6, 14, 22, 31, 5, 16, 30, 0, 24, 17, 23, 28, 7, 13, 26, 21, 3, 27, 18, 20, 19, 11, 8, 1, 2},
+//		{14, 6, 15, 23, 4, 26, 28, 29, 5, 19, 9, 8, 13, 10, 1, 16, 24, 12, 30, 7, 20, 3, 31, 2, 17, 22, 27, 11, 25, 21, 18, 0},
+//		{19, 21, 18, 13, 28, 5, 12, 11, 15, 1, 9, 17, 4, 24, 7, 16, 26, 14, 23, 30, 8, 0, 2, 27, 20, 6, 29, 25, 10, 31, 22, 3}
+
 	};
 
 
@@ -78,7 +93,65 @@ class FullTimePad
 	// initial key, before any permutation
 	uint8_t *init_key;
 
+	// initial static permutation of the key
+	// key: initial key before any permutations
+	void static_permutation(uint8_t *key)
+	{
+		uint8_t temp;
+		
+		for(int i=0;i<keysize>>1;i++) {
+			temp = key[i];
+			key[i] = key[V[i]];
+			key[V[i]] = temp;
+		}
+	}
+
+	// dynamically permutate the key during iteration
+	// key: permutated 32-byte key
+	// p: dynamically re-purmutated key
+	// ni: index of dynamic permutation number n
+	// ni: iteration index
+	void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
+	{
+		for(uint32_t i=0;i<keysize;i++) {
+			p[i] = key[n_V[ni][i]];
+		}
+		memcpy(key, p, keysize); // copy the repurmutated values
+	}
+
+	// iterations for the main transformation loop
+	void transformation(uint8_t *key) // length of k is 8
+	{
+		// vector used for dynamic permutation, dynamically permutated key placeholder
+		// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
+		uint8_t p[keysize]; // TODO: maybe make it a pointer
+
+		// 32-bit array ints for key for arithmetic ARX manipulations
+		uint32_t *k = reinterpret_cast<uint32_t*>(key);
+		for(uint8_t i=0;i<nl;i++) { // nl is 12, number of primes till keysize (m)
+			uint8_t index = i<<1;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t rmod = i % 5; // 5 rotation values
+			k[i1mod] = ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) ^ rotr(k[i1mod], r[rmod]);
+			k[i2mod] = ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) ^ lotr(k[i2mod], r[rmod]); // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
+			
+			// permutate the bytearray key
+			dynamic_permutation(key, p, i%nl);
+		}
+	}
+
+	// safely delete the inital key
+	bool terminate_k = false;
+
 	public:
+			// if you want the destructor called to safely destroy key after use is over
+			// this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else
+			inline void terminate() noexcept
+			{
+				terminate_k = true;
+			}
+
 			const constexpr static uint8_t keysize = 32;
 
 			FullTimePad(uint8_t *initial_key)
@@ -86,12 +159,9 @@ class FullTimePad
 				init_key = initial_key;
 			}
 
-			
-
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
-			void hash(uint8_t *key, uint32_t encryption_index)
+			void hash(uint8_t *key)
 			{
-
 				// make copy of key to transform and to preserve init_key
 				memcpy(key, init_key, keysize);
 
@@ -103,62 +173,53 @@ class FullTimePad
 
 			}
 
-			// initial static permutation of the key
-			// key: initial key before any permutations
-			void static_permutation(uint8_t *key)
+			// encrypt/decrypt
+			// key is the initial key, return heap allocated key output
+			// pt: plaintext data
+			// ct: ciphertext data
+			// length: length of pt, and ct
+			// encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
+			void transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint32_t encryption_index)
 			{
-				uint8_t temp;
+				uint8_t *key = new uint8_t[keysize];
+				memcpy(key, init_key, keysize);
+
+				// generate unieqe key based on encryption index
+				hash(key); // incorporate encryption index
 				
-				for(int i=0;i<keysize>>1;i++) {
-					temp = key[i];
-					key[i] = key[V[i]];
-					key[V[i]] = temp;
+				for(uint8_t i=0;i<length;i++) {
+					ct[i] = pt[i] ^ key[i];
 				}
+
+				delete[] key;
 			}
 
-			// dynamically permutate the key during iteration
-			// key: permutated 32-byte key
-			// p: dynamically re-purmutated key
-			// ni: index of dynamic permutation number n
-			// ni: iteration index
-			void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
+			// Destructor
+			~FullTimePad()
 			{
-				for(uint32_t i=0;i<keysize;i++) {
-					p[i] = key[n_V[ni][i]];
-				}
-				memcpy(key, p, keysize); // copy the repurmutated values
-			}
-
-			// iterations for the main transformation loop
-			void transformation(uint8_t *key) // length of k is 8
-			{
-				// vector used for dynamic permutation, dynamically permutated key placeholder
-				// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
-				uint8_t p[keysize];
-
-				// 32-bit array ints for key for arithmetic ARX manipulations
-				uint32_t *k = reinterpret_cast<uint32_t*>(key);
-				for(uint8_t i=0;i<nl;i++) { // nl is 12, number of primes till keysize (m)
-					uint8_t index = i<<1;
-					uint8_t i1mod = index % 8;
-					uint8_t i2mod = (index+1) % 8;
-					uint8_t rmod = i % 5; // 5 rotation values
-					k[i1mod] = ( ((uint64_t)k[i1mod] + A[i1mod]) % (fp+0)) ^ rotr(k[i1mod], r[rmod]);
-					k[i2mod] = ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) ^ lotr(k[i2mod], r[rmod]); // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
-					
-					// permutate the bytearray key
-					dynamic_permutation(key, p, i%nl);
+				if (terminate_k) {
+					memset(init_key, 0, keysize); // set to 0s for a safe memory deletion before deallocation
+					delete[] init_key;
 				}
 			}
+
 };
 
 int main()
 {
-	uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-	FullTimePad fulltimepad = FullTimePad(initial_key);
-	for(int i=0;i<32;i++) std::cout << initial_key[i]+0 << ", ";
-
+	uint8_t initial_key[] = {1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+	uint8_t pt[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+	uint8_t ct[32];
+	for(int m=0;m<255;m++) {
+		initial_key[0] = m;
+		//initial_key[20] = 255-m;
+		//initial_key[4] = m;
+		FullTimePad fulltimepad = FullTimePad(initial_key);
+		fulltimepad.transform(pt, ct, 32, 0);
+		for(int i=0;i<32;i++) std::cout << ct[i]+0 << ", ";
 	std::cout << std::endl;
+	}
+
 	
 	return 0;
 }
