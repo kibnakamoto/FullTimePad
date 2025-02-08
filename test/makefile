@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++2b -Wall -pedantic -Wextra -O4
-EXEC = fulltimepad 
-OBJS = fulltimepad.o
+EXEC = best_permutation
+OBJS = best_permutation.o
 
 all: ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o ${EXEC}
