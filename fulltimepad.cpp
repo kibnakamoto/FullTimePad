@@ -1,8 +1,19 @@
 /*
- * @Author: Taha
+ * Author: Taha
  * Date: Feb 6, 2025
  *
- * TODO: licence, and licence information
+ * Full-Time-Pad Symmetric Stream Cipher
+ *  Copyright (C) 2025  Taha
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  */
 
 #include <iostream>
@@ -11,6 +22,8 @@
 #include <string.h>
 #include <sstream>
 #include <assert.h>
+
+// TODO: increase number of rotations to new n_V[i] length (16). nl = 16
 
 // 256-bit Full-Time-Pad Cipher
 class FullTimePad
