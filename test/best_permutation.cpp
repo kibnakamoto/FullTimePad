@@ -112,6 +112,9 @@ class FullTimePad
 			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
 			A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
 			
+			k[(index+2) % 8] = ((uint64_t)A[i1mod] + k[(index+2) % 8]) ^ ((uint64_t)A[i2mod] + k[(index+2) % 8]);
+			k[(index+3) % 8] = ((uint64_t)A[i1mod] + k[(index+3) % 8]) ^ ((uint64_t)A[i2mod] + k[(index+3) % 8]);
+			
 			// permutate the bytearray key
 			dynamic_permutation(key, p, i%16, best_n_V);
 		}
