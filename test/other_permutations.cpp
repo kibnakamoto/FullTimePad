@@ -29,7 +29,7 @@
 class FullTimePad
 {
 	// constant array used in the transformation of the key
-	uint32_t A[8] = {
+	static const constexpr uint32_t A[] = {
 		0x184f03e9, 
 		0x216c46df,
 		0x119f904f,
@@ -176,26 +176,22 @@ class FullTimePad
 	{
 		// vector used for dynamic permutation, dynamically permutated key placeholder
 		// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
-		uint8_t p[keysize];
+		uint8_t p[keysize]; // TODO: maybe make it a pointer
 
 		// 32-bit array ints for key for arithmetic ARX manipulations
 		uint32_t *k = reinterpret_cast<uint32_t*>(key);
-		for(uint8_t i=0;i<16;i++) {
+		for(uint8_t i=0;i<nl;i++) { // nl is 12, number of primes till keysize (m)
 			uint8_t index = i<<1;
 			uint8_t i1mod = index % 8;
 			uint8_t i2mod = (index+1) % 8;
 			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
-
-			A[i2mod] ^= k[i1mod];
-
-			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
-			A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
-
+			k[i1mod] = ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) ^ rotr(k[i1mod], r[rmod]);
+			k[i2mod] = ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) ^ lotr(k[i2mod], r[rmod]); // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
+			//std::cout << k[i1mod] << " : " << k[i2mod] << "\n";
+			
 			// permutate the bytearray key
-			dynamic_permutation(key, p, i%16);
+			dynamic_permutation(key, p, i%nl);
 		}
-
 	}
 
 	// safely delete the inital key
