@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++2b -Wall -pedantic -Wextra -O4
 EXEC = fulltimepad 
 OBJS = fulltimepad.o
-PDF_DOC_FILES = FullTimePad.tex FullTimePad.pdf
+PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux
 
 all: ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o ${EXEC}

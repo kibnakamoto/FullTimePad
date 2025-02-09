@@ -1,29 +1,49 @@
 \documentclass[a4paper,12pt]{article}
 
-\usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{geometry}
 \usepackage{listings}
+\usepackage[hidelinks]{hyperref}
 \usepackage[svgnames, table]{xcolor}
 
-
+\newcommand{\subsubsubsection}[1]{\paragraph{#1}\mbox{}\\}
 
 \title {
-	\Huge Full-Time-Pad - Symmetric Stream Cipher \\
+		\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
 	\ \\
 	\ \\
 	\ \\
-	\Large Improved One-Time-Pad Encryption Scheme
+	\ \\
+	\ \\
+	\Large \textbf{Improved One-Time-Pad Encryption Scheme}
+
 }
 
-\author{Taha Canturk\\kibnakanoto@protonmail.com}
+\author{Taha Canturk\\\texttt{kibnakanoto@protonmail.com}}
 \date{2024-05-20}
+
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+
+\pagenumbering{roman}
+
+\begin{center}
+		\Large \texttt{Version 1.0}
+		\ \\
+		\ \\
+		\ \\
+		\ \\
+		\small License to copy this document is granted provided it is identified as "Full-Time-Pad", in all material mentioning or referencing it.
+\end{center}
 
 \newpage
 
+
+\begin{abstract}
+	Abstract
+\end{abstract}
 
 \newpage
 
@@ -31,15 +51,90 @@
 
 \newpage
 
-\pagenumbering{roman}
+\pagenumbering{arabic}
 
-\section{Networking}
+\section{Introduction}
 
-\subsection{one on one}
 
-\subsection{groupchat}
 
-\section{Cryptography}
+\subsection {Pre-requisite Terminology}
+
+
+\subsection{Applications}
+
+
+\subsection{Key Generation}
+
+
+\subsection{Prerequisite Mathematics}
+
+
+\subsection{Vector Permutation}
+
+
+\section{Security Vulnerabilities}
+
+
+
+\subsection{Brute-Force}
+
+
+\subsubsection {Birthday Attack}
+
+\subsubsection {Denial of Service (DoS)}
+
+\subsection{Reverse Engineering the Transformation}
+
+\subsection{Collision-Resistance}
+
+\subsubsection{Different Permutation Matrices}
+
+\subsubsection{Number of Rounds}
+
+\subsubsection{Constant - $F_p$ - Prime Galois Field Size} % Fp and r
+
+\subsubsection{Constant - $r$ - Dynamic Rotation Constant} % Fp and r
+
+\section{Hashing}
+
+
+
+\subsection{Diffusion - Permutation}
+
+
+\subsubsection{Vector Permutation}
+
+
+\subsubsection{Dynamic vs. Static}
+
+\subsection{Dynamic Matrix Permutation}
+
+
+% mention python code
+
+\subsubsection{Deravation}
+
+\subsubsection{Other Options} % include Discovery
+
+\subsection{Confusion - ARX}
+
+\subsubsection{A - Modular Addition} % pseudo-code and Explanation
+
+\subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
+
+\subsubsection{X - XOR} % pseudo-code and Explanation
+
+\subsection{Key Transformation} % pseudo-code and Explanation - brings it all together
+
+\section {Cipher}
+
+\subsection{Transformation}
+
+\subsection {Avalanche Effect - Plaintext}
+
+\subsubsection {Encryption Index}
+
+\subsection {Long Plaintexts}
 
 \end{document}
 
