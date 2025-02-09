@@ -189,6 +189,8 @@ class FullTimePad
 			uint8_t index = i<<1;
 			uint8_t i1mod = index % 8;
 			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+1) % 8;
 			uint8_t rmod = i % 5; // 5 rotation values
 			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
 
@@ -197,8 +199,8 @@ class FullTimePad
 			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
 			A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
 
-			k[(index+2) % 8] = ((uint64_t)A[i1mod] + k[(index+2) % 8]) ^ ((uint64_t)A[i2mod] + k[(index+2) % 8]);
-			k[(index+3) % 8] = ((uint64_t)A[i1mod] + k[(index+3) % 8]) ^ ((uint64_t)A[i2mod] + k[(index+3) % 8]);
+			k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
+			k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
 
 			// permutate the bytearray key
 			dynamic_permutation(key, p, i%16);

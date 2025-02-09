@@ -3,7 +3,10 @@
 
 # Executables
 fulltimepad
+test/best_permutation
 
-# Documentation Log
+# Latex Files
 FullTimePad.log
-
+FullTimePad.aux
+FullTimePad.out
+FullTimePad.toc
