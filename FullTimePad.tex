@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[fleqn, a4paper,12pt]{article}
 
 \usepackage{graphicx}
 \usepackage{geometry}
@@ -8,6 +8,7 @@
 \usepackage{minted} % python code
 \usepackage{algorithm} % pseudo code
 \usepackage{mathtools} % equations
+\usepackage{amssymb} % equations
 \usepackage{algpseudocode}  % Correctly load this for pseudocode
 \usepackage{tikz} % drawing trailing lines in pseudo code
 
@@ -23,7 +24,7 @@
 }
 
 \title {
-		\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
+	\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
 	\ \\
 	\ \\
 	\ \\
@@ -57,7 +58,7 @@
 
 \begin{abstract}
 		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation garuntees that every time there is a manipulation, eacj 32-bit number is made up of a different byte order.
+		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, eacj 32-bit number is made up of a different byte order.
 
 		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
 		% TODO: how to deal with long messsages
@@ -79,13 +80,21 @@
 
 \subsection {Pre-requisite Terminology}
  
+\renewcommand{\arraystretch}{2} % Increases vertical space between rows 
 
-\begin{tabular}{l p{14cm}}  % left-aligned 2 columns
-		\textbf{Symmetric}  & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
-		\textbf{Stream}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without seperating it into blocks \\
-		\textbf{plaintext}  & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plain data before encryption \\
-		\textbf{ciphertext} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} encrypted plaintext \\
-		\textbf{Cipher}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
+\begin{tabular}{l p{12cm}}  % left-aligned 2 columns
+		\textbf{Key}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 32-byte random array that's transformed, then hashed before XORed with the plaintext to encrypt \\
+		\textbf{Symmetric}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
+		\textbf{Stream}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without seperating it into blocks \\
+		\textbf{Plaintext}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plain data before encryption \\
+		\textbf{Ciphertext}       & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encrypted plaintext \\
+		\textbf{Cipher}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
+		\textbf{Diffusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plaintext/key is spread out in the ciphertext \\
+		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
+		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
+		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
+		\textbf{Galois Field}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Finite Field where there are only limited number of numbers. Only prime galois fields ($F_p$) are used where size of the field is denoted by prime number p \\
+		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
 \end{tabular}
 
 
@@ -95,6 +104,7 @@
 
 \subsection{Key Generation}
 
+The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Elliptic Cryptography Diffie Hellman (ECDH) protocol with Hash-based Key Derivation Function (HKDF)
 
 \subsection{Prerequisite Mathematics}
 
@@ -103,8 +113,44 @@
 
 
 \section{Security Vulnerabilities}
+\setlength{\mathindent}{3pt} % No indentation for equations
+
+In One-Time-Pad, key isn't reusable. Here is the proof:
+
+\[
+\begin{aligned}
+&\texttt{let }  m_1, m_2 \texttt{ be 2 plaintexts} \\
+&\texttt{let }  k \texttt{ be the key} \\
+&\texttt{let }  c_1 = m_1 \oplus k \\
+&\texttt{let }  c_2 = m_2 \oplus k \\
+&c_1 \oplus c_2 = (m_1 \oplus k) \oplus (m_2 \oplus k) \\
+&c_1 \oplus c_2 = m_1 \oplus m_2
+\end{aligned}
+\]
+
+Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
+Using cryptoanalysis, the 2 plaintexts can be found. 
+\\
+For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
+\\
+But there is another concern,
+\\
+What if plaintext and ciphertext are known, then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
+\[
+\begin{aligned}
+&k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
+&k'_2 = hash(k+2) \\
+&c_1 \oplus c_2 = (m_1 \oplus k'_1) \oplus (m_2 \oplus k'_2) \\
+&c_1 \oplus c_2 \neq m_1 \oplus m_2 \\
+&m_1 \oplus c_1 = k'_1 \\
+&m_2 \oplus c_2 = k'_2 \\
+&k'_1, k'_2 \texttt{  are calculated using an irreversible hashing algorithm }
+\end{aligned}
+\]
+\\
 
 
+$\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confusion
 
 \subsection{Brute-Force}
 
@@ -180,6 +226,7 @@ Python code is in the test/perm.py
  
 \subsubsection{Dynamic Permutation Matrix Values} % include Discovery
 
+\renewcommand{\arraystretch}{1} % Decrease vertical space between rows 
 
 \small
 \[
