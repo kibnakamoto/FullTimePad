@@ -19,8 +19,8 @@ clean_test:
 	${MAKE} -C test clean
 
 pdf:
-	pdflatex FullTimePad.tex
-	pdflatex FullTimePad.tex
+	pdflatex --shell-escape FullTimePad.tex
+	pdflatex --shell-escape FullTimePad.tex
 	evince FullTimePad.pdf
 
 pdf_clean:

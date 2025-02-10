@@ -5,8 +5,22 @@
 \usepackage{listings}
 \usepackage[hidelinks]{hyperref}
 \usepackage[svgnames, table]{xcolor}
+\usepackage{minted} % python code
+\usepackage{algorithm} % pseudo code
+\usepackage{mathtools} % equations
+\usepackage{algpseudocode}  % Correctly load this for pseudocode
+\usepackage{tikz} % drawing trailing lines in pseudo code
 
-\newcommand{\subsubsubsection}[1]{\paragraph{#1}\mbox{}\\}
+\setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
+
+\setcounter{MaxMatrixCols}{32}
+
+\geometry{
+  left=1in,    % Left margin
+  right=1in,   % Right margin
+  top=1in,     % Top margin
+  bottom=1in   % Bottom margin
+}
 
 \title {
 		\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
@@ -42,7 +56,13 @@
 
 
 \begin{abstract}
-	Abstract
+		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
+		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation garuntees that every time there is a manipulation, eacj 32-bit number is made up of a different byte order.
+
+		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
+		% TODO: how to deal with long messsages
+		% TODO: This paragraph is for introduction, abstract should be talking about what's in the document
+
 \end{abstract}
 
 \newpage
@@ -58,6 +78,16 @@
 
 
 \subsection {Pre-requisite Terminology}
+ 
+
+\begin{tabular}{l p{14cm}}  % left-aligned 2 columns
+		\textbf{Symmetric}  & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
+		\textbf{Stream}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without seperating it into blocks \\
+		\textbf{plaintext}  & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plain data before encryption \\
+		\textbf{ciphertext} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} encrypted plaintext \\
+		\textbf{Cipher}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
+\end{tabular}
+
 
 
 \subsection{Applications}
@@ -113,6 +143,65 @@
 % mention python code
 
 \subsubsection{Deravation}
+
+\begin{algorithm}
+\caption{Dynamic Permutation Matrix Deravation Pseudo-code}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} an array of incrementing numbers (0-31) $A$ 
+\State \textbf{Output:} Most Efficient Permutation Matrix $V$ ($16 \times 32$)
+\State \textbf{Begin}
+\State $P \gets \texttt{copy of A}$
+\For{$k = 0$ to $4$}
+	\For{$i = 0$ to $8$}
+		\State $P_i      \gets A_{i \times 4}$
+		\State $P_{i+8}  \gets A_{i \times 4 + 1}$
+		\State $P_{i+16} \gets A_{i \times 4 + 2}$
+		\State $P_{i+24} \gets A_{i \times 4 + 3}$
+	\EndFor
+	\State $A \gets \texttt{copy of P}$
+	\State $V.append(P)$
+	\State $C \gets \texttt{copy of P}$
+	\For{$m = 0$ to $3$}
+		\For{$i = 0$ to $8$}
+			\For{$n = 0$ to $4$}
+			\State $P_{i \times 4 + n} \gets C_{(1+n+m) \mod{4} \texttt{    } + \texttt{    } i \times 4}$
+			\EndFor
+		\EndFor
+		\State $V.append(P)$
+	\EndFor
+	\State $A \gets \texttt{copy of P}$
+\EndFor
+\State \textbf{Return} $V$
+\end{algorithmic}
+\end{algorithm}
+
+Python code is in the test/perm.py
+
+ 
+\subsubsection{Dynamic Permutation Matrix Values} % include Discovery
+
+
+\small
+\[
+\begin{Bmatrix}
+\phantom{0}0 & \phantom{0}4 & \phantom{0}8 & 12 & 16 & 20 & 24 & 28 & \phantom{0}1 & \phantom{0}5 & 9 & 13 & 17 & 21 & 25 & 29 & \phantom{0}2 & \phantom{0}6 & 10 & 14 & 18 & 22 & 26 & 30 & \phantom{0}3 & \phantom{0}7 & 11 & 15 & 19 & 23 & 27 & 31 \\
+\phantom{0}4 & \phantom{0}8 & 12 & \phantom{0}0 & 20 & 24 & 28 & 16 & \phantom{0}5 & 9 & 13 & \phantom{0}1 & 21 & 25 & 29 & 17 & \phantom{0}6 & 10 & 14 & \phantom{0}2 & 22 & 26 & 30 & 18 & \phantom{0}7 & 11 & 15 & \phantom{0}3 & 23 & 27 & 31 & 19 \\
+\phantom{0}8 & 12 & \phantom{0}0 & \phantom{0}4 & 24 & 28 & 16 & 20 & 9 & 13 & \phantom{0}1 & \phantom{0}5 & 25 & 29 & 17 & 21 & 10 & 14 & \phantom{0}2 & \phantom{0}6 & 26 & 30 & 18 & 22 & 11 & 15 & \phantom{0}3 & \phantom{0}7 & 27 & 31 & 19 & 23 \\
+12 & \phantom{0}0 & \phantom{0}4 & \phantom{0}8 & 28 & 16 & 20 & 24 & 13 & \phantom{0}1 & \phantom{0}5 & 9 & 29 & 17 & 21 & 25 & 14 & \phantom{0}2 & \phantom{0}6 & 10 & 30 & 18 & 22 & 26 & 15 & \phantom{0}3 & \phantom{0}7 & 11 & 31 & 19 & 23 & 27 \\
+12 & 28 & 13 & 29 & 14 & 30 & 15 & 31 & \phantom{0}0 & 16 & \phantom{0}1 & 17 & \phantom{0}2 & 18 & \phantom{0}3 & 19 & \phantom{0}4 & 20 & \phantom{0}5 & 21 & \phantom{0}6 & 22 & \phantom{0}7 & 23 & \phantom{0}8 & 24 & 9 & 25 & 10 & 26 & 11 & 27 \\
+28 & 13 & 29 & 12 & 30 & 15 & 31 & 14 & 16 & \phantom{0}1 & 17 & \phantom{0}0 & 18 & \phantom{0}3 & 19 & \phantom{0}2 & 20 & \phantom{0}5 & 21 & \phantom{0}4 & 22 & \phantom{0}7 & 23 & \phantom{0}6 & 24 & 9 & 25 & \phantom{0}8 & 26 & 11 & 27 & 10 \\
+13 & 29 & 12 & 28 & 15 & 31 & 14 & 30 & \phantom{0}1 & 17 & \phantom{0}0 & 16 & \phantom{0}3 & 19 & \phantom{0}2 & 18 & \phantom{0}5 & 21 & \phantom{0}4 & 20 & \phantom{0}7 & 23 & \phantom{0}6 & 22 & 9 & 25 & \phantom{0}8 & 24 & 11 & 27 & 10 & 26 \\
+29 & 12 & 28 & 13 & 31 & 14 & 30 & 15 & 17 & \phantom{0}0 & 16 & \phantom{0}1 & 19 & \phantom{0}2 & 18 & \phantom{0}3 & 21 & \phantom{0}4 & 20 & \phantom{0}5 & 23 & \phantom{0}6 & 22 & \phantom{0}7 & 25 & \phantom{0}8 & 24 & 9 & 27 & 10 & 26 & 11 \\
+29 & 31 & 17 & 19 & 21 & 23 & 25 & 27 & 12 & 14 & \phantom{0}0 & \phantom{0}2 & \phantom{0}4 & \phantom{0}6 & \phantom{0}8 & 10 & 28 & 30 & 16 & 18 & 20 & 22 & 24 & 26 & 13 & 15 & \phantom{0}1 & \phantom{0}3 & \phantom{0}5 & \phantom{0}7 & 9 & 11 \\
+31 & 17 & 19 & 29 & 23 & 25 & 27 & 21 & 14 & \phantom{0}0 & \phantom{0}2 & 12 & \phantom{0}6 & \phantom{0}8 & 10 & \phantom{0}4 & 30 & 16 & 18 & 28 & 22 & 24 & 26 & 20 & 15 & \phantom{0}1 & \phantom{0}3 & 13 & \phantom{0}7 & 9 & 11 & \phantom{0}5 \\
+17 & 19 & 29 & 31 & 25 & 27 & 21 & 23 & \phantom{0}0 & \phantom{0}2 & 12 & 14 & \phantom{0}8 & 10 & \phantom{0}4 & \phantom{0}6 & 16 & 18 & 28 & 30 & 24 & 26 & 20 & 22 & \phantom{0}1 & \phantom{0}3 & 13 & 15 & 9 & 11 & \phantom{0}5 & \phantom{0}7 \\
+19 & 29 & 31 & 17 & 27 & 21 & 23 & 25 & \phantom{0}2 & 12 & 14 & \phantom{0}0 & 10 & \phantom{0}4 & \phantom{0}6 & \phantom{0}8 & 18 & 28 & 30 & 16 & 26 & 20 & 22 & 24 & \phantom{0}3 & 13 & 15 & \phantom{0}1 & 11 & \phantom{0}5 & \phantom{0}7 & 9 \\
+19 & 27 & \phantom{0}2 & 10 & 18 & 26 & \phantom{0}3 & 11 & 29 & 21 & 12 & \phantom{0}4 & 28 & 20 & 13 & \phantom{0}5 & 31 & 23 & 14 & \phantom{0}6 & 30 & 22 & 15 & \phantom{0}7 & 17 & 25 & \phantom{0}0 & \phantom{0}8 & 16 & 24 & \phantom{0}1 & 9 \\
+27 & \phantom{0}2 & 10 & 19 & 26 & \phantom{0}3 & 11 & 18 & 21 & 12 & \phantom{0}4 & 29 & 20 & 13 & \phantom{0}5 & 28 & 23 & 14 & \phantom{0}6 & 31 & 22 & 15 & \phantom{0}7 & 30 & 25 & \phantom{0}0 & \phantom{0}8 & 17 & 24 & \phantom{0}1 & 9 & 16 \\
+\phantom{0}2 & 10 & 19 & 27 & \phantom{0}3 & 11 & 18 & 26 & 12 & \phantom{0}4 & 29 & 21 & 13 & \phantom{0}5 & 28 & 20 & 14 & \phantom{0}6 & 31 & 23 & 15 & \phantom{0}7 & 30 & 22 & \phantom{0}0 & \phantom{0}8 & 17 & 25 & \phantom{0}1 & 9 & 16 & 24 \\
+10 & 19 & 27 & \phantom{0}2 & 11 & 18 & 26 & \phantom{0}3 & \phantom{0}4 & 29 & 21 & 12 & \phantom{0}5 & 28 & 20 & 13 & \phantom{0}6 & 31 & 23 & 14 & \phantom{0}7 & 30 & 22 & 15 & \phantom{0}8 & 17 & 25 & \phantom{0}0 & 9 & 16 & 24 & \phantom{0}1 \\
+\end{Bmatrix}
+\]
 
 \subsubsection{Other Options} % include Discovery
 
