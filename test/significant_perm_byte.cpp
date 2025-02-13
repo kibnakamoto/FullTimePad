@@ -83,16 +83,16 @@ class FullTimePad
 	// p: dynamically re-purmutated key
 	// ni: index of dynamic permutation number n
 	// ni: iteration index
-	void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni, uint8_t **best_n_V)
+	void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 	{
 		for(uint32_t i=0;i<keysize;i++) {
-			p[i] = key[best_n_V[ni][i]];
+			p[i] = key[n_V[ni][i]];
 		}
 		memcpy(key, p, keysize); // copy the repurmutated values
 	}
 
 	// iterations for the main transformation loop
-	void transformation(uint8_t *key, uint8_t **best_n_V) // length of k is 8
+	void transformation(uint8_t *key) // length of k is 8
 	{
 		// vector used for dynamic permutation, dynamically permutated key placeholder
 		// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
@@ -101,11 +101,12 @@ class FullTimePad
 		// 32-bit array ints for key for arithmetic ARX manipulations
 		uint32_t *k = reinterpret_cast<uint32_t*>(key);
 		for(uint8_t i=0;i<16;i++) {
-			uint8_t index = i<<1;
-			uint8_t i1mod = index % 8;
-			uint8_t i2mod = (index+1) % 8;
-			uint8_t i3mod = (index+2) % 8;
-			uint8_t i4mod = (index+3) % 8;
+			uint8_t index = i<<1; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
+			uint8_t i4mod = index % 8;
+			uint8_t i3mod = (index+1) % 8;
+			uint8_t i2mod = (7 - index%8);
+			uint8_t i1mod = (7-(index+1)%8);
+			//std::cout << i3mod+0 << " ";
 			uint8_t rmod = i % 5; // 5 rotation values
 			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
 
@@ -118,7 +119,7 @@ class FullTimePad
 			k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
 
 			// permutate the bytearray key
-			dynamic_permutation(key, p, i%16, best_n_V);
+			dynamic_permutation(key, p, i%16);
 		}
 
 	}
@@ -151,10 +152,10 @@ class FullTimePad
 
 			const constexpr static uint8_t keysize = 32;
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
-			void hash(uint8_t *key, uint8_t **best_n_V)
+			void hash(uint8_t *key)
 			{
 				// transformation iterations
-				transformation(key, best_n_V);
+				transformation(key);
 
 			}
 };
@@ -170,7 +171,7 @@ void gen_rand_key(uint8_t *key)
 }
 
 // calculate the collision rate with random key
-double find_collision_rate_random_key(uint8_t **best_n_V)
+double find_collision_rate_random_key(uint32_t n)
 {
 	double collision_rate = 0;
 	uint8_t tmp[32];
@@ -182,10 +183,10 @@ double find_collision_rate_random_key(uint8_t **best_n_V)
 		memcpy(initial_key, tmp, 32);
 		FullTimePad fulltimepad1 = FullTimePad();
 		FullTimePad fulltimepad2 = FullTimePad();
-		initial_key[0] = k;
+		initial_key[n] = k;
 
-		fulltimepad1.hash(initial_key, best_n_V);
-		fulltimepad2.hash(oldkey, best_n_V);
+		fulltimepad1.hash(initial_key);
+		fulltimepad2.hash(oldkey);
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
 				collision_rate++;
@@ -195,12 +196,13 @@ double find_collision_rate_random_key(uint8_t **best_n_V)
 		// print the percentage changes when one bit of data is changed in key
 		double col = collision_rate/(32*k)*100;
 		if(col < 10)
-			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%\t";
+			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%";
 		else 
-			std::cout << std::dec << std::fixed << std::setprecision(4) << col << "%\t";
+			std::cout << std::dec << std::fixed << std::setprecision(4) << col << "%";
+		std::cout << ": n=" << n << "\t";
 		if(k%10 == 0) std::cout << std::endl;
 		memcpy(oldkey, tmp, 32);
-		oldkey[0] = k;
+		oldkey[n] = k;
 	}
 	collision_rate/=32*255;
 	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
@@ -209,107 +211,53 @@ double find_collision_rate_random_key(uint8_t **best_n_V)
 }
 
 // calculate the collision rate with incrementing integers key
-double find_collision_rate(uint8_t **best_n_V)
+double find_collision_rate(uint32_t n)
 {
 	double collision_rate = 0;
-	for(int k=1;k<2;k++) {
+	for(int k=1;k<256;k++) {
 		uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 		uint8_t oldkey[]      = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 		FullTimePad fulltimepad1 = FullTimePad();
 		FullTimePad fulltimepad2 = FullTimePad();
-		initial_key[0] = k;
-		oldkey[0] = k-1;
+		initial_key[n] = k;
+		oldkey[n] = k-1;
 
-		fulltimepad1.hash(initial_key, best_n_V);
-		fulltimepad2.hash(oldkey, best_n_V);
+		fulltimepad1.hash(initial_key);
+		fulltimepad2.hash(oldkey);
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
 				collision_rate++;
 			}
 		}
 	}
-	collision_rate/=32*1;
+	collision_rate/=32*255; // total collision rate
 	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
 	//std::cout << std::endl;
 	return collision_rate*100;
 }
 
 
-
-// permutate the matrix n_V by swapping indexes with new ones
-void permutate_matrix(uint8_t **n_V, uint8_t **placeholder, std::vector<uint8_t> index)
+// find if a particular byte affects collision rate more or less
+void check_bytes_permutation(CollisionCalculation collision_calc)
 {
-	// permutate matrix
-	for(uint8_t i=0;i<12;i++) {
-		for(uint8_t j=0;j<32;j++) {
-			placeholder[i][j] = n_V[index[i]][j];
+	double total = 0;
+	for(int i=0;i<32;i++) {
+		// get collision rate at i'th index of key
+		double rate;
+		if(collision_calc == random_key) {
+			rate = find_collision_rate_random_key(i);
+		} else {
+			rate = find_collision_rate(i);
 		}
-	}
-
-	// copy the values back from the placeholder
-	for(uint8_t i=0;i<12;i++)
-		memcpy(n_V[i], placeholder[i], 32);
-}
-
-// print the best n_V matrix
-void print_best_n_V(uint8_t **n_V)
-{
-	std::cout << "\nbest n_V: {";
-	for(int i=0;i<12;i++) {
-		std::cout << "\n\t{" << std::dec;
-		for(int j=0;j<32;j++) {
-			std::cout << n_V[i][j]+0;
-			if(j != 31) std::cout << ", ";
-		}
-		std::cout << "}";
-		if (i != 11) std::cout << ",";
-	}
-	std::cout << "\n}";
-}
-
-// find the best n_V
-void new_n_V(uint8_t **n_V, uint8_t **placeholder, double &best_collision_rate, uint32_t &permutations_count, CollisionCalculation collision_calc)
-{
-    std::vector<uint8_t> index = {0,1,2,3,4,5,6,7,8,9,10,11}; // index of n_V
-
-    do {
-		// find collision rate
-		double collision_rate;
-		if(collision_calc == incrementing_key)
-			collision_rate = find_collision_rate(n_V);
+		if (rate < 10)
+			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
 		else
-			collision_rate = find_collision_rate_random_key(n_V);
-
-
-		// permutate the matrix
-		permutate_matrix(n_V, placeholder, index);
-
-        // Update the best permutation if a lower collision rate is found
-        if (collision_rate < best_collision_rate) {
-            best_collision_rate = collision_rate;
-			std::cout << "new best collision rate: " << best_collision_rate << "%";
-			print_best_n_V(n_V);
-			std::cout << "\npermutations_count: " << permutations_count << "\n";
-        }
-
-		// if exited program
-		if (doprint) {
-			std::cout << "\n\nbest collision rate: " << best_collision_rate << "%";
-			print_best_n_V(n_V);
-			std::cout << "\npermutations_count: " << permutations_count << "\n";
-
-			// safely deallocate before exit
-			for(uint8_t i=0;i<12;i++) {
-				delete[] n_V[i];
-				delete[] placeholder[i];
-			}
-			delete[] n_V;
-			delete[] placeholder;
-			exit(0);
-		}
-
-		permutations_count++;
-    } while (std::next_permutation(index.begin(), index.end()));
+			std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
+		if(i != 0 && (i+1) % 8 == 0) std::cout << std::endl;
+		total+=rate;
+	}
+	total/=32;
+	std::cout << std::endl << "total: " << total << "%";
 }
 
 #pragma GCC diagnostic push
@@ -331,26 +279,15 @@ int main(int argc, char *argv[])
 
 	double best_collision_rate = UINT32_MAX;
 	uint32_t permutations_count = 0; // number of permutations tried
-	uint8_t **n_V = new uint8_t*[16];
-	uint8_t **placeholder = new uint8_t*[16];
-	for(uint8_t i=0;i<16;i++) {
-		n_V[i] = new uint8_t[32];
-   		placeholder[i] = new uint8_t[32];
-		memcpy(n_V[i], FullTimePad::n_V[i], 32);
-	}
+	
 	// catch signal interrupt
 	signal(SIGINT, signal_handler);
-	new_n_V(n_V, placeholder, best_collision_rate, permutations_count, collision_calc);
+	check_bytes_permutation(collision_calc);
 
-	for(uint8_t i=0;i<16;i++) {
-		delete[] n_V[i];
-		delete[] placeholder[i];
-	}
-	delete[] n_V;
-	delete[] placeholder;
-	std::cout << std::endl << "PROGRAM FINSIHED, ALL PERMUTATIONS TRIED";
+	std::cout << std::endl;
 	return 0;
 }
 #pragma GCC diagnostic pop
 
 #endif /* BEST_PERMUTATION_CPP */
+
