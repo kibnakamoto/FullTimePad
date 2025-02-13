@@ -4,6 +4,7 @@
 # Executables
 fulltimepad
 test/best_permutation
+test/significant_perm_byte
 
 # Latex Files
 FullTimePad.log
