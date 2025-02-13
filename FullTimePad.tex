@@ -5,12 +5,12 @@
 \usepackage{listings}
 \usepackage[hidelinks]{hyperref}
 \usepackage[svgnames, table]{xcolor}
-\usepackage{minted} % python code
 \usepackage{algorithm} % pseudo code
 \usepackage{mathtools} % equations
 \usepackage{amssymb} % equations
 \usepackage{algpseudocode}  % Correctly load this for pseudocode
 \usepackage{tikz} % drawing trailing lines in pseudo code
+\usepackage[makeroom]{cancel}
 
 \setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
 
@@ -135,7 +135,7 @@ For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the
 \\
 But there is another concern,
 \\
-What if plaintext and ciphertext are known, then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
+What if the plaintext and ciphertext are known, then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
 &k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
@@ -154,8 +154,120 @@ $\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confu
 
 \subsection{Brute-Force}
 
+Due to the use of a galois field. The total number of combinations per 256-bit key isn't $a=2^{256}$, but rather $b=4294967291^8$ where $p=4294967291$ for arithmetic in $F_p$ and there are 8 32-bit numbers in a 256-bit key.
 
-\subsubsection {Birthday Attack}
+\[
+\begin{aligned}
+&a = 115792089237316195423570985008687907853269984665640564039457584007913129639936_{10} \\
+&b = 115792088158918333131516597762172392628570465465856793992332884130307292657121_{10} \\
+&\texttt{let  } \Delta = a-b \\
+&\Delta = 1078397862292054387246515515224699519199783770047124699877605836982815_{10} \\
+\end{aligned}
+\]
+So the difference $\Delta$ is a somewhat large integer. The number of combinations with a galois field is lower than without a galois field ($b < a$). This isn't a big concern as their difference measured exponentially is only around $2^{\log_2\Delta} \approx 2^{229}$ which means that their difference is around $2^{229}$, this is a negligible difference as the difference between $2^{230}$ and $2^{229}$ is also huge. \\
+$\therefore $ \texttt{Using a galois field doesn't negatively impact number of cominations in terms of brute force as the total number of combinations when using a galois field vs not is a negligible amount}
+
+\subsubsection {Birthday Problem}
+
+
+The birthday problem is a paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
+\\
+The answer is an unexpected 23 people.
+\\
+In the context of this encryption algorithm, it might be a concern, as number of key reused (with transformation) increase, the chances of finding the key increase:
+\\
+\\
+
+\texttt{let } $V_c$ \texttt{be the number of combinations per key without order and repetitions} \\
+\texttt{let } $k$ \texttt{be the number of keys needed for hash(key) to have a 50\% chance to equal another hash(key)} \\
+\texttt{let } $V_t$ \texttt{be the number of combinations per key with order and repetitions} \\
+
+\[
+\begin{aligned}
+&V_c = \frac{b!}{(b-k)!} = \frac{4294967291^8!}{(4294967291^8-k)!} \\
+&V_t = b^k = 4294967291^{8^k} \\
+&P(A) = \frac{V_c}{V_t} \\
+&P(A) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
+&P(B) = 1- P(A) = 50\%\\
+&P(A) = 1 - 50\%\\
+&1 - 50\% = \frac{\frac{b!}{(b-k)!}}{b^k} \\
+&\frac{1}{2}b^k =  \frac{b!}{(b-k)!} \hspace{7.2cm} \texttt{ since }50\% = \frac{1}{2} \\
+&\log_b\frac{1}{2}b^k = \log_b\frac{b!}{(b-k)!} \\
+&\log_b\frac{1}{2} + \log_bb^k = \log_bb! - \log_b(b-k)! \\
+&0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{3.2cm} \texttt{ since }\log_bb^k = k\\
+\end{aligned}
+\]
+% seperate equations to 2 segments otherwise previous page is empty
+\thispagestyle{empty} % page number is confusing in the equation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\small
+\[
+\begin{aligned}
+& \\
+& \texttt{According to Ramanujan's Approximation: } \\
+& \quad \log_bb! \approx \frac{b\log b - b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \frac{log\pi}{2}}{\log b} \\
+& \texttt{And} \\
+& \\
+& \log_b(b-k)! \approx \frac{(b-k)\log(b-k) - (b-k) + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+& \\
+& \texttt{Recall: } \\
+& \quad 0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{2.8cm} \texttt{ isolate } \log_b(b-k)! \\
+& \quad \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} - k \\
+& \\
+& \texttt{Combine both equations for } \log_b(b-k)! \texttt{: } \\
+& \log_bb! - \log_b\frac{1}{2} - k \approx \frac{(b-k)\log(b-k) - (b-k) + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+& \\
+& \frac{b\log b - b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \frac{log\pi}{2}}{\log b} - \log_b\frac{1}{2} - k \approx \frac{(b-k)\log(b-k) - (b-k)}{\log b} +  \\ 
+& \hspace{9cm} + \frac{\frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+\end{aligned}
+\]
+
+\thispagestyle{empty} % page number is confusing in the equation
+\[
+\begin{aligned}
+		& \frac{b\log b \cancel{-b} + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{log\pi}{2}} - \log b \log_b\frac{1}{2} - \log b k}{\cancel{\log b}} \approx \frac{(b-k)\log(b-k) \cancel{-b} + k }{\cancel{\log b}} +  \\ 
+& \hspace{10.5cm} + \frac{\frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\log\pi}{2}}}{\cancel{\log b}} \\
+& \\
+& \texttt{let } C = b\log b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} - \log b \log_b\frac{1}{2} \approx (b-k)\log(b-k) + k + \log b k  \\ 
+& \hspace{10.5cm} + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
+& \\
+& \texttt{let } f(k) = (b-k)\log(b-k) + k + \log b k + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} - C = 0\\
+%& C \approx \log(b-k)^{b-k} + k + \log b k + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
+%& C \approx k(1 + \log b) + \frac{\log \biggl[ (b-k)^{6(b-k)+1}(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
+\end{aligned}
+\]
+
+\[
+\begin{aligned}
+%& \texttt{let } x = b-k \\
+%& C \approx k(1 + \log b) + \frac{\log \biggl[ x^{6x+1}(1+4x+8x^2) \biggr]}{6} \\
+%& 6C \approx 6k(1 + \log b) + \log \biggl[ x^{6x+1} (1+4x+8x^2) \biggr] \\
+%& \log \biggl[ x^{6x+1} (1+4x+8x^2) \biggr] \approx 6C - 6k(1 + \log b) \\
+%& \log( x^{6x+1} + 4x^{6x+2} + 8x^{6x+3}) \approx 6C - 6k(1 + \log b) \\
+%& \texttt{let } f(k) = \log( x^{6x+1} + 4x^{6x+2} + 8x^{6x+3}) - 6C + 6k(1 + \log b) = 0 \\
+%& x^{6x+1} + 4x^{6x+2} + 8x^{6x+3} = 10^{6C - 6k(1 + \log b)} \\
+%& x^{6x+1} + 4x^{6x+2} + 8x^{6x+3} - 10^{6C - 6k(1 + \log b)} = 0 \\
+%& \texttt{let } f(k) = x^{6x+1} + 4x^{6x+2} + 8x^{6x+3} - 10^{6C - 6k(1 + \log b)} = 0 \\
+\end{aligned}
+\]
+$\therefore$ $f(k)$ \texttt{ can be used to evaluate how many keys it would take so that 2 hashes have a 50\% chance of being equal. $f(k)$ can be evaluated using the secant algorithm}
+
 
 \subsubsection {Denial of Service (DoS)}
 
