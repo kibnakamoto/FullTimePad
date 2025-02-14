@@ -268,6 +268,17 @@ In the context of this encryption algorithm, it might be a concern, as number of
 \]
 $\therefore$ $f(k)$ \texttt{ can be used to evaluate how many keys it would take so that 2 hashes have a 50\% chance of being equal. $f(k)$ can be evaluated using the secant algorithm}
 
+After running \texttt{test/secant.py}, given the parameters: \\
+Based on Wikipedia Article: Birthday Attack, we can approximate $x_0$ and $x_1$ \\
+$x_0 = \frac{1}{2}+\sqrt{\frac{1}{4}+2 \times ln(2) \times b}$ (due to Approximation of number of people) \\
+$x_1 = \sqrt{b}$ (due to square approximation) \\
+\\ error tolarance:
+$e = 1 \times 10^{-200}$ \\
+for $b=4294967291^8$,  we get $k_1 = 400651867432320527534628274526034254879$ for the root. \\
+And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ for the root \\
+So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
+Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of Galois fields to increasing avalanche effect.
+
 
 \subsubsection {Denial of Service (DoS)}
 
