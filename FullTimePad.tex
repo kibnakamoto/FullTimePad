@@ -221,33 +221,33 @@ In the context of this encryption algorithm, it might be a concern, as number of
 \begin{aligned}
 & \\
 & \texttt{According to Ramanujan's Approximation: } \\
-& \quad \log_bb! \approx \frac{b\log b - b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \frac{log\pi}{2}}{\log b} \\
+& \quad \log_bb! \approx \frac{b\ln b - b + \frac{\ln\biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} + \frac{ln\pi}{2}}{\ln b} \\
 & \texttt{And} \\
 & \\
-& \log_b(b-k)! \approx \frac{(b-k)\log(b-k) - (b-k) + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+& \log_b(b-k)! \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
 & \\
 & \texttt{Recall: } \\
 & \quad 0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{2.8cm} \texttt{ isolate } \log_b(b-k)! \\
 & \quad \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} - k \\
 & \\
 & \texttt{Combine both equations for } \log_b(b-k)! \texttt{: } \\
-& \log_bb! - \log_b\frac{1}{2} - k \approx \frac{(b-k)\log(b-k) - (b-k) + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+& \log_bb! - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
 & \\
-& \frac{b\log b - b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \frac{log\pi}{2}}{\log b} - \log_b\frac{1}{2} - k \approx \frac{(b-k)\log(b-k) - (b-k)}{\log b} +  \\ 
-& \hspace{9cm} + \frac{\frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\log\pi}{2}}{\log b} \\
+& \frac{b\ln b - b + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k)}{\ln b} +  \\ 
+& \hspace{9cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k))) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
 \end{aligned}
 \]
 
 \thispagestyle{empty} % page number is confusing in the equation
 \[
 \begin{aligned}
-		& \frac{b\log b \cancel{-b} + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{log\pi}{2}} - \log b \log_b\frac{1}{2} - \log b k}{\cancel{\log b}} \approx \frac{(b-k)\log(b-k) \cancel{-b} + k }{\cancel{\log b}} +  \\ 
-& \hspace{10.5cm} + \frac{\frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\log\pi}{2}}}{\cancel{\log b}} \\
+		& \frac{b\log b \cancel{-b} + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{ln\pi}{2}} - \ln b \log_b\frac{1}{2} - \ln b k}{\cancel{\ln b}} \approx \frac{(b-k)\ln(b-k) \cancel{-b} + k }{\cancel{\ln b}} +  \\ 
+& \hspace{10.3cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\ln\pi}{2}}}{\cancel{\ln b}} \\
 & \\
-& \texttt{let } C = b\log b + \frac{\log\biggl[ b(1+4b(1+2b)) \biggr]}{6} - \log b \log_b\frac{1}{2} \approx (b-k)\log(b-k) + k + \log b k  \\ 
-& \hspace{10.5cm} + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
+& \texttt{let } C = b\ln b + \frac{\ln \biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} - \ln b \log_b\frac{1}{2} \approx (b-k)\ln(b-k) + k + \ln b k  \\ 
+& \hspace{10.1cm} + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 & \\
-& \texttt{let } f(k) = (b-k)\log(b-k) + k + \log b k + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} - C = 0\\
+& \texttt{let } f(k) = (b-k)\ln(b-k) + k + \ln b k + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} - C = 0\\
 %& C \approx \log(b-k)^{b-k} + k + \log b k + \frac{\log \biggl[ (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 %& C \approx k(1 + \log b) + \frac{\log \biggl[ (b-k)^{6(b-k)+1}(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 \end{aligned}

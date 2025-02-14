@@ -100,6 +100,13 @@ class FullTimePad
 
 		// 32-bit array ints for key for arithmetic ARX manipulations
 		uint32_t *k = reinterpret_cast<uint32_t*>(key);
+
+		// need pre manipulation so that all bytes are transformed the same number of times
+		for(int i=0;i<4;i++) {
+			k[i] += k[i+4]+ ~A[i];
+			k[i+4] += k[i]+ ~A[i];
+		}
+
 		for(uint8_t i=0;i<16;i++) {
 			uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
 			uint8_t i1mod = index % 8;

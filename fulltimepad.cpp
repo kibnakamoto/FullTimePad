@@ -199,7 +199,7 @@ class FullTimePad
 		// 32-bit array ints for key for arithmetic ARX manipulations
 		uint32_t *k = reinterpret_cast<uint32_t*>(key);
 		for(uint8_t i=0;i<16;i++) {
-			uint8_t index = i<<2;
+			uint16_t index = i<<2;
 			uint8_t i1mod = index % 8;
 			uint8_t i2mod = (index+1) % 8;
 			uint8_t i3mod = (index+2) % 8;

@@ -12,12 +12,12 @@ def log(x, base=Decimal(math.e)):
         return x.ln()
     return Decimal(x).ln()/base.ln()
 
-c = Decimal(b*log(b) + log( b*(1+4*b*(1+2*b)) )/6 - log(b) * log(0.5, b))
+c = Decimal(b*log(b) + log(1/Decimal(math.pi)**3 + b*(1+4*b*(1+2*b)) )/6 - log(b) * log(0.5, b))
 
 def f(k):
     k = Decimal(k)
     x = b-k
-    return c - (x*log(x) + k  + log(b)*k + log(x*(1+4*x*(1+2*x)))/6)
+    return c - (x*log(x) + k  + log(b)*k + log(1/Decimal(math.pi)**3 + x*(1+4*x*(1+2*x)))/6)
 
 def secant(x0,x1,e,N):
     print('\n\n*** SECANT METHOD IMPLEMENTATION ***')
@@ -46,8 +46,8 @@ def secant(x0,x1,e,N):
 
 x0 = Decimal(2**172)
 x1 = Decimal(1496577676626844588240573268701473812127674924007424)
-e = Decimal(1e-500)
+e = Decimal(1e-200)
 
 N = 100000
 x2 = secant(x0, x1, e, N)
-print(f(x2), x2)
+print(f(x2), round(x2))
