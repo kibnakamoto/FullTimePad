@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++2b -Wall -pedantic -Wextra -O4
+CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
 EXEC_BEST = best_permutation
 EXEC_SIG = significant_perm_byte
 OBJ_BEST = best_permutation.o

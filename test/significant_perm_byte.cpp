@@ -23,15 +23,14 @@
 #include <iomanip>
 #include <stdint.h>
 #include <string.h>
-#include <sstream>
-#include <vector>
 #include <signal.h>
 #include <assert.h>
-#include <algorithm>
 #include <random>
+#include <bit>
+#include <array>
 
 // print best permutation matrix after signal interrupt
-bool doprint = false;
+static bool doprint = false;
 
 // how the collision calculation should be performed
 enum CollisionCalculation {
@@ -39,121 +38,40 @@ enum CollisionCalculation {
 	random_key
 };
 
+// check endiannes before assigning n_V to big/little endian version
+static consteval bool is_big_endian() {
+	return std::endian::native == std::endian::big;
+}
+
 
 // 256-bit Full-Time-Pad Cipher
 class FullTimePad
 {
-	// constant array used in the transformation of the key
-	uint32_t A[8] = {
-		0x184f03e9, 
-		0x216c46df,
-		0x119f904f,
-		0x64997dfd,
-		0x2a5497bd,
-		0x3918fa83,
-		0xaf820335,
-		0x85096c2e,
-	};
-	
-	// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
-	static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
-
-	// rotation index r
-	static const constexpr uint8_t r[] = {
-		23, 5, 17, 31, 13
-	};
-
-	// bitwise right rotation
-	inline uint32_t rotr(uint32_t x, uint8_t shift)
-	{
-		return (x >> shift) | (x << ((sizeof(x)<<3)-shift));
-	}
-
-	// bitwise left rotation
-	inline uint32_t lotr(uint32_t x, uint8_t shift)
-	{
-		return (x << shift) | (x >> ((sizeof(x)<<3)-shift));
-	}
-
-	// initial key, before any permutation
-	uint8_t *init_key;
-
-	// dynamically permutate the key during iteration
-	// key: permutated 32-byte key
-	// p: dynamically re-purmutated key
-	// ni: index of dynamic permutation number n
-	// ni: iteration index
-	void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
-	{
-		for(uint32_t i=0;i<keysize;i++) {
-			p[i] = key[n_V[ni][i]];
-		}
-		memcpy(key, p, keysize); // copy the repurmutated values
-	}
-
-	// iterations for the main transformation loop
-	void transformation(uint8_t *key) // length of k is 8
-	{
-		// vector used for dynamic permutation, dynamically permutated key placeholder
-		// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
-		uint8_t p[keysize];
-
-		// 32-bit array ints for key for arithmetic ARX manipulations
-		uint32_t *k = reinterpret_cast<uint32_t*>(key);
-
-		// need pre manipulation so that all bytes are transformed the same number of times
-		for(int i=0;i<4;i++) {
-			k[i] += k[i+4]+ ~A[i];
-			k[i+4] += k[i]+ ~A[i];
-		}
-
-		for(uint8_t i=0;i<16;i++) {
-			uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
-			uint8_t i1mod = index % 8;
-			uint8_t i2mod = (index+1) % 8;
-			uint8_t i3mod = (index+2) % 8;
-			uint8_t i4mod = (index+3) % 8;
-
-			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
-
-			A[i2mod] ^= k[i1mod];
-
-			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
-			A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
-
-			k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
-			k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
-
-			// permutate the bytearray key
-			dynamic_permutation(key, p, i%16);
-		}
-	}
-
 	public:
 
-			// indexes represented as constant when rotated V right by n
-			static const constexpr uint8_t n_V[][32] = {
-				// ideal permutations: would have 1 byte shifted to each another 32-bit number.
-				// e.g. byte 0 goes to byte 4
-				// {0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31},
-				// {4, 8, 12, 0, 20, 24, 28, 16, 5, 9, 13, 1, 21, 25, 29, 17, 6, 10, 14, 2, 22, 26, 30, 18, 7, 11, 15, 3, 23, 27, 31, 19}, 
-				// {8, 12, 0, 4, 24, 28, 16, 20, 9, 13, 1, 5, 25, 29, 17, 21, 10, 14, 2, 6, 26, 30, 18, 22, 11, 15, 3, 7, 27, 31, 19, 23},
-				// {12, 0, 4, 8, 28, 16, 20, 24, 13, 1, 5, 9, 29, 17, 21, 25, 14, 2, 6, 10, 30, 18, 22, 26, 15, 3, 7, 11, 31, 19, 23, 27},
-				// {12, 28, 13, 29, 14, 30, 15, 31, 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23, 8, 24, 9, 25, 10, 26, 11, 27},
-				// {28, 13, 29, 12, 30, 15, 31, 14, 16, 1, 17, 0, 18, 3, 19, 2, 20, 5, 21, 4, 22, 7, 23, 6, 24, 9, 25, 8, 26, 11, 27, 10},
-				// {13, 29, 12, 28, 15, 31, 14, 30, 1, 17, 0, 16, 3, 19, 2, 18, 5, 21, 4, 20, 7, 23, 6, 22, 9, 25, 8, 24, 11, 27, 10, 26},
-				// {29, 12, 28, 13, 31, 14, 30, 15, 17, 0, 16, 1, 19, 2, 18, 3, 21, 4, 20, 5, 23, 6, 22, 7, 25, 8, 24, 9, 27, 10, 26, 11},
-				// {29, 31, 17, 19, 21, 23, 25, 27, 12, 14, 0, 2, 4, 6, 8, 10, 28, 30, 16, 18, 20, 22, 24, 26, 13, 15, 1, 3, 5, 7, 9, 11},
-				// {31, 17, 19, 29, 23, 25, 27, 21, 14, 0, 2, 12, 6, 8, 10, 4, 30, 16, 18, 28, 22, 24, 26, 20, 15, 1, 3, 13, 7, 9, 11, 5},
-				// {17, 19, 29, 31, 25, 27, 21, 23, 0, 2, 12, 14, 8, 10, 4, 6, 16, 18, 28, 30, 24, 26, 20, 22, 1, 3, 13, 15, 9, 11, 5, 7},
-				// {19, 29, 31, 17, 27, 21, 23, 25, 2, 12, 14, 0, 10, 4, 6, 8, 18, 28, 30, 16, 26, 20, 22, 24, 3, 13, 15, 1, 11, 5, 7, 9},
-				// {19, 27, 2, 10, 18, 26, 3, 11, 29, 21, 12, 4, 28, 20, 13, 5, 31, 23, 14, 6, 30, 22, 15, 7, 17, 25, 0, 8, 16, 24, 1, 9},
-				// {27, 2, 10, 19, 26, 3, 11, 18, 21, 12, 4, 29, 20, 13, 5, 28, 23, 14, 6, 31, 22, 15, 7, 30, 25, 0, 8, 17, 24, 1, 9, 16},
-				// {2, 10, 19, 27, 3, 11, 18, 26, 12, 4, 29, 21, 13, 5, 28, 20, 14, 6, 31, 23, 15, 7, 30, 22, 0, 8, 17, 25, 1, 9, 16, 24},
-				// {10, 19, 27, 2, 11, 18, 26, 3, 4, 29, 21, 12, 5, 28, 20, 13, 6, 31, 23, 14, 7, 30, 22, 15, 8, 17, 25, 0, 9, 16, 24, 1},
-				
-				// LITTLE ENDIAN:
+			// ideal permutations: would have 1 byte shifted to each another 32-bit number.
+			// e.g. byte 0 goes to byte 4
+			static constexpr std::array<std::array<uint8_t, 32>, 16> n_V_big_endian = {{
+				{0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31},
+				{4, 8, 12, 0, 20, 24, 28, 16, 5, 9, 13, 1, 21, 25, 29, 17, 6, 10, 14, 2, 22, 26, 30, 18, 7, 11, 15, 3, 23, 27, 31, 19}, 
+				{8, 12, 0, 4, 24, 28, 16, 20, 9, 13, 1, 5, 25, 29, 17, 21, 10, 14, 2, 6, 26, 30, 18, 22, 11, 15, 3, 7, 27, 31, 19, 23},
+				{12, 0, 4, 8, 28, 16, 20, 24, 13, 1, 5, 9, 29, 17, 21, 25, 14, 2, 6, 10, 30, 18, 22, 26, 15, 3, 7, 11, 31, 19, 23, 27},
+				{12, 28, 13, 29, 14, 30, 15, 31, 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23, 8, 24, 9, 25, 10, 26, 11, 27},
+				{28, 13, 29, 12, 30, 15, 31, 14, 16, 1, 17, 0, 18, 3, 19, 2, 20, 5, 21, 4, 22, 7, 23, 6, 24, 9, 25, 8, 26, 11, 27, 10},
+				{13, 29, 12, 28, 15, 31, 14, 30, 1, 17, 0, 16, 3, 19, 2, 18, 5, 21, 4, 20, 7, 23, 6, 22, 9, 25, 8, 24, 11, 27, 10, 26},
+				{29, 12, 28, 13, 31, 14, 30, 15, 17, 0, 16, 1, 19, 2, 18, 3, 21, 4, 20, 5, 23, 6, 22, 7, 25, 8, 24, 9, 27, 10, 26, 11},
+				{29, 31, 17, 19, 21, 23, 25, 27, 12, 14, 0, 2, 4, 6, 8, 10, 28, 30, 16, 18, 20, 22, 24, 26, 13, 15, 1, 3, 5, 7, 9, 11},
+				{31, 17, 19, 29, 23, 25, 27, 21, 14, 0, 2, 12, 6, 8, 10, 4, 30, 16, 18, 28, 22, 24, 26, 20, 15, 1, 3, 13, 7, 9, 11, 5},
+				{17, 19, 29, 31, 25, 27, 21, 23, 0, 2, 12, 14, 8, 10, 4, 6, 16, 18, 28, 30, 24, 26, 20, 22, 1, 3, 13, 15, 9, 11, 5, 7},
+				{19, 29, 31, 17, 27, 21, 23, 25, 2, 12, 14, 0, 10, 4, 6, 8, 18, 28, 30, 16, 26, 20, 22, 24, 3, 13, 15, 1, 11, 5, 7, 9},
+				{19, 27, 2, 10, 18, 26, 3, 11, 29, 21, 12, 4, 28, 20, 13, 5, 31, 23, 14, 6, 30, 22, 15, 7, 17, 25, 0, 8, 16, 24, 1, 9},
+				{27, 2, 10, 19, 26, 3, 11, 18, 21, 12, 4, 29, 20, 13, 5, 28, 23, 14, 6, 31, 22, 15, 7, 30, 25, 0, 8, 17, 24, 1, 9, 16},
+				{2, 10, 19, 27, 3, 11, 18, 26, 12, 4, 29, 21, 13, 5, 28, 20, 14, 6, 31, 23, 15, 7, 30, 22, 0, 8, 17, 25, 1, 9, 16, 24},
+				{10, 19, 27, 2, 11, 18, 26, 3, 4, 29, 21, 12, 5, 28, 20, 13, 6, 31, 23, 14, 7, 30, 22, 15, 8, 17, 25, 0, 9, 16, 24, 1}
+			}};
+			
+			// LITTLE ENDIAN:
+			static constexpr std::array<std::array<uint8_t, 32>, 16> n_V_little_endian = {{
 				{12, 8, 4, 0, 28, 24, 20, 16, 13, 9, 5, 1, 29, 25, 21, 17, 14, 10, 6, 2, 30, 26, 22, 18, 15, 11, 7, 3, 31, 27, 23, 19},
 				{0, 12, 8, 4, 16, 28, 24, 20, 1, 13, 9, 5, 17, 29, 25, 21, 2, 14, 10, 6, 18, 30, 26, 22, 3, 15, 11, 7, 19, 31, 27, 23},
 				{4, 0, 12, 8, 20, 16, 28, 24, 5, 1, 13, 9, 21, 17, 29, 25, 6, 2, 14, 10, 22, 18, 30, 26, 7, 3, 15, 11, 23, 19, 31, 27},
@@ -170,17 +88,116 @@ class FullTimePad
 				{19, 10, 2, 27, 18, 11, 3, 26, 29, 4, 12, 21, 28, 5, 13, 20, 31, 6, 14, 23, 30, 7, 15, 22, 17, 8, 0, 25, 16, 9, 1, 24},
 				{27, 19, 10, 2, 26, 18, 11, 3, 21, 29, 4, 12, 20, 28, 5, 13, 23, 31, 6, 14, 22, 30, 7, 15, 25, 17, 8, 0, 24, 16, 9, 1},
 				{2, 27, 19, 10, 3, 26, 18, 11, 12, 21, 29, 4, 13, 20, 28, 5, 14, 23, 31, 6, 15, 22, 30, 7, 0, 25, 17, 8, 1, 24, 16, 9}
+			}};
 
+			static consteval std::array<std::array<uint8_t, 32>, 16> get_n_V() {
+				return is_big_endian() ? n_V_big_endian : n_V_little_endian;
+			}
+	private: 
+			// constant array used in the transformation of the key
+			uint32_t A[8] = {
+				0x184f03e9, 
+				0x216c46df,
+				0x119f904f,
+				0x64997dfd,
+				0x2a5497bd,
+				0x3918fa83,
+				0xaf820335,
+				0x85096c2e,
 			};
-
-
+			
+			// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
+			static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
+		
+			// rotation index r
+			static const constexpr uint8_t r[] = {
+				23, 5, 17, 31, 13
+			};
+		
+			// bitwise right rotation
+			inline uint32_t rotr(uint32_t x, uint8_t shift)
+			{
+				return (x >> shift) | (x << ((sizeof(x)<<3)-shift));
+			}
+		
+			// bitwise left rotation
+			inline uint32_t lotr(uint32_t x, uint8_t shift)
+			{
+				return (x << shift) | (x >> ((sizeof(x)<<3)-shift));
+			}
+		
+			// initial key, before any permutation
+			uint8_t *init_key;
+		
+			// dynamically permutate the key during iteration
+			// key: permutated 32-byte key
+			// p: dynamically re-purmutated key
+			// ni: index of dynamic permutation number n
+			// ni: iteration index
+			void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
+			{
+				constexpr std::array<std::array<uint8_t, 32>, 16> n_V = get_n_V();
+				for(uint32_t i=0;i<keysize;i++) {
+					p[i] = key[n_V[ni][i]];
+				}
+				memcpy(key, p, keysize); // copy the repurmutated values
+			}
+		
+			// iterations for the main transformation loop
+			void transformation(uint8_t *key) // length of k is 8
+			{
+				// vector used for dynamic permutation, dynamically permutated key placeholder
+				// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
+				uint8_t p[keysize];
+		
+				// 32-bit array ints for key for arithmetic ARX manipulations
+				uint32_t *k = reinterpret_cast<uint32_t*>(key);
+		
+				// need pre manipulation so that all bytes increase avalanche effect with the same magnitude
+				// if all bytes are mixed in to each other by addition
+				// TODO: add key reuse logic here
+				for(int i=0;i<8;i++) {
+					for(int j=i+1;j<8+i+1;j++) { // don't add 2 k[i] indexes that are equal to each other.
+						int ind = j%8; // to make sure only unieqe indexes are added since (ki + ki)/2 = ki, this pattern should be avoided
+						k[i] = ((uint64_t)k[i] + lotr(k[ind], r[ind%5])) % fp; // TODO: make 64 value uint32_t constant array to add
+					}
+				}
+				// for(int i=0;i<8;i++) std::cout << std::setfill('0') << std::setw(8) << std::hex << k[i] << " ";
+			
+		
+				for(uint8_t i=0;i<16;i++) {
+					uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
+					uint8_t i1mod = index % 8;
+					uint8_t i2mod = (index+1) % 8;
+					uint8_t i3mod = (index+2) % 8;
+					uint8_t i4mod = (index+3) % 8;
+		
+					uint8_t rmod = i % 5; // 5 rotation values
+					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+		
+					A[i2mod] ^= k[i1mod];
+		
+					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+					A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+		
+					k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
+					k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
+		
+					// permutate the bytearray key
+					dynamic_permutation(key, p, i%16);
+				}
+			}
+		
+	public:
+		
 			const constexpr static uint8_t keysize = 32;
+
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
 			void hash(uint8_t *key)
 			{
 				// transformation iterations
 				transformation(key);
-
+		
 			}
 };
 
@@ -273,7 +290,8 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 		} else {
 			rate = find_collision_rate(i);
 		}
-		if (rate < 10)
+		
+		if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
 			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
 		else
 			std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
@@ -301,9 +319,6 @@ int main(int argc, char *argv[])
 		collision_calc = incrementing_key;
 	}
 
-	double best_collision_rate = UINT32_MAX;
-	uint32_t permutations_count = 0; // number of permutations tried
-	
 	// catch signal interrupt
 	signal(SIGINT, signal_handler);
 	check_bytes_permutation(collision_calc);
