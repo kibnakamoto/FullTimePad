@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++2b -Wall -pedantic -Wextra -O4
+CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
 EXEC = fulltimepad 
 OBJS = fulltimepad.o
 PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux
