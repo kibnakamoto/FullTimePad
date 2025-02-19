@@ -371,7 +371,9 @@ then, $x = c + 1$
 
 the total number of combinations according to the equation is between $1$ and \\$2871827628774669857283799072180574717903946432793745331030345747716374528 \approx 2.9 \times 10^{72}$
 
-Which isn't possible to brute force.
+Which isn't possible to brute force provided key is random and not chosen to be a small value.
+
+But according to testing, summation rarely provide low avalanche effect for certain input keys. But using xor operator offers the same avalanche effect for all keys and it offers $2^{256} \approx 1.2 \times 10^{77}$ (more) combinations.
 
 \subsection{Reverse Engineering the Transformation}
 

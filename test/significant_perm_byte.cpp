@@ -168,7 +168,7 @@ class FullTimePad
 						k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
 		
 						// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
-						A[i2mod] ^= ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+						A[i2mod] ^= ((uint64_t)k[0] ^ k[1] ^ k[2] ^ k[3] ^ k[4] ^ k[5] ^ k[6] ^ k[7]) % fp;
 		
 						k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
 						A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
