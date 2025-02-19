@@ -167,8 +167,7 @@ Due to the use of a galois field. The total number of combinations per 256-bit k
 So the difference $\Delta$ is a somewhat large integer. The number of combinations with a galois field is lower than without a galois field ($b < a$). This isn't a big concern as their difference measured exponentially is only around $2^{\log_2\Delta} \approx 2^{229}$ which means that their difference is around $2^{229}$, this is a negligible difference as the difference between $2^{230}$ and $2^{229}$ is also huge. \\
 $\therefore $ \texttt{Using a galois field doesn't negatively impact number of cominations in terms of brute force as the total number of combinations when using a galois field vs not is a negligible amount}
 
-\subsubsection {Birthday Problem}
-
+\subsubsection {Birthday Problem} \label{birthday_problem}
 
 The birthday problem is a paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
 \\
@@ -199,22 +198,6 @@ In the context of this encryption algorithm, it might be a concern, as number of
 \]
 % seperate equations to 2 segments otherwise previous page is empty
 \thispagestyle{empty} % page number is confusing in the equation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 \small
 \[
@@ -277,16 +260,126 @@ $e = 1 \times 10^{-200}$ \\
 for $b=4294967291^8$,  we get $k_1 = 400651867432320527534628274526034254879$ for the root. \\
 And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ for the root \\
 So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
-Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of Galois fields to increasing avalanche effect.
+Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of Galois fields to increase avalanche effect.
 
+% TODO: TEST BRUTE FORCING IT TO GET HIGHEST POSSIBLE COLLISION CHANCES FROM ANY 32-BYTES
 
 \subsubsection {Denial of Service (DoS)}
+
+Most denial of service attacks related to encryption algorithms are based on brute-force methods. To see if this algorithm has a potential collision attack: \\
+$\texttt{transform(} key_1 \texttt{)} = \texttt{transform(} key_2 \texttt{)}$ \\
+\\
+For example: $x + y = 16$ \\
+
+$ x,y \in \mathbb{Z}, 0 \leq x,y < 256$ \\
+there are 17-combinations for x to satisfy this equation, and simultaniously, there are 17 combinations for y to satisfy the equation, so a total of $17$ combinations.
+\\
+But for $x + y = z$, there are $257$ combinations to try. if the result of an arithmetic operation is known, there may be ways to get the same end-result with less combinations to brute-force. Knowing the value of $z$ reduced the number of combinations by $15$ times.
+\\
+This means that the calculation done on \ref{birthday_problem} for the birthday problem would be irrelevant because there is a better algorithm than random brute forcing (to find collisions for \texttt{transform(key)})
+
+$\therefore$ if there is an operation that can provide the same output for a wide range of inputs, there can be a collision attack. Collision attacks can be used to derive the same transformed key using a different input key and decrypt the plaintext without actually having the original key.
+\\
+In the context of this encryption algorithm (using addition as an example): keysize is 32-bytes
+\\
+so for byte n: $x_n + y_n = z_n$\\
+$ x,y,z \in \mathbb{Z}, 0 \leq x,y,z < 256$\\
+\\
+Number of combinations can be represented by 
+\[
+\\		\prod_{n=0}^{32-1}(z_n+1)
+\]
+\small so the number of combinations would be between a minimum of 32 combinations ($z_n=0$ for all 32-bytes) up to a maximum of $2^{256}$ combinations ($z_n = 255$ for all 32-bytes) which can be brute forced for small $z_n$. So a simple addition is prone to collision attacks for $x_n+y_n=z_n$, where $x,y$ are unknown. The use of galois field makes $z_n$ even smaller. So even less combinations. Solution is to use operations that cannot be represented differently. e.g.
+\[
+\\\sum_{i=0}^{z_n} x_n + y_n = z_n \Longrightarrow
+\sum_{i=0}^{z_n} (z_n-i)+(i) = z_n
+\]
+
+solves for all possible $x, y$ values for each $z_n$. An addition operation can be represented differently to solve for 2 unknowns, while a good mix of ARX operations cannot be reverse engineered. This is also the reason why pre-manipulating the key (using addition) before \texttt{transform()} isn't a good option. Since it provides a very obvious collision attack which makes it invalid even though pre-manipulation will provide a good avalanche effect for every single byte of the key (if 1-bit of any byte is changed, ciphertext changes completely).
+
+So the final solution is to calculate sum of each 32-bit segment of the key (represented by $k_i$) in order to interlink them to make sure that every byte of the key offers the same avalanche effect:
+\[
+\\\sum_{i=0}^{7} k_i
+\]
+
+To test if this offers enough collision resistance: think of this problem as an example:
+\\
+\textbf{1.} $x+y=16 \texttt{\hspace{2.3cm} offers n=17 combinations}$\\
+\textbf{2.} $x+y+z=16 \texttt{\hspace{1.7cm} offers n=153 combinations (determined experimentally)}$\\
+\textbf{3.} $x+y+z+v=16 \texttt{\hspace{1cm} offers n=969 combinations (determined experimentally)}$\\
+$x,y,z,v \in \mathbb{Z}, 0 \leq x,y,z,v < 256$\\
+
+So there has to be an equation or algorithm to summarize the relationship between number of variables ($l$) and the sum of the addition operation ($16$);
+
+Knowing that equation \textbf{1.} is the simplest equation and it offers 17 combinations. Then if the rest of the equations are represented in 2-variable fashion. we can find number of combinations $n$:
+
+For equation \textbf{2.}: There are 3 ways to represent as 2-variable equation
+\begin{center}
+\[
+\hspace*{\fill} x + y \hspace{1cm} x + z \hspace{1cm} y + z \hspace*{\fill}
+\]
+\end{center}
+
+For equation \textbf{3.}: There are 6 ways to represent as 2-variable equation
+\begin{center}
+\[
+\hspace*{\fill} x + y \hspace{1cm} x + z \hspace{1cm} x + v \hspace*{\fill}
+\]
+\end{center}
+\begin{center}
+\[
+\hspace*{\fill} y + z \hspace{1cm} y + v \hspace{1cm} z + v \hspace*{\fill}
+\]
+\end{center}
+
+The number of ways a multi-variable equation can be represented as a 2 variable equation can be summarized by the following:
+
+\[
+\\ \sum_{i=1}^{l-1} i
+\]
+
+Using some number crunching and logic, I found that there is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
+
+\[
+		\\ n_l \propto \frac{\displaystyle \sum_{i=1}^{l-1}}{\displaystyle \sum_{i=1}^{l-2}}
+\]
+
+Using more number crunching: I found the following recursive formula that finds the number of combinations that satisfies x+y+\dots = 16:
+
+\[
+		\\ n_l = (n_{l-1} \frac{\displaystyle \sum_{i=1}^{x}}{\displaystyle \sum_{i=1}^{x-1}} +17) \times 3 - 17 \times 3( (x+1) \mod 2 )
+\]
+where $x = l-1$ \quad and x should be incremented until correct answer is reached for $l \geq 6$ and $n_{l-1}$ is previous number of combinations.
+This formula doesn't translate to cases where the 2-variable equation doesn't have 17 combinations.
+
+Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following equation that satisfies all cases:
+
+\[
+\\ x \prod_{i=1}^{l-1} \frac{(x+i)}{1+i}
+\]
+\\
+where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
+
+Using this equation for the context of this encryption algorithm:
+
+Recall:
+\[
+\\ c = \sum_{i=1}^{l-1} i
+\]
+where $l=8$ since 8 32-bit segments to the 256-bit key
+then, $x = c + 1$
+
+the total number of combinations according to the equation is between $1$ and \\$2871827628774669857283799072180574717903946432793745331030345747716374528 \approx 2.9 \times 10^{72}$
+
+Which isn't possible to brute force.
 
 \subsection{Reverse Engineering the Transformation}
 
 \subsection{Collision-Resistance}
 
 \subsubsection{Different Permutation Matrices}
+
+tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.
 
 \subsubsection{Number of Rounds}
 
@@ -299,10 +392,6 @@ Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big 
 
 
 \subsection{Diffusion - Permutation}
-
-
-\subsubsection{Vector Permutation}
-
 
 \subsubsection{Dynamic vs. Static}
 

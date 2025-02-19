@@ -144,50 +144,45 @@ class FullTimePad
 			}
 		
 			// iterations for the main transformation loop
-			void transformation(uint8_t *key) // length of k is 8
+			void transformation(uint8_t *key)
 			{
 				// vector used for dynamic permutation, dynamically permutated key placeholder
 				// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
 				uint8_t p[keysize];
 		
 				// 32-bit array ints for key for arithmetic ARX manipulations
-				uint32_t *k = reinterpret_cast<uint32_t*>(key);
+				uint32_t *k = reinterpret_cast<uint32_t*>(key); // length of k is 8
 		
 				// need pre manipulation so that all bytes increase avalanche effect with the same magnitude
 				// if all bytes are mixed in to each other by addition
-				// TODO: add key reuse logic here
-				for(int i=0;i<8;i++) {
-					for(int j=i+1;j<8+i+1;j++) { // don't add 2 k[i] indexes that are equal to each other.
-						int ind = j%8; // to make sure only unieqe indexes are added since (ki + ki)/2 = ki, this pattern should be avoided
-						k[i] = ((uint64_t)k[i] + lotr(k[ind], r[ind%5])) % fp; // TODO: make 64 value uint32_t constant array to add
-					}
-				}
-				// for(int i=0;i<8;i++) std::cout << std::setfill('0') << std::setw(8) << std::hex << k[i] << " ";
-			
 		
 				for(uint8_t i=0;i<16;i++) {
-					uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
-					uint8_t i1mod = index % 8;
-					uint8_t i2mod = (index+1) % 8;
-					uint8_t i3mod = (index+2) % 8;
-					uint8_t i4mod = (index+3) % 8;
+					for(uint8_t j=0;j<=0;j++) {
+						uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
+						uint8_t i1mod = index % 8;
+						uint8_t i2mod = (index+1) % 8;
+						uint8_t i3mod = (index+2) % 8;
+						uint8_t i4mod = (index+3) % 8;
 		
-					uint8_t rmod = i % 5; // 5 rotation values
-					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+						uint8_t rmod = i % 5; // 5 rotation values
+						k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
 		
-					A[i2mod] ^= k[i1mod];
+						// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
+						A[i2mod] ^= ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 		
-					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
-					A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+						k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+						A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
 		
-					k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
-					k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
+						k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
+						k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
+					}
+
 		
 					// permutate the bytearray key
 					dynamic_permutation(key, p, i%16);
 				}
 			}
-		
+
 	public:
 		
 			const constexpr static uint8_t keysize = 32;

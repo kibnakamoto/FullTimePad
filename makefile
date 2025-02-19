@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
 EXEC = fulltimepad 
-OBJS = fulltimepad.o
-PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux
+OBJS = main.o fulltimepad.o
+PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux FullTimePad.log FullTimePad.out
 
 all: ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o ${EXEC}
@@ -23,7 +23,7 @@ pdf:
 	pdflatex --shell-escape FullTimePad.tex
 	evince FullTimePad.pdf
 
-pdf_clean:
+clean_pdf:
 	rm -rf ${PDF_DOC_FILES}
 
 
