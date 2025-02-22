@@ -169,7 +169,7 @@ class FullTimePad
 			static inline uint32_t rotr(uint32_t x, uint8_t shift);
 		
 			// bitwise left rotation
-			static inline uint32_t lotr(uint32_t x, uint8_t shift);
+			static inline uint32_t rotl(uint32_t x, uint8_t shift);
 		
 			// initial key, before any permutation
 			uint8_t *init_key;
