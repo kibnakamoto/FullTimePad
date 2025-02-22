@@ -5,6 +5,7 @@
 fulltimepad
 test/best_permutation
 test/significant_perm_byte
+test/reverse
 
 # Latex Files
 FullTimePad.log
