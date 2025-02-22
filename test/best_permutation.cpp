@@ -124,7 +124,7 @@ class FullTimePad
 			}
 		
 			// bitwise left rotation
-			inline uint32_t lotr(uint32_t x, uint8_t shift)
+			inline uint32_t rotl(uint32_t x, uint8_t shift)
 			{
 				return (x << shift) | (x >> ((sizeof(x)<<3)-shift));
 			}
@@ -160,19 +160,25 @@ class FullTimePad
 					uint8_t i2mod = (index+1) % 8;
 					uint8_t i3mod = (index+2) % 8;
 					uint8_t i4mod = (index+3) % 8;
+					uint8_t imod8 = i % 8;
+					uint8_t imod9 = (i+1) % 8;
+	
 					uint8_t rmod = i % 5; // 5 rotation values
-					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[i1mod]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
-		
-					A[i2mod] ^= k[i1mod];
-		
-					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[i2mod]) % fp) + lotr(k[i2mod], r[rmod])  ) % fp; // TODO: uint64_t conversion after testing is over, this is to make sure there is no unwanted overflow
-					A[i1mod] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
-		
-					k[i3mod] =( (uint64_t)(A[i1mod] ^ k[i3mod]) + (A[i2mod] ^ k[i3mod]) ) % fp;
-					k[i4mod] =( (uint64_t)(A[i1mod] ^ k[i4mod])  + (A[i2mod] ^ k[i4mod]) ) % fp;
+					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+	
+					uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+
+					A[imod9] ^= sum;
+	
+					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+					
+					A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+	
+					k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
+					k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
 		
 					// permutate the bytearray key
-					dynamic_permutation(key, p, i%16, best_n_V);
+					dynamic_permutation(key, p, i, best_n_V);
 				}
 		
 			}
@@ -209,27 +215,29 @@ double find_collision_rate_random_key(uint8_t **best_n_V)
 	memcpy(oldkey, tmp, 32);
 	for(int k=1;k<256;k++) { // calculate average collision rate
 		memcpy(initial_key, tmp, 32);
+		memcpy(oldkey, tmp, 32);
 		FullTimePad fulltimepad1 = FullTimePad();
 		FullTimePad fulltimepad2 = FullTimePad();
 		initial_key[0] = k;
+		oldkey[0] = k-1;
 
 		fulltimepad1.hash(initial_key, best_n_V);
 		fulltimepad2.hash(oldkey, best_n_V);
+		double temp_col = 0;
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
-				collision_rate++;
+				temp_col++;
 			}
 		}
 		
 		// print the percentage changes when one bit of data is changed in key
-		double col = collision_rate/(32*k)*100;
+		double col = temp_col/32*100;
+		collision_rate += temp_col;
 		if(col < 10)
 			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%\t";
 		else 
 			std::cout << std::dec << std::fixed << std::setprecision(4) << col << "%\t";
 		if(k%10 == 0) std::cout << std::endl;
-		memcpy(oldkey, tmp, 32);
-		oldkey[0] = k;
 	}
 	collision_rate/=32*255;
 	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";

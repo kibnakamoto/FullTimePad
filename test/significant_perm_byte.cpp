@@ -157,33 +157,30 @@ class FullTimePad
 				// if all bytes are mixed in to each other by addition
 		
 				for(uint8_t i=0;i<16;i++) {
-					for(uint8_t j=0;j<=0;j++) {
-						uint8_t index = i<<2; // TODO: FIX INDEXING ON ALL VERSIONS. IMPORTANT VULNERABILITY: SOME BYTES BARELY AFFECT AVALANCHE EFFECT. FIX IT
-						uint8_t i1mod = index % 8;
-						uint8_t i2mod = (index+1) % 8;
-						uint8_t i3mod = (index+2) % 8;
-						uint8_t i4mod = (index+3) % 8;
-						uint8_t imod8 = i % 8;
-						uint8_t imod9 = (i+1) % 8;
-		
-						uint8_t rmod = i % 5; // 5 rotation values
-						k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
-		
-						// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
-						uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+					uint8_t index = i<<2;
+					uint8_t i1mod = index % 8;
+					uint8_t i2mod = (index+1) % 8;
+					uint8_t i3mod = (index+2) % 8;
+					uint8_t i4mod = (index+3) % 8;
+					uint8_t imod8 = i % 8;
+					uint8_t imod9 = (i+1) % 8;
+	
+					uint8_t rmod = i % 5; // 5 rotation values
+					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+	
+					uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 
-						A[imod9] ^= sum;
-		
-						k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
-						
-						A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
-		
-						k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
-						k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
-					}
+					A[imod9] ^= sum;
+	
+					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+					
+					A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+	
+					k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
+					k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
 		
 					// permutate the bytearray key
-					dynamic_permutation(key, p, i%16);
+					dynamic_permutation(key, p, i);
 				}
 			}
 
@@ -281,6 +278,7 @@ double find_collision_rate(uint32_t n)
 
 
 // find if a particular byte affects collision rate more or less
+// print the average  collision rates to test the avalanche effect. Higher collision means lower avalanche effect.
 void check_bytes_permutation(CollisionCalculation collision_calc)
 {
 	double total = 0;
@@ -289,16 +287,23 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 		double rate;
 		if(collision_calc == random_key) {
 			rate = find_collision_rate_random_key(i);
+
+			std::cout << " avr =  ";
+			if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
+				std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
+			else
+				std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
+			std::cout << std::endl << std::endl;
 		} else {
 			rate = find_collision_rate(i);
+
+			if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
+				std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
+			else
+				std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
+			if((i+1)%8 == 0) std::cout << std::endl;
 		}
 		
-		std::cout << " avr =  ";
-		if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
-			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
-		else
-			std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
-		std::cout << std::endl << std::endl;
 		total+=rate;
 	}
 	total/=32;
