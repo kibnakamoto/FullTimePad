@@ -29,9 +29,6 @@
 #include <bit>
 #include <array>
 
-// print best permutation matrix after signal interrupt
-static bool doprint = false;
-
 // how the collision calculation should be performed
 enum CollisionCalculation {
 	incrementing_key,
@@ -170,9 +167,7 @@ class FullTimePad
 						k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
 		
 						// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
-						uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
-
-						A[imod9] ^= sum;
+						A[imod9] ^= ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 		
 						k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
 						
@@ -183,13 +178,56 @@ class FullTimePad
 					}
 		
 					// permutate the bytearray key
-					dynamic_permutation(key, p, i%16);
+					dynamic_permutation(key, p, i);
 				}
 			}
 
 	public:
 		
 			const constexpr static uint8_t keysize = 32;
+
+			// inverse the key transformation
+			void inv_transformation(uint8_t *transformed_k)
+			{
+				// vector used for dynamic permutation, dynamically permutated key placeholder
+				// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
+				uint8_t p[keysize];
+		
+				// 32-bit array ints for key for arithmetic ARX manipulations
+				uint32_t *k = reinterpret_cast<uint32_t*>(transformed_k); // length of k is 8
+		
+				// need pre manipulation so that all bytes increase avalanche effect with the same magnitude
+				// if all bytes are mixed in to each other by addition
+		
+				for(int8_t i=15;i>=0;i--) {
+					uint8_t index = i<<2;
+					uint8_t i1mod = index % 8;
+					uint8_t i2mod = (index+1) % 8;
+					uint8_t i3mod = (index+2) % 8;
+					uint8_t i4mod = (index+3) % 8;
+					uint8_t imod8 = i % 8;
+					uint8_t imod9 = (i+1) % 8;
+					uint8_t rmod = i % 5; // 5 rotation values
+		
+					// permutate the bytearray key
+					dynamic_permutation(transformed_k, p, i);
+
+					k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) - (A[imod9] ^ k[i3mod]) ) % fp;
+		
+					k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) - (A[imod9] ^ k[i4mod]) ) % fp;
+					
+					A[imod8] ^= ((uint64_t)k[i2mod] + rotl(k[i1mod], r[(i+1)%5])) % fp;
+		
+					k[i2mod] = ( ( ((uint64_t)k[i2mod] - A[imod9]) % fp) - rotr(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+		
+					// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
+					A[imod9] ^= ((uint64_t)k[0] - k[1] - k[2] - k[3] - k[4] - k[5] - k[6] - k[7]) % fp;
+		
+					k[i1mod] = ( ( ((uint64_t)k[i1mod] - A[imod8]) % fp) - rotl(k[i1mod], r[rmod])  ) % fp;
+				}
+				
+			}
+
 
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
 			void hash(uint8_t *key)
@@ -221,49 +259,9 @@ double find_collision_rate_random_key(uint32_t n)
 	memcpy(oldkey, tmp, 32);
 	for(int k=1;k<256;k++) { // calculate average collision rate
 		memcpy(initial_key, tmp, 32);
-		memcpy(oldkey, tmp, 32);
 		FullTimePad fulltimepad1 = FullTimePad();
 		FullTimePad fulltimepad2 = FullTimePad();
 		initial_key[n] = k;
-		oldkey[n] = k-1;
-
-		fulltimepad1.hash(initial_key);
-		fulltimepad2.hash(oldkey);
-		double temp_rate = 0;
-		for(int i=0;i<32;i++) {
-			if(initial_key[i] == oldkey[i]) {
-				temp_rate++;
-			}
-		}
-
-		// print the percentage changes when one bit of data is changed in key
-		double col = temp_rate/32*100;
-		collision_rate += temp_rate;
-
-		if(col < 10)
-			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%";
-		else 
-			std::cout << std::dec << std::fixed << std::setprecision(4) << col << "%";
-		std::cout << ": n=" << n << "\t";
-		if(k%10 == 0) std::cout << std::endl;
-	}
-	collision_rate/=32*255;
-	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
-	//std::cout << std::endl;
-	return collision_rate*100;
-}
-
-// calculate the collision rate with incrementing integers key
-double find_collision_rate(uint32_t n)
-{
-	double collision_rate = 0;
-	for(int k=1;k<256;k++) {
-		uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-		uint8_t oldkey[]      = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-		FullTimePad fulltimepad1 = FullTimePad();
-		FullTimePad fulltimepad2 = FullTimePad();
-		initial_key[n] = k;
-		oldkey[n] = k-1;
 
 		fulltimepad1.hash(initial_key);
 		fulltimepad2.hash(oldkey);
@@ -272,60 +270,59 @@ double find_collision_rate(uint32_t n)
 				collision_rate++;
 			}
 		}
+
+		// print the percentage changes when one bit of data is changed in key
+		double col = collision_rate/(32*k)*100;
+		if(col < 10)
+			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%";
+		else 
+			std::cout << std::dec << std::fixed << std::setprecision(4) << col << "%";
+		std::cout << ": n=" << n << "\t";
+		if(k%10 == 0) std::cout << std::endl;
+		memcpy(oldkey, tmp, 32);
+		oldkey[n] = k;
 	}
-	collision_rate/=32*255; // total collision rate
+	collision_rate/=32*255;
 	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
 	//std::cout << std::endl;
 	return collision_rate*100;
 }
 
 
-// find if a particular byte affects collision rate more or less
-void check_bytes_permutation(CollisionCalculation collision_calc)
+int main()
 {
-	double total = 0;
-	for(int i=0;i<32;i++) {
-		// get collision rate at i'th index of key
-		double rate;
-		if(collision_calc == random_key) {
-			rate = find_collision_rate_random_key(i);
-		} else {
-			rate = find_collision_rate(i);
-		}
-		
-		std::cout << " avr =  ";
-		if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
-			std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
-		else
-			std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
-		std::cout << std::endl << std::endl;
-		total+=rate;
-	}
-	total/=32;
-	std::cout << std::endl << "total: " << total << "%";
-}
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-void signal_handler(int sig) {
-	doprint = true;
-}
-
-int main(int argc, char *argv[])
-{
-	CollisionCalculation collision_calc;
-
-	// parse user input to determine how the collision calculation should be performed
-	if(argc > 1 && strcmp(argv[1], "-r") == 0) {
-		collision_calc = random_key;
-	} else {
-		collision_calc = incrementing_key;
+	// if two plaintexts are the same (or are known), and the ciphertexts are known or if one plaintext and ciphertext are known. then you can find the hash(key)
+	// Are there any patterns between hash(key1) xor hash(key2) where key1 and key2 have 1-bit difference?
+	// And most importantly, is it possible to find the key using hash(key). Make inv_hash to test it
+	FullTimePad fulltimepad = FullTimePad();
+	//uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+	uint8_t key[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
+	uint32_t A[8] = {
+		0x184f03e9, 
+		0x216c46df,
+		0x119f904f,
+		0x64997dfd,
+		0x2a5497bd,
+		0x3918fa83,
+		0xaf820335,
+		0x85096c2e,
+	};
+	for(int i=0;i<8;i++) {
+		key[i*4+0] = ( A[i] >> 24 ) & 0xff;
+		key[i*4+1] = ( A[i] >> 16 ) & 0xff;
+		key[i*4+2] = ( A[i] >> 8 ) & 0xff;
+		key[i*4+3] = ( A[i] >> 0 ) & 0xff;
 	}
 
-	// catch signal interrupt
-	signal(SIGINT, signal_handler);
-	check_bytes_permutation(collision_calc);
+	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
+	std::cout << std::endl;
 
+	fulltimepad.hash(key);
+
+	// inverse the key:
+	fulltimepad.inv_transformation(key);
+
+	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
 	std::cout << std::endl;
 	return 0;
 }

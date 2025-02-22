@@ -264,7 +264,7 @@ Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big 
 
 % TODO: TEST BRUTE FORCING IT TO GET HIGHEST POSSIBLE COLLISION CHANCES FROM ANY 32-BYTES
 
-\subsubsection {Denial of Service (DoS)}
+\subsubsection {Collision Attack}
 
 Most denial of service attacks related to encryption algorithms are based on brute-force methods. To see if this algorithm has a potential collision attack: \\
 $\texttt{transform(} key_1 \texttt{)} = \texttt{transform(} key_2 \texttt{)}$ \\
@@ -373,11 +373,11 @@ the total number of combinations according to the equation is between $1$ and \\
 
 Which isn't possible to brute force provided key is random and not chosen to be a small value.
 
-But according to testing, summation rarely provide low avalanche effect for certain input keys. But using xor operator offers the same avalanche effect for all keys and it offers $2^{256} \approx 1.2 \times 10^{77}$ (more) combinations.
-
 \subsection{Reverse Engineering the Transformation}
 
 \subsection{Collision-Resistance}
+
+Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as sha256. This is a good sign that there is a good collision resistance, but the problem is that the numbers aren't as consistent. This isn't such a big deal since it's still a very small difference, it might cause some statistical attacks. 
 
 \subsubsection{Different Permutation Matrices}
 
