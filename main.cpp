@@ -12,6 +12,9 @@ int main()
 		uint8_t oldkey[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 		initial_key[0] = m;
 		oldkey[0] = m-1;
+		FullTimePad fulltimepad1 = FullTimePad(oldkey);
+		fulltimepad1.hash(oldkey);
+
 		FullTimePad fulltimepad = FullTimePad(initial_key);
 		fulltimepad.hash(initial_key);
 		if(m != 0) {

@@ -377,7 +377,10 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 \subsection{Collision-Resistance}
 
-Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as sha256. This is a good sign that there is a good collision resistance, but the problem is that the numbers aren't as consistent. This isn't such a big deal since it's still a very small difference, it might cause some statistical attacks. 
+Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as the numbers in sha256. and don't have any particular patterns as proven in \texttt{test/significant\_perm\_byte.cpp}. This test file shows the collision rate as any byte of the 32-byte key is modified by 1-bit.
+\\\\
+$\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
+ \\ where \texttt{\#collisions} is the number of bytes where $\texttt{previous key}_i$ and $\texttt{modified key}_i$ are equal
 
 \subsubsection{Different Permutation Matrices}
 
@@ -385,7 +388,27 @@ tried permutation matrices that followed logic or randomness. But they didn't of
 
 \subsubsection{Number of Rounds}
 
+Number of rounds is determined by the number of rows in the permutation matrix. as using a permutation twice will cancel out.
+
 \subsubsection{Constant - $F_p$ - Prime Galois Field Size} % Fp and r
+
+every addition operation is done in a prime galois field as every $k_i \in \mathbb{F_p}$ where $k_i$ is the i'th index of the 32-bit segmented key $p = \texttt{0xfffffffb}$. p is the largest unsigned 32-bit prime number. It was evaluated using Fermat's Little Theorem:\\
+\\
+\begin{algorithm}
+\caption{Find the largest 32-bit prime number pseudo-code}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Output:} Biggest unsigned 32-bit prime number ($p$)
+\State \textbf{Begin}
+\State $p = 0$
+\For{$i = \texttt{0xffffffff}$ to $0$}
+		\If {$2^{i-1} \mod i = 1$}
+		\State $p = i$
+		\State break
+	\EndIf
+\EndFor
+\State \textbf{Return} $p$
+\end{algorithmic}
+\end{algorithm}
 
 \subsubsection{Constant - $r$ - Dynamic Rotation Constant} % Fp and r
 
@@ -394,8 +417,6 @@ tried permutation matrices that followed logic or randomness. But they didn't of
 
 
 \subsection{Diffusion - Permutation}
-
-\subsubsection{Dynamic vs. Static}
 
 \subsection{Dynamic Matrix Permutation}
 

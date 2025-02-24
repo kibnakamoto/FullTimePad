@@ -46,19 +46,6 @@ inline uint32_t FullTimePad::rotl(uint32_t x, uint8_t shift)
 	return (x << shift) | (x >> ((sizeof(x)<<3)-shift));
 }
 
-// initial static permutation of the key
-// key: initial key before any permutations
-void FullTimePad::static_permutation(uint8_t *key)
-{
-	uint8_t temp;
-	
-	for(int i=0;i<keysize>>1;i++) {
-		temp = key[i];
-		key[i] = key[V[i]];
-		key[V[i]] = temp;
-	}
-}
-
 // dynamically permutate the key during iteration
 // key: permutated 32-byte key
 // p: dynamically re-purmutated key
@@ -74,6 +61,18 @@ void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 	memcpy(key, p, keysize); // copy the repurmutated values
 }
 
+// convert uint8_t *key into uint32_t *k in big endian
+static uint32_t *endian_8_to_32_arr(uint8_t *key)
+{
+	if constexpr(!is_big_endian()) {
+	    for (uint8_t i=0;i<FullTimePad::keysize;i+=4) {
+       		std::swap(key[i], key[i+3]);
+       		std::swap(key[i+1], key[i+2]);
+    	}
+	}
+		return reinterpret_cast<uint32_t*>(key);
+}
+
 // iterations for the main transformation loop
 void FullTimePad::transformation(uint8_t *key) // length of k is 8
 {
@@ -82,7 +81,8 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 	uint8_t p[keysize];
 
 	// 32-bit array ints for key for arithmetic ARX manipulations
-	uint32_t *k = reinterpret_cast<uint32_t*>(key);
+	uint32_t *k = endian_8_to_32_arr(key);
+
 	for(uint8_t i=0;i<16;i++) {
 		uint8_t index = i<<2;
 		uint8_t i1mod = index % 8;
@@ -126,13 +126,15 @@ FullTimePad::FullTimePad(uint8_t *initial_key)
 }
 
 // key: 256-bit (32-byte) key, should be allocated with length keysize
+// key should be empty as it's only a place holder for the value in init_key
 void FullTimePad::hash(uint8_t *key)
 {
+	// TODO: use the encryption_index here
+	
 	// make copy of key to transform and to preserve init_key
 	memcpy(key, init_key, keysize);
 
 	// permutate the key based on the V array
-	//static_permutation(key);
 
 	// transformation iterations
 	transformation(key);

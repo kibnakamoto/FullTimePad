@@ -4,10 +4,18 @@ EXEC = fulltimepad
 OBJS = main.o fulltimepad.o
 PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux FullTimePad.log FullTimePad.out
 
-all: ${OBJS}
+all: ${EXEC}
+
+${EXEC}: ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o ${EXEC}
 
-debug: ${OBJS}
+%.o: %.cpp %.h
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+#all: ${OBJS} %.h %.cpp
+#	${CXX} ${CXXFLAGS} ${OBJS} -o ${EXEC}
+
+debug: ${OBJS} fulltimepad.h fulltimepad.cpp
 	${CXX} ${CXXFLAGS} -g ${OBJS} -o ${EXEC}
 
 test: ${OBJS}
