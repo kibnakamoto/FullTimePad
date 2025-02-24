@@ -26,7 +26,6 @@ for k in range(4):
 print("LITTLE ENDIAN: ")
 # a is the result when the big endian permutation matrix is applied to vector with values 0-31
 a = [
- [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28],
 [0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31],
 [16, 1, 17, 0, 18, 3, 19, 2, 20, 5, 21, 4, 22, 7, 23, 6, 24, 9, 25, 8, 26, 11, 27, 10, 28, 13, 29, 12, 30, 15, 31, 14],
 [20, 22, 16, 18, 28, 30, 24, 26, 5, 7, 1, 3, 13, 15, 9, 11, 21, 23, 17, 19, 29, 31, 25, 27, 4, 6, 0, 2, 12, 14, 8, 10],
@@ -45,16 +44,30 @@ a = [
 [26, 11, 19, 2, 20, 5, 29, 12, 28, 13, 21, 4, 18, 3, 27, 10, 6, 23, 15, 30, 8, 25, 1, 16, 0, 17, 9, 24, 14, 31, 7, 22],
 ]
 
+# convert results to little endian (reverse order of bytes in 32-bit segment)
+for i in range(16):
+    perm = []
+    for j in range(0, 32, 4):
+        # Slice the 4 bytes and reverse their order (little-endian conversion)
+        perm.extend(a[i][j:j+4][::-1])
+    a[i] = perm[:]
+
 # Get values of vector before permutation applied
 # Mi,j = Vi-1.index(Vi,j) where M is permutation matrix and Vi is the vector a[i]
 # Find Mi,j
 
-for i in range(1,17):
+for i in range(16):
     # Initialize the permutation vector
     p = []
+
+    if i==0: # first indexing
+        prev = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28]
+    else:
+        prev = a[i-1]
 
     # Iterate over the result array and find the corresponding index in the input array
     for j in range(32):
         # Find the index of elem in the input array
-        p.append(a[i-1].index(a[i][j]))
+        p.append(prev.index(a[i][j]))
     print(p)
+
