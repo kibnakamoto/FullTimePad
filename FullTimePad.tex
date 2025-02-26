@@ -16,6 +16,8 @@
 
 \setcounter{MaxMatrixCols}{32}
 
+\newcommand{\COMMENT}[1]{\State \textcolor[HTML]{003e57}{// #1}}
+
 \geometry{
   left=1in,    % Left margin
   right=1in,   % Right margin
@@ -58,7 +60,7 @@
 
 \begin{abstract}
 		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, eacj 32-bit number is made up of a different byte order.
+		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order.
 
 		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
 		% TODO: how to deal with long messsages
@@ -95,21 +97,36 @@
 		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
 		\textbf{Galois Field}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Finite Field where there are only limited number of numbers. Only prime galois fields ($F_p$) are used where size of the field is denoted by prime number p \\
 		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
+		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
 \end{tabular}
 
 
 
 \subsection{Applications}
 
+This encryption algorithm is fast yet reliable as the avalanche effect is strong and the confusion operations used have proved themselves in cryptography. If the generated key is potentially found due to a side-channel attack or any other method not relating to the specifics of this algorithm, then all plaintexts can be found. However this isn't a pressing issue as all encryption algorithms offer this flaw. In contrast, without this flaw, a new key would have to be generated per plaintext like in One-Time-Pad which is inefficient.
 
 \subsection{Key Generation}
 
-The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Elliptic Cryptography Diffie Hellman (ECDH) protocol with Hash-based Key Derivation Function (HKDF)
+The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Elliptic Cryptography Diffie Hellman (ECDH) protocol with Hash-based Key Derivation Function (HKDF).
 
 \subsection{Prerequisite Mathematics}
 
+\subsubsection{Galois Field Addition}
 
-\subsection{Vector Permutation}
+In a prime galois field, where two variables ($x,y$) are added, $x,y \in \mathbb{F_p}$ where $\mathbb/{F_p}$ denotes the finite field with a prime field size. There are finite number of elements in $F_p$ which means that $x,y < p$. 
+
+The expression:\\
+$x + y = z$\\
+$x,y,z \in \mathbb{F}_7$\\
+
+Implicitly denotes \\
+$x + y = z \pmod 7$\\
+\\
+So all addition operations require modulo p.\\
+In the context of this encryption algorithm, it's used in the tranformation algorithm as one of three operations (\textbf{A}RX). 
+
+\subsubsection{Vector Permutation}
 
 
 \section{Security Vulnerabilities}
@@ -262,8 +279,6 @@ And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ fo
 So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
 Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of Galois fields to increase avalanche effect.
 
-% TODO: TEST BRUTE FORCING IT TO GET HIGHEST POSSIBLE COLLISION CHANCES FROM ANY 32-BYTES
-
 \subsubsection {Collision Attack}
 
 Most denial of service attacks related to encryption algorithms are based on brute-force methods. To see if this algorithm has a potential collision attack: \\
@@ -401,7 +416,7 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 \State \textbf{Begin}
 \State $p = 0$
 \For{$i = \texttt{0xffffffff}$ to $0$}
-		\If {$2^{i-1} \mod i = 1$}
+	\If {$2^{i-1} \mod i = 1$}
 		\State $p = i$
 		\State break
 	\EndIf
@@ -409,19 +424,18 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 \State \textbf{Return} $p$
 \end{algorithmic}
 \end{algorithm}
-
+\\
+\\
+\\
 \subsubsection{Constant - $r$ - Dynamic Rotation Constant} % Fp and r
 
 \section{Hashing}
 
-
-
-\subsection{Diffusion - Permutation}
+The 'hashing' algorithm is used for manipulating the key each time with proper confusion and avalanche effect. The main reason why the key can be reused is due to the algorithm's strong avalanche effect as well as the lack of statistical patterns with collision rates as proven in the unit tests, \texttt{test/significant\_perm\_byte.cpp} which shows if some bytes have more or less collision reasistance.
 
 \subsection{Dynamic Matrix Permutation}
 
-
-% mention python code
+Considering the use of \texttt{reinterpret\_cast} for representing the bytearray (key) as 32-bit segments (for confusion operations), the endiannes of the computer will affect the matrix. the matrix given in this documentation is the big endian version as the algorithm is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. This is in the C++ implementation of \texttt{Full-Time-Pad} and the python Deravation program mentioned below.
 
 \subsubsection{Deravation}
 
@@ -457,7 +471,6 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 \end{algorithm}
 
 Python code is in the test/perm.py
-
  
 \subsubsection{Dynamic Permutation Matrix Values} % include Discovery
 
@@ -489,21 +502,75 @@ Python code is in the test/perm.py
 
 \subsection{Confusion - ARX}
 
+For the confusion aspect of the key transformation algorithm, ARX operations are used.
+
 \subsubsection{A - Modular Addition} % pseudo-code and Explanation
 
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 
 \subsubsection{X - XOR} % pseudo-code and Explanation
 
-\subsection{Key Transformation} % pseudo-code and Explanation - brings it all together
-
 \section {Cipher}
 
 \subsection{Transformation}
 
-\subsection {Avalanche Effect - Plaintext}
+\begin{algorithm}
+\caption{The key transformation operation per encryption}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} 32-byte bytearray key (\texttt{key})
+\State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
+\State \textbf{Begin}
+\COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
+\COMMENT{Vector used for dynamic permutation, dynamically permutated key placeholder with length of keysize.}
+\COMMENT{Use stack memory}
+\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\For{$i=0$ to $16$}
+	\State int index $\gets i \ll 2$
+	\State int i1mod $\gets index \mod 8$
+	\State int i2mod $\gets index+1) \mod 8$
+	\State int i3mod $\gets index+2) \mod 8$
+	\State int i4mod $\gets index+3) \mod 8$
+	\State int imod8 $\gets i \mod 8$
+	\State int imod9 $\gets (i+1) \mod 8$
+	\State int rmod $\gets i \mod 5$ \\
 
-\subsubsection {Encryption Index}
+	\COMMENT{No unwanted overflow, so convert to uint64\_t}
+	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
+
+	%\State \[ \text{uint32\_t sum} \gets  \sum\limits_{j=0}^8 k_j \pmod p \]
+	\State $ \text{uint32\_t sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+
+	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+
+	\State $k_{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
+	\State $A_{imod8} \gets A_{imod8} \oplus \text{(uint64\_t)} k_{i2mod} + k_{i1mod} \ggg r_{(i+1) \mod 5} \pmod p$
+
+	\State $k_{i3mod} \gets \text{(uint64\_t)} A_{imod8} \oplus k_{i3mod} + A_{imod9} \oplus k_{i4mod} \pmod p$
+	\State $k_{i4mod} \gets  \text{(uint64\_t)} A_{imod8} \oplus k_{i4mod} + A_{imod9} \oplus k_{i3mod} \pmod p$ \\
+
+	\COMMENT{Permutate the bytearray key}
+	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+\EndFor
+\State \textbf{Return} $\texttt{key}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{dynamic\_permutation}
+
+\begin{algorithm}
+\caption{The dynamic\_permutation() in the transformation function}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} 32-byte bytearray ($B$), permutation matrix ($V$), iteration index ($i$)
+\State \textbf{Output:} 32-byte permutated bytearray ($B$)
+\State let $P$ be placeholder vector declared with length of 32-bytes
+\For{$j=0$ to $32$}
+		\State $P_j = B_{V_{i_j}}$
+\EndFor
+\State \textbf{Return} $\texttt{P}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection {Encryption Index}
 
 \subsection {Long Plaintexts}
 

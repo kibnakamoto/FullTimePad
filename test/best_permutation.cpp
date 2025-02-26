@@ -139,7 +139,7 @@ class FullTimePad
 			// ni: iteration index
 			void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni, uint8_t **best_n_V)
 			{
-				for(uint32_t i=0;i<keysize;i++) {
+				for(uint8_t i=0;i<keysize;i++) {
 					p[i] = key[best_n_V[ni][i]];
 				}
 				memcpy(key, p, keysize); // copy the repurmutated values

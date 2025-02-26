@@ -55,7 +55,7 @@ void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 {
 	constexpr std::array<std::array<uint8_t, 32>, 16> n_V = get_n_V();
 
-	for(uint32_t i=0;i<keysize;i++) {
+	for(uint8_t i=0;i<keysize;i++) {
 		p[i] = key[n_V[ni][i]];
 	}
 	memcpy(key, p, keysize); // copy the repurmutated values
