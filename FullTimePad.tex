@@ -11,6 +11,7 @@
 \usepackage{algpseudocode}  % Correctly load this for pseudocode
 \usepackage{tikz} % drawing trailing lines in pseudo code
 \usepackage[makeroom]{cancel}
+\usepackage{float} % so that algorithms stay in correct section
 
 \setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
 
@@ -128,6 +129,34 @@ In the context of this encryption algorithm, it's used in the tranformation algo
 
 \subsubsection{Vector Permutation}
 
+Permutating a vector refers to transposing the elements in a vector. It is a reversible operation.
+For example, if I have the vector: $V$ \\
+\[
+V = 
+\begin{pmatrix}
+	0 & 1 & 2 & 3
+\end{pmatrix}
+\]
+and have the permutation vector $P$: \\
+
+\[
+P = 
+\begin{pmatrix}
+	3 & 2 & 1 & 0
+\end{pmatrix}
+\]
+
+then the resulting matrix would be 
+
+\[
+V' = 
+\begin{pmatrix}
+	3 & 2 & 1 & 0
+\end{pmatrix}
+\]
+
+If we look at $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic\_permutation section (\ref{dynamic_permutation}).
+. The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address, if the 
 
 \section{Security Vulnerabilities}
 \setlength{\mathindent}{3pt} % No indentation for equations
@@ -409,7 +438,7 @@ Number of rounds is determined by the number of rows in the permutation matrix. 
 
 every addition operation is done in a prime galois field as every $k_i \in \mathbb{F_p}$ where $k_i$ is the i'th index of the 32-bit segmented key $p = \texttt{0xfffffffb}$. p is the largest unsigned 32-bit prime number. It was evaluated using Fermat's Little Theorem:\\
 \\
-\begin{algorithm}
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{Find the largest 32-bit prime number pseudo-code}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Output:} Biggest unsigned 32-bit prime number ($p$)
@@ -424,10 +453,17 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 \State \textbf{Return} $p$
 \end{algorithmic}
 \end{algorithm}
-\\
-\\
-\\
+
 \subsubsection{Constant - $r$ - Dynamic Rotation Constant} % Fp and r
+
+Cicadas only surface once every 17 years. Assuming that their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
+let x be the time interval for when the cicadas surface\\
+let t be the time interval for when the predetors surface\\
+We can conclude:\\
+$GCD(x,y) = 1$, then they meet up every $x \times y$ years. \\
+Whereas if $GCD(x,y) \neq 1$, then they meet up every $x$ years (assuming $x > y$). \\
+\\
+Bitwise rotation operation should also be done with either a prime number or a number where $GCD(x,y) = 1$ to maximize the collision resistance. \\
 
 \section{Hashing}
 
@@ -439,7 +475,7 @@ Considering the use of \texttt{reinterpret\_cast} for representing the bytearray
 
 \subsubsection{Deravation}
 
-\begin{algorithm}
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{Dynamic Permutation Matrix Deravation Pseudo-code}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} an array of incrementing numbers (0-31) $A$ 
@@ -514,7 +550,7 @@ For the confusion aspect of the key transformation algorithm, ARX operations are
 
 \subsection{Transformation}
 
-\begin{algorithm}
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} 32-byte bytearray key (\texttt{key})
@@ -555,9 +591,9 @@ For the confusion aspect of the key transformation algorithm, ARX operations are
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{dynamic\_permutation}
+\subsection{dynamic\_permutation} \label{dynamic_permutation}
 
-\begin{algorithm}
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The dynamic\_permutation() in the transformation function}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} 32-byte bytearray ($B$), permutation matrix ($V$), iteration index ($i$)
