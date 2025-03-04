@@ -12,6 +12,7 @@
 \usepackage{tikz} % drawing trailing lines in pseudo code
 \usepackage[makeroom]{cancel}
 \usepackage{float} % so that algorithms stay in correct section
+\usepackage{pgfplots} % plot graph
 
 \setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
 
@@ -65,7 +66,6 @@
 
 		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
 		% TODO: how to deal with long messsages
-		% TODO: This paragraph is for introduction, abstract should be talking about what's in the document
 
 \end{abstract}
 
@@ -430,8 +430,62 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 % TODO: cite:  https://www.iacr.org/archive/crypto2004/31520306/multicollisions.pdf
 
-This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}.
+This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
 
+\subsection{Related Key Attack}
+
+Related key attacks isn't possible considering that it requires that \texttt{transform($k_1$)} is similiar to \texttt{transform($k_2$)} where $k_1$ and $k_2$ have a predictible difference (incremented by encryption index). But this is only under the assumption that the \texttt{transform} function is an irreversible hashing algorithm.
+
+\subsection{Time Based Attacks}
+
+% TODO: FINISH BENCHMARK TESTS AND TEST IF LARGE NUMBER KEYS ARE CALCULATED AT SAME SPEED AS SMALL NUMBER KEYS (E.G. 32 ZEROS).
+
+% TODO: side channel attacks? Why not possible in fulltimepad.cpp? (algorithm is constant time)
+
+\subsection{Linear Cryptoanalysis}
+
+Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm.
+
+\subsection{Differential Cryptoanalysis}
+
+In \texttt{test/significant\_perm\_byte.cpp}, instead of comparing if values are equal, but rather approximately equal with accuracy of $\pm n$. This gave the same results are sha-256. And no specific bytes seemed to have followed a specific pattern. This means that there isn't a differential statistical pattern.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{n} & \textbf{Full-Time-Pad (\%)} & \textbf{SHA-256 (\%)} \\
+\hline
+		0 & 0.3883 & 0.3923 \\
+\hline
+		5 & 4.2678 & 4.224 \\
+\hline
+		10 & 8.0342 & 8.0322 \\
+\hline
+		15 & 11.7421 & 11.7403 \\
+\hline
+		20 & 15.4626 & 15.4287 \\
+\hline
+		25 & 18.8071 & 18.8382 \\
+\hline
+\end{tabular}
+\caption{Comparision Accuracy VS. Collision Rate}
+\end{table}
+
+Results of collision rates are approximately equal given lower accuracy ($\pm n$). This suggests that there isn't any cryptoanalysis pattern. These numbers are average of 255 tries. Each try also yields similar results which means that there isn't a differential cryptoanalysis exploit regarding accuracy of comparision.
+
+\begin{tikzpicture}
+\begin{axis}[
+	xlabel={Collision Rate},
+	ylabel={Inaccuracy ($n$)},
+	title={Collision Rate (\%) vs. Inaccuracy ($n$)}
+]
+    \addplot[line width=2pt] coordinates { (0, 0.387944) (1, 1.23085) (2, 1.947) (3, 2.6934) (4, 3.43444) (5, 4.34972) (6, 5.01302) (7, 5.76555) (8, 6.46944) (9, 7.32843) (10, 8.089) (11, 8.80936) (12, 9.46232) (13, 10.2348) (14, 11.0953) (15, 11.7479) (16, 12.4418) (17, 13.2418) (18, 13.8825) (19, 14.5875) (20, 15.3251) (21, 16.1903) (22, 16.8807) (23, 17.4958) (24, 18.2008) (25, 18.7749) (26, 19.5741) (27, 20.4339) (28, 20.8969) (29, 21.7869) (30, 22.3851) (31, 23.0653) (32, 23.7699) (33, 24.4397) (34, 25.1298) (35, 25.9766) (36, 26.5453) (37, 27.0267) (38, 27.9523) (39, 28.521) (40, 29.1441) (41, 29.9157) (42, 30.4469) (43, 31.0761) (44, 31.8532) (45, 32.3679) (46, 33.0277) (47, 33.634) (48, 34.3482) (49, 34.8912) (50, 35.4902) (51, 36.3369) (52, 36.9198) (53, 37.2687) (54, 37.9925) (55, 38.7301) (56, 39.1429) (57, 39.7568) (58, 40.5553) (59, 41.078) (60, 41.7965) (61, 42.2423) (62, 43.0162) (63, 43.3238) (64, 44.1349) (65, 44.6856) (66, 45.175) (67, 45.6717) (68, 46.4545) (69, 46.9229) (70, 47.4621) (71, 47.9201) (72, 48.6914) (73, 49.2096) (74, 49.7652) (75, 50.4163) (76, 50.7924) (77, 51.4415) (78, 51.9868) (79, 52.3303) (80, 53.0806) (81, 53.5876) (82, 54.0958) (83, 54.3704) (84, 55.2459) (85, 55.6484) (86, 56.1409) (87, 56.551) (88, 57.1193) (89, 57.7987) (90, 58.385) (91, 58.7477) (92, 59.0411) (93, 59.8154) (94, 60.1578) (95, 60.7767) (96, 61.1769) (97, 61.8084) (98, 62.1572) (99, 62.8435) };
+\end{axis}
+\end{tikzpicture}
+
+This graph demonstrates how lower accuracy of comparison results in higher collision rate. The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d}.
+\\
 \subsection{Reverse Engineering the Transformation}
 
 this is demonstrated in the \texttt{test/reverse.cpp} code. The reversed key and key are very different.
@@ -622,7 +676,7 @@ Example:\\
 "d": 100 in ascii encoding\\
 In python: hex($100^{32}$)[:10] = \texttt{0x184f03e9}
 \\
-the word \textbf{decrypts} and $\textbf{A}_i$ is arbitrary. This is an initial array. In the confusion algorithm, every $\textbf{A}_i$ is modified twice. This makes the algorithm harder to reverse.
+the word \textbf{decrypts} and $\textbf{A}_i$ is arbitrary. In other words, it's nothing up my sleeve numbers. This is an initial array. In the confusion algorithm, every $\textbf{A}_i$ is modified twice. This makes the algorithm harder to reverse.
 
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 

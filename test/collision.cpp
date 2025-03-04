@@ -159,7 +159,7 @@ void brute_force_incr()
 			exit(0);
 		}
 
-		// increment k2 (0-)
+		// increment k2 starting from 0 (64-bits is enough)
 		k2[0] = iteration >> 56;
 		k2[1] = iteration >> 48;
 		k2[2] = iteration >> 40;
