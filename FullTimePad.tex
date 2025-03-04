@@ -156,9 +156,18 @@ V' =
 \]
 
 If we look at $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic\_permutation section (\ref{dynamic_permutation}).
-. The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address, if the 
+. The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address. Most efficient way to do this, would be using \texttt{reinterpret\_cast} in C++ or using \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
 
-\section{Security Vulnerabilities}
+\[
+V' = 
+\begin{pmatrix}
+	3 & 2 & 1 & 0 & 7 & 6 & 5 & 4 & 11 & 10 & 9 & 8 & 15 & 14 & 13 & 12 & 19 & 18 & 17 & 16 & 23 & 22 & 21 & 20 & 27 & 26 & 25 & 24 & 31 & 30 & 29 & 28
+\end{pmatrix}
+\]
+
+This means that for little endian systems, the permutation matrix also needs to change. The little-endian permutation matrix deravation is given in the \texttt{test/perm.py}.
+
+\section{Security}
 \setlength{\mathindent}{3pt} % No indentation for equations
 
 In One-Time-Pad, key isn't reusable. Here is the proof:
@@ -308,7 +317,7 @@ And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ fo
 So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
 Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of Galois fields to increase avalanche effect.
 
-\subsubsection {Collision Attack}
+\subsubsection {Collision Attack} \label{collision_attack}
 
 Most denial of service attacks related to encryption algorithms are based on brute-force methods. To see if this algorithm has a potential collision attack: \\
 $\texttt{transform(} key_1 \texttt{)} = \texttt{transform(} key_2 \texttt{)}$ \\
@@ -399,7 +408,7 @@ This formula doesn't translate to cases where the 2-variable equation doesn't ha
 Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following equation that satisfies all cases:
 
 \[
-\\ x \prod_{i=1}^{l-1} \frac{(x+i)}{1+i}
+\\ \prod_{i=0}^{l-1} \frac{(x+i)}{1+i}
 \]
 \\
 where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
@@ -417,7 +426,15 @@ the total number of combinations according to the equation is between $1$ and \\
 
 Which isn't possible to brute force provided key is random and not chosen to be a small value.
 
+\subsection{Joux's Attack: Multicollisions in Iterated Hash Functions}
+
+% TODO: cite:  https://www.iacr.org/archive/crypto2004/31520306/multicollisions.pdf
+
+This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}.
+
 \subsection{Reverse Engineering the Transformation}
+
+this is demonstrated in the \texttt{test/reverse.cpp} code. The reversed key and key are very different.
 
 \subsection{Collision-Resistance}
 
@@ -434,7 +451,7 @@ tried permutation matrices that followed logic or randomness. But they didn't of
 
 Number of rounds is determined by the number of rows in the permutation matrix. as using a permutation twice will cancel out.
 
-\subsubsection{Constant - $F_p$ - Prime Galois Field Size} % Fp and r
+\subsubsection{Constant - $F_p$ - Prime Galois Field Size}
 
 every addition operation is done in a prime galois field as every $k_i \in \mathbb{F_p}$ where $k_i$ is the i'th index of the 32-bit segmented key $p = \texttt{0xfffffffb}$. p is the largest unsigned 32-bit prime number. It was evaluated using Fermat's Little Theorem:\\
 \\
@@ -454,20 +471,60 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{Constant - $r$ - Dynamic Rotation Constant} % Fp and r
+\subsubsection{Constant - $r$ - Dynamic Rotation Constant} \label{rotation_constant}
 
 Cicadas only surface once every 17 years. Assuming that their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
-let x be the time interval for when the cicadas surface\\
-let t be the time interval for when the predetors surface\\
+let x be the time interval for when the cicadas surface \\
+let t be the time interval for when the predetors surface \\
 We can conclude:\\
 $GCD(x,y) = 1$, then they meet up every $x \times y$ years. \\
 Whereas if $GCD(x,y) \neq 1$, then they meet up every $x$ years (assuming $x > y$). \\
 \\
-Bitwise rotation operation should also be done with either a prime number or a number where $GCD(x,y) = 1$ to maximize the collision resistance. \\
+Bitwise rotation operation should also be done with either a prime number or a number where $GCD(x,y) = 1$ to maximize the collision resistance.\\
+
+If not, then for example: \\
+let $w$ be 32-bit number\\
+let $q = 8$ be rotation count\\
+rotation can be represented by: $w = w \lll q$\\
+If this rotation was repeated for 4 iterations, then the rotations would cancel out and rotated $w$ ($w'$) and $w$ would be equal. Make sure that $GCD(q, 32) = 1$. \\
+
+If there's only one rotation number, the likelihood of finding a pattern increases. Imagine a card dealer shuffling cards with two stacks, ensuring that one card from each stack is placed on top of the other in a consistent pattern. In this case, you could easily "unshuffle" the cards by simply separating them into two stacks, putting one card on one side and one card on the other. Using a single rotation like this is too simple, but if the cards were shuffled using a more complex method, the process becomes harder to reverse. Even though each method is reversible on its own, combining them makes it significantly more difficult to undo. The use of bitwise rotations on 32-bit segments combined with byte-level permutations creates excellent diffusion. The only potential improvement would be to ensure that all bytes are interlinked solely through the bitwise rotations and permutations, rather than relying on the sum, as seen in the current transformation algorithm.
+
+Rotation numbers that are selected are represented by r:
+
+\[
+r = 
+\begin{pmatrix}
+		23 & 5 & 17 & 31 & 13
+\end{pmatrix}
+\]
+
+There are 5 numbers for r, this is because $16 \mod 5 \neq 0$, after 16 iterations in the transformation algorithm, all values of k aren't rotated the same number of times.
+
+If you were to rotate 32-bit unsigned integer (x)
+\[
+sum_{i=0}^4 i = 89
+\]
+\\
+number of times, the net rotation would be 89 (a prime number). $x \ggg 89$ would produce a net rotation of $x \ggg 25$, since $89 \mod 32=25$. Knowing that $GCD(25, 32) = 1$, the minimum number of times where the expression $x \ggg 89$ is repeated till rotated $x$ equals $x$ is $89 \times 32 = 2848$. This means that only after $2848$ iterations would rotated x equal x. Whereas if there was a singular number for $r$, the number of rotations for rotated $x$ to equal $x$ would be $r \times 32$ (e.g. $r=23, 23 \times 32 = 736$). \\
+
+$\therefore$ there needs to be multiple numbers for r.
+\\
+It is designed so that $|r_i - r_{i-1}|$ results in a different magnitude each time so that the net rotation is a bigger number (more rotation means better diffusion/confusion).
+\\
+For the deravation, the numbers started with prime numbers, all prime numbers from 0-32, but most were eliminated due to similiar values for  $|r_i - r_{i-1}|$ results (e.g. $23-5=18$, $|5-17|=12$ aren't too close). A good net rotation would be prime and without similiarities to net rotations. In the transformation algorithm, There are bitwise right rotate ($\ggg$) and bitwise left rotate ($\lll$), this is done to properly mix the results.
 
 \section{Hashing}
 
 The 'hashing' algorithm is used for manipulating the key each time with proper confusion and avalanche effect. The main reason why the key can be reused is due to the algorithm's strong avalanche effect as well as the lack of statistical patterns with collision rates as proven in the unit tests, \texttt{test/significant\_perm\_byte.cpp} which shows if some bytes have more or less collision reasistance.
+\\
+To maximize the effects of confusion using the current logic, 4 out of 8 values k (32-bit segmented key) should be modified per iteration (half of key). So each byte of the key is transformed a total of 8 times ($\frac{16 \texttt{iterations}}{8 \div 4}$). since $16 \mod 4 = 0$, all bytes are transformed the same number of times which would also tarnish the possibility of a statistical exploit that could target less transformed bytes of the key.
+\\
+Half of the key should be modified per iteration because classical cryptographic algorithms (non-quantum) rely on computational complexity for their security. So more transformation the better. But the most minimum work to get a secure transformed key is enough, \\
+therefore it's the goal. this was determined experimentally; testing collision resistance of each byte upon modifying the transformation algorithm. \\
+\\
+
+I would represent the transformation algorithm with a game of cards. Imagine that 8 cards are randomly picked in a pile of $2^{256}$ cards, each card is cut up into 4 equal pieces, the cut up pieces are shuffled using a permutation algorithm while also replaced with other cut up values from the pile of cards and simultaniously, some pieces are cut up to 2 pieces with magnitude of a prime number (e.g. 5mm, other pieces being 32-5mm if card is 32mm). If this process repeated for 16 iterations, could you recover the original cards? Probably not.
 
 \subsection{Dynamic Matrix Permutation}
 
@@ -534,17 +591,46 @@ Python code is in the test/perm.py
 \end{Bmatrix}
 \]
 
-\subsubsection{Other Options} % include Discovery
-
 \subsection{Confusion - ARX}
 
 For the confusion aspect of the key transformation algorithm, ARX operations are used.
 
 \subsubsection{A - Modular Addition} % pseudo-code and Explanation
 
+For the modular addition, a constant array of 8 values is used (\texttt{A}):
+
+\begin{center}
+	\begin{tabular}{c}
+		\texttt{0x184f03e9} \\
+		\texttt{0x216c46df} \\
+		\texttt{0x119f904f} \\
+		\texttt{0x64997dfd} \\
+		\texttt{0x2a5497bd} \\
+		\texttt{0x3918fa83} \\
+		\texttt{0xaf820335} \\
+		\texttt{0x85096c2e} \\
+	\end{tabular}
+\end{center}
+
+\texttt{A} is derived as follows:
+\\
+start with the message: "\textbf{decrypts}" (8 digit message with 8 uneiqe characters)
+\\
+take every ascii encoding of each character of the message and calculate to the 32nd power and take the first 32-bits:
+\\
+Example:\\
+"d": 100 in ascii encoding\\
+In python: hex($100^{32}$)[:10] = \texttt{0x184f03e9}
+\\
+the word \textbf{decrypts} and $\textbf{A}_i$ is arbitrary. This is an initial array. In the confusion algorithm, every $\textbf{A}_i$ is modified twice. This makes the algorithm harder to reverse.
+
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 
+"Using the values determined for $r$ (as discussed in Section \ref{rotation_constant}), rotate one value to the right, another to the left, and then the third to the right again. The reasoning behind alternating the rotation directions goes back to the card analogy. Imagine two stacks of cards. One on the left and the other on the right. To shuffle them efficiently, a logical approach would be to alternately take a card from the left stack and place a card from the right stack on top. For a "randomized" shuffle, the best strategy would be to take $n$th card from alternating sides, where $n$ is a prime number, to minimize collisions."
+
 \subsubsection{X - XOR} % pseudo-code and Explanation
+
+Some of the values are xored because xor operator offers 256 combinations per byte unlike unsigned addition which mostly offers less (section \ref{collision_attack}). This will bring more possabilites which in return limits brute-forcing attacks. It is avoided when there is a good possibility of xoring the same 2 values ($x \oplus x$), this is why the sum of $k_i$ is used rather then xor.
 
 \section {Cipher}
 
@@ -606,9 +692,17 @@ For the confusion aspect of the key transformation algorithm, ARX operations are
 \end{algorithmic}
 \end{algorithm}
 
-\subsection {Encryption Index}
+\subsection {Key Reuse}
+
+In order to reuse the key, there is an encryption index which is a number that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm by incrementing the initial key by encryption index. In other words, the key is incremented per encryption.
 
 \subsection {Long Plaintexts}
+
+When there are long plaintexts used, the IV should be the encryption index and then galois counter mode should be used.
+
+\subsection {Encryption/Decryption operation}
+
+Encryption operation is the same as decryption
 
 \end{document}
 
