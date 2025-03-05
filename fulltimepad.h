@@ -61,24 +61,6 @@ class FullTimePad
 			
 			// LITTLE ENDIAN:
 			static constexpr std::array<std::array<uint8_t, 32>, 16> n_V_little_endian = {{
-// TODO: try matrix: as n_V these values FOR SIGNIFICANT_BYTES.CPP
-// {3, 7, 11, 15, 19, 23, 27, 31, 2, 6, 10, 14, 18, 22, 26, 30, 1, 5, 9, 13, 17, 21, 25, 29, 0, 4, 8, 12, 16, 20, 24, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {0, 4, 8, 12, 16, 20, 24, 28, 1, 5, 9, 13, 17, 21, 25, 29, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15, 19, 23, 27, 31, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-// {1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12, 17, 18, 19, 16, 21, 22, 23, 20, 25, 26, 27, 24, 29, 30, 31, 28, },
-
 					{15, 11, 7, 3, 31, 27, 23, 19, 14, 10, 6, 2, 30, 26, 22, 18, 13, 9, 5, 1, 29, 25, 21, 17, 12, 8, 4, 0, 28, 24, 20, 16},
 					{3, 15, 11, 7, 19, 31, 27, 23, 2, 14, 10, 6, 18, 30, 26, 22, 1, 13, 9, 5, 17, 29, 25, 21, 0, 12, 8, 4, 16, 28, 24, 20},
 					{7, 3, 15, 11, 23, 19, 31, 27, 6, 2, 14, 10, 22, 18, 30, 26, 5, 1, 13, 9, 21, 17, 29, 25, 4, 0, 12, 8, 20, 16, 28, 24},
@@ -114,12 +96,6 @@ class FullTimePad
 			
 			// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
 			static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
-		
-			// static permutation vector V
-			static const constexpr uint8_t V[] = {
-				17, 16, 19, 18, 21, 20, 23, 22, 25, 24, 27, 26, 29, 28, 31, 30,
-				 1,  0,  3,  2,  5,  4,  7,  6,  9,  8, 11, 10, 13, 12, 15, 14
-			};
 		
 			/*
 			// indexes represented as constant when rotated V right by n
@@ -172,41 +148,47 @@ class FullTimePad
 			[18, 17, 20, 19, 22, 21, 24, 23, 26, 25, 28, 27, 30, 29, 0, 31, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15],
 			 */
 		
-		
-			// dynamic permutation number n
-			static const constexpr uint8_t nl = 12; // number of primes till keysize (m). represented by l
-			static const constexpr uint8_t n[nl] = {
-				1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31
-			};
-		
 			// rotation index r
 			static const constexpr uint8_t r[] = {
 				23, 5, 17, 31, 13
 			};
-		
+
 			// bitwise right rotation
-			static inline uint32_t rotr(uint32_t x, uint8_t shift);
-		
+			static inline uint32_t rotr(uint32_t x, uint8_t shift) {
+				return (x >> shift) | (x << ((sizeof(x) << 3) - shift));
+			}
+			
 			// bitwise left rotation
-			static inline uint32_t rotl(uint32_t x, uint8_t shift);
+			static inline uint32_t rotl(uint32_t x, uint8_t shift) {
+			    return (x << shift) | (x >> ((sizeof(x) << 3) - shift));
+			}
 		
 			// initial key, before any permutation
 			uint8_t *init_key;
+		
+			// safely delete the inital key
+			bool terminate_k = false;
+		
+			// iterations for the main transformation loop
+			void transformation(uint8_t *key); // length of k is 8
 		
 			// dynamically permutate the key during iteration
 			// key: permutated 32-byte key
 			// p: dynamically re-purmutated key
 			// ni: index of dynamic permutation number n
 			// ni: iteration index
-			void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni);
-		
-			// iterations for the main transformation loop
-			void transformation(uint8_t *key); // length of k is 8
-		
-			// safely delete the inital key
-			bool terminate_k = false;
+			static void dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni);
+			
+			// convert uint8_t *key into uint32_t *k in big endian
+			static uint32_t *endian_8_to_32_arr(uint8_t *key);
+
 
 	public:
+			// for testing purposes
+			#ifdef REVERSE_CPP
+			friend void inv_transformation(uint8_t *transformed_k);
+			#endif
+
 			// if you want the destructor called to safely destroy key after use is over
 			// this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else
 			inline void terminate() noexcept;

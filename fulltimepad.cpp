@@ -33,18 +33,6 @@
 consteval std::array<std::array<uint8_t, 32>, 16> FullTimePad::get_n_V() {
 	return is_big_endian() ? n_V_big_endian : n_V_little_endian;
 }
- 
-// bitwise right rotation
-inline uint32_t FullTimePad::rotr(uint32_t x, uint8_t shift)
-{
-	return (x >> shift) | (x << ((sizeof(x)<<3)-shift));
-}
-
-// bitwise left rotation
-inline uint32_t FullTimePad::rotl(uint32_t x, uint8_t shift)
-{
-	return (x << shift) | (x >> ((sizeof(x)<<3)-shift));
-}
 
 // dynamically permutate the key during iteration
 // key: permutated 32-byte key
@@ -62,7 +50,7 @@ void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 }
 
 // convert uint8_t *key into uint32_t *k in big endian
-static uint32_t *endian_8_to_32_arr(uint8_t *key)
+uint32_t *FullTimePad::endian_8_to_32_arr(uint8_t *key)
 {
 	if constexpr(!is_big_endian()) {
 	    for (uint8_t i=0;i<FullTimePad::keysize;i+=4) {
@@ -70,7 +58,7 @@ static uint32_t *endian_8_to_32_arr(uint8_t *key)
        		std::swap(key[i+1], key[i+2]);
     	}
 	}
-		return reinterpret_cast<uint32_t*>(key);
+	return reinterpret_cast<uint32_t*>(key);
 }
 
 // iterations for the main transformation loop

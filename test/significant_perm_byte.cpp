@@ -144,10 +144,10 @@ double find_collision_rate(uint32_t n)
 	for(int k=1;k<256;k++) {
 		uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 		uint8_t oldkey[]      = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-		FullTimePad fulltimepad1 = FullTimePad(initial_key);
-		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 		initial_key[n] = k;
 		oldkey[n] = k-1;
+		FullTimePad fulltimepad1 = FullTimePad(initial_key);
+		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
 		fulltimepad1.hash(initial_key);
 		fulltimepad2.hash(oldkey);

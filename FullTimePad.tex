@@ -62,10 +62,11 @@
 
 \begin{abstract}
 		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order.
+		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order. This algorithm is not necesarrily a substitute for existing algorithms. This version of the algorithm is better suited towards cases where performance can be sacrificed, ChaCha20 is objectively faster, AES with AES-NI instruction set is faster, but algorithms that are a little slower can be better at limiting brute-force attacks.
 
 		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
 		% TODO: how to deal with long messsages
+		
 
 \end{abstract}
 
@@ -444,7 +445,9 @@ Related key attacks isn't possible considering that it requires that \texttt{tra
 
 \subsection{Linear Cryptoanalysis}
 
-Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm.
+Linear Cryptoanalysis is used to find linear connections between ciphertext and plaintexts.
+\\
+Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
 
 \subsection{Differential Cryptoanalysis}
 
@@ -686,6 +689,10 @@ the word \textbf{decrypts} and $\textbf{A}_i$ is arbitrary. In other words, it's
 
 Some of the values are xored because xor operator offers 256 combinations per byte unlike unsigned addition which mostly offers less (section \ref{collision_attack}). This will bring more possabilites which in return limits brute-forcing attacks. It is avoided when there is a good possibility of xoring the same 2 values ($x \oplus x$), this is why the sum of $k_i$ is used rather then xor.
 
+\section{Performance}
+
+% TODO: write about performance, benchmark tests, etc.
+
 \section {Cipher}
 
 \subsection{Transformation}
@@ -713,7 +720,6 @@ Some of the values are xored because xor operator offers 256 combinations per by
 	\COMMENT{No unwanted overflow, so convert to uint64\_t}
 	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
 
-	%\State \[ \text{uint32\_t sum} \gets  \sum\limits_{j=0}^8 k_j \pmod p \]
 	\State $ \text{uint32\_t sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
 
 	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
@@ -752,7 +758,7 @@ In order to reuse the key, there is an encryption index which is a number that i
 
 \subsection {Long Plaintexts}
 
-When there are long plaintexts used, the IV should be the encryption index and then galois counter mode should be used.
+When there are long plaintexts used, the encryption index should be incremented.
 
 \subsection {Encryption/Decryption operation}
 

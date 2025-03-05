@@ -47,7 +47,7 @@ static consteval bool is_big_endian() {
 }
 
 // 256-bit Full-Time-Pad Cipher
-class FullTimePad
+class FullTimePadTest
 {
 	public:
 
@@ -149,7 +149,7 @@ class FullTimePad
 			static uint32_t *endian_8_to_32_arr(uint8_t *key)
 			{
 				if constexpr(!is_big_endian()) {
-				    for (uint8_t i=0;i<FullTimePad::keysize;i+=4) {
+				    for (uint8_t i=0;i<FullTimePadTest::keysize;i+=4) {
 			       		std::swap(key[i], key[i+3]);
 			       		std::swap(key[i+1], key[i+2]);
 			    	}
@@ -229,8 +229,8 @@ double find_collision_rate_random_key(uint8_t **best_n_V)
 	for(int k=1;k<256;k++) { // calculate average collision rate
 		memcpy(initial_key, tmp, 32);
 		memcpy(oldkey, tmp, 32);
-		FullTimePad fulltimepad1 = FullTimePad();
-		FullTimePad fulltimepad2 = FullTimePad();
+		FullTimePadTest fulltimepad1 = FullTimePadTest();
+		FullTimePadTest fulltimepad2 = FullTimePadTest();
 		initial_key[0] = k;
 		oldkey[0] = k-1;
 
@@ -265,8 +265,8 @@ double find_collision_rate(uint8_t **best_n_V)
 	for(int k=1;k<2;k++) {
 		uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 		uint8_t oldkey[]      = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-		FullTimePad fulltimepad1 = FullTimePad();
-		FullTimePad fulltimepad2 = FullTimePad();
+		FullTimePadTest fulltimepad1 = FullTimePadTest();
+		FullTimePadTest fulltimepad2 = FullTimePadTest();
 		initial_key[0] = k;
 		oldkey[0] = k-1;
 
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
 	uint32_t permutations_count = 0; // number of permutations tried
 	uint8_t **n_V = new uint8_t*[16];
 	uint8_t **placeholder = new uint8_t*[16];
-	constexpr std::array<std::array<uint8_t, 32>, 16> n_V_const = FullTimePad::get_n_V();
+	constexpr std::array<std::array<uint8_t, 32>, 16> n_V_const = FullTimePadTest::get_n_V();
 	for(uint8_t i=0;i<16;i++) {
 		n_V[i] = new uint8_t[32];
    		placeholder[i] = new uint8_t[32];
