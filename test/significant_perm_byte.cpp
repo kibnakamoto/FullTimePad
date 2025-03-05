@@ -169,6 +169,7 @@ double find_collision_rate(uint32_t n)
 void check_bytes_permutation(CollisionCalculation collision_calc)
 {
 	double total = 0;
+	uint32_t fail_count=0; // rate is reasonable for all bytes. (smaller than 0.6% collision suggests secure, this is known as secure hashing algorithm has the same range)
 	if(collision_calc == random_key) {
 		for(int i=0;i<32;i++) {
 			// get collision rate at i'th index of key
@@ -179,31 +180,62 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 				std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
 			else
 				std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
+			if(rate < 0.6) {
+				std::cout << "PASSED";
+			} else {
+				std::cout << "FAILED";
+				fail_count++; // algorithm probably failed security, there can be a few exceptions rarely as it's statistical.
+			}
 			std::cout << std::endl << std::endl;
 
 			total+=rate;
 		}
 		total/=32;
 		std::cout << std::endl << "total: " << total << "%";
+		if(fail_count != 0) {
+			double fail_rate = (double)fail_count/32*100;
+			std::cout << "\nTHERE ARE " << fail_count << " COUNTS OF HIGH COLLISIONS (" << fail_rate << "% fail rate)";
+			if (fail_count < 2) {
+				std::cout << "\t | LOW FAIL RATE";
+			} else { // more than 1
+				std::cout << "\t | HIGH FAIL RATE";
+			}
+		}
 	} else if(collision_calc == differential_cryptoanalysis) {
 		for(uint8_t range=0;range<100;range++) { // inaccuracy range
 			total = 0;
+			double prev = 0;
+			double prev_rate = 0;
 			for(int i=0;i<32;i++) {
 				// get collision rate at i'th index of key
 				double rate = differential_cryptoanalysis_random_key(i, range);
 
-				//std::cout << " avr =  ";
-				//if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
-				//	std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
-				//else
-				//	std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
-				//std::cout << std::endl << std::endl;
-
+				// std::cout << " avr =  ";
+				// if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
+				// 	std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
+				// else
+				// 	std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
+				// std::cout << std::endl << std::endl;
+				
+				// check if rates are consistently increasing
+				double rate_of_rate=1;
+				if(prev != 0) {
+					double rate_of_rate = rate/prev;
+					if(!(rate_of_rate < prev_rate+2 && rate_of_rate > prev_rate-2)) {
+						fail_count++;
+						std::cout << rate_of_rate << "\t " << prev_rate;;
+					}
+				}
+				prev_rate = rate_of_rate;
 				total+=rate;
-
+				prev = rate;
 			}
 			total/=32;
-			std::cout << "(" << range+0 << ", " << total << ")" << " ";
+			std::cout << "(accuracy range, collision rate): (" << range+0 << ", " << total << ")" << "\n";
+
+			if(fail_count != 0) {
+				std::cout << "\nTHERE ARE " << fail_count << " COUNTS OF INCONSISTENT CHANGES IN RATES (" << (fail_count<2 ? "LOW CHANCE OF" : "CHANCE OF") << " POTENTIAL STATISTICAL PATTERN)";
+			}
 		}
 	} else {
 		for(int i=0;i<32;i++) {
@@ -215,11 +247,23 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 			else
 				std::cout << std::dec << std::fixed << rate << "% : " << i << "\t";
 			if((i+1)%8 == 0) std::cout << std::endl;
+			if(rate >= 0.6) {
+				fail_count++; // algorithm probably failed security, there can be a few exceptions rarely as it's statistical.
+			}
 
 			total+=rate;
 		}
 		total/=32;
 		std::cout << std::endl << "total: " << total << "%";
+		if(fail_count != 0) {
+			double fail_rate = (double)fail_count/32*100;
+			std::cout << "\nTHERE ARE " << fail_count << " COUNTS OF HIGH COLLISIONS (" << fail_rate << "% fail rate)";
+			if (fail_count < 2) {
+				std::cout << "\t | LOW FAIL RATE";
+			} else { // more than 1
+				std::cout << "\t | HIGH FAIL RATE";
+			}
+		}
 	}
 }
 

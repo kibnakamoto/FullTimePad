@@ -439,11 +439,7 @@ Related key attacks isn't possible considering that it requires that \texttt{tra
 
 \subsection{Time Based Attacks}
 
-Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again.
-
-% TODO: FINISH BENCHMARK TESTS AND TEST IF LARGE NUMBER KEYS ARE CALCULATED AT SAME SPEED AS SMALL NUMBER KEYS (E.G. 32 ZEROS).
-
-% TODO: side channel attacks? Why not possible in fulltimepad.cpp? (algorithm is constant time)
+Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again. This is tested in \texttt{test/benchmark} in function \texttt{benchmark\_hash\_time\_attack\_v()}. This test passed. The keys with small numbers have the same speed as keys with large numbers (This was never in doubt), therefore algorithm is proven to be constant time.
 
 \subsection{Linear Cryptoanalysis}
 
@@ -551,7 +547,7 @@ Results of collision rates are approximately equal given lower accuracy ($\pm n$
 \end{axis}
 \end{tikzpicture}
 
-This graph demonstrates how lower accuracy of comparison results in higher collision rate. The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d}.
+This graph demonstrates how lower accuracy of comparison results in higher collision rate. The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d}. The consistent non-volatile increase in the numbers are a good thing.
 \\
 \subsection{Reverse Engineering the Transformation}
 

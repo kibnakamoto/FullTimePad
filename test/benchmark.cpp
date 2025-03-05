@@ -75,11 +75,11 @@ void benchmark_hash()
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> timer = end - start;
-    double messagesPerSecond = 1000000 / timer.count();
+    double speed = 1000000 / timer.count();
 
     std::cout << "Computation Time for " << 1000000 << " key transformations: "
               << timer.count() << " seconds" << std::endl;
-    std::cout << "Hashrate: " << (uint64_t)messagesPerSecond << " keys per second" << std::endl;
+    std::cout << "Hashrate: " << (uint64_t)speed << " keys per second" << std::endl;
 
 	delete[] key;
 }
