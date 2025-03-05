@@ -439,6 +439,8 @@ Related key attacks isn't possible considering that it requires that \texttt{tra
 
 \subsection{Time Based Attacks}
 
+Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again.
+
 % TODO: FINISH BENCHMARK TESTS AND TEST IF LARGE NUMBER KEYS ARE CALCULATED AT SAME SPEED AS SMALL NUMBER KEYS (E.G. 32 ZEROS).
 
 % TODO: side channel attacks? Why not possible in fulltimepad.cpp? (algorithm is constant time)
@@ -448,6 +450,68 @@ Related key attacks isn't possible considering that it requires that \texttt{tra
 Linear Cryptoanalysis is used to find linear connections between ciphertext and plaintexts.
 \\
 Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
+
+Here is data for SHA-256 hashing algortihm, what percentage of bytes can be equal, if this number gets to 100\%, this means that there is a successful collision. i is the number of hashes that are generated to get $n$\% equality.
+higher comp: 3.125%	i: 2
+higher comp: 6.25%	i: 6
+higher comp: 9.375%	i: 2648
+higher comp: 12.5%	i: 36595
+higher comp: 15.625%	i: 6167198
+higher comp: 18.75%	i: 530210645
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{\%} & \textbf{Full-Time-Pad -(i)} & \textbf{SHA-256 (i)} \\
+\hline
+		3.125 & 1 & 2 \\
+\hline
+		6.25 & 291 & 6 \\
+\hline
+		9.375 & 1501 & 2648 \\
+\hline
+		12.5 & 267184 & 36595 \\
+\hline
+		15.625 & 5981439 & 6167198  \\
+\hline
+		18.75 & 408355721 & 530210645 \\
+\hline
+\end{tabular}
+\caption{collision (\%) VS. number of hashes}
+\end{table}
+
+This data fluctuates a lot and therefore doesn't actually have any visible pattern, The numbers being similiar to SHA-256 would be good news to suggest that the avalanche effect is real and that the math checks out for the birthday problem, it's not possible to find a collision.
+
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={Collision (\%)},
+    ylabel={Number of hashes},
+    title={Collision (\%) VS. Number of Hashes for Full-Time-Pad},
+    ymode=log, 
+    ymin=1,    
+    ymax=1e11, 
+    xtick distance=5,
+    ytick distance=1,
+    grid=major, 
+    enlargelimits,
+    legend style={at={(0.5,-0.15)}, anchor=north, legend columns=1},
+    ytick={1, 1e3, 1e6, 1e9, 1e10, 1e11}, 
+    yticklabel style={/pgf/number format/fixed},
+]
+    % Add the plot coordinates
+    \addplot[line width=2pt] coordinates {
+        (3.125, 1)
+        (6.25, 291)
+        (9.375, 1501)
+        (12.5, 267184)
+        (15.625, 5981439)
+        (18.75, 408355721)
+        (21.875, 37820493025)
+    };
+\end{axis}
+\end{tikzpicture}%
+
 
 \subsection{Differential Cryptoanalysis}
 

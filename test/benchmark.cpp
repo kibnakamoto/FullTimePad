@@ -13,6 +13,50 @@ void gen_rand_key(uint8_t *key)
 	for(uint8_t i=0;i<32;i++) key[i] = dist(gen);
 }
 
+// Check for a potential Side Channel Vulnerability to check if small numbers are faster
+void benchmark_hash_time_attack_v()
+{
+	uint8_t *key = new uint8_t[32];
+    uint8_t transformed_key[32];
+	double speeds[256]; // keep an array of all speeds. Compare after it's done
+	for(int i=0;i<256;i++) {
+		// assign key to 32 0s to 32 255s
+		for(int j=0;j<32;j++) {
+			key[j] = i;
+		}
+    	auto start = std::chrono::high_resolution_clock::now(); // start timing
+		FullTimePad fulltimepad = FullTimePad(key);
+
+		// get the average of 100 repetations to get more consistent numbers
+		for(int j=0;j<1000;j++) {
+			fulltimepad.hash(transformed_key);
+		}
+    	auto end = std::chrono::high_resolution_clock::now(); // end timing
+    	std::chrono::duration<double> timer = end - start; // how long calculation took
+		speeds[i] = timer.count()/1000;
+	}
+
+	// analyize speed data (check if they are consistent)
+	bool consistent = true;
+	for(int i=1;i<256;i++) {
+		if(round(speeds[i]/speeds[i-1]) != 1)
+			consistent = false;
+	}
+
+	if(consistent) {
+		std::cout << "PASSED (NO SIDE CHANNEL): data is consistent\n";
+	} else {
+		std::cout << "FAILED (POTENTIAL SIDE-CHANNEL): data isn\'t consistent\nDATA:\n";
+		for(int i=1;i<256;i++) {
+			// if this ratio is close to 1, then numbers are about the same and therefore consistent numbers.
+			std::cout << speeds[i]/speeds[i-1] << "\t";
+		}
+	}
+	std::cout << std::endl;
+
+	delete[] key;
+}
+
 
 void benchmark_hash()
 {
@@ -42,6 +86,10 @@ void benchmark_hash()
 
 int main()
 {
+	// test speed of hashing algorithm:
 	benchmark_hash();
+
+	// test for time-based side channel attack possibility:
+	benchmark_hash_time_attack_v(); // PASSED
 	return 0;
 }
