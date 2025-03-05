@@ -16,39 +16,26 @@ void gen_rand_key(uint8_t *key)
 
 void benchmark_hash()
 {
-    const size_t messageSize = 32;  // 32-byte messages
-    const size_t numMessages = 1000000;  // Number of 32-byte messages to encrypt
-	
 	uint8_t *key = new uint8_t[32];
-
-    // Generate a random key and nonce
+    uint8_t transformed_key[32];
 	gen_rand_key(key);
-
-    // Create a buffer to hold a single 32-byte message
-    uint8_t data[messageSize];
 
     // Start the clock to measure encryption time
     auto start = std::chrono::high_resolution_clock::now();
 
+	// call hash function 1,000,000 times
 	FullTimePad fulltimepad = FullTimePad(key);
-
-    // Encrypt multiple 32-byte messages
-    for (size_t i = 0; i < numMessages; ++i) {
-		fulltimepad.hash(data);
+    for (size_t i = 0; i < 1000000; ++i) {
+		fulltimepad.hash(transformed_key);
     }
 
-    // Stop the clock after encryption
     auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> timer = end - start;
+    double messagesPerSecond = 1000000 / timer.count();
 
-    // Calculate the time taken in seconds
-    std::chrono::duration<double> elapsed = end - start;
-
-    // Calculate how many 32-byte messages were encrypted per second
-    double messagesPerSecond = numMessages / elapsed.count();
-
-    std::cout << "Time taken to encrypt " << numMessages << " 32-byte messages: "
-              << elapsed.count() << " seconds" << std::endl;
-    std::cout << "Encryption rate: " << (uint64_t)messagesPerSecond << " messages per second" << std::endl;
+    std::cout << "Computation Time for " << 1000000 << " key transformations: "
+              << timer.count() << " seconds" << std::endl;
+    std::cout << "Hashrate: " << (uint64_t)messagesPerSecond << " keys per second" << std::endl;
 
 	delete[] key;
 }
