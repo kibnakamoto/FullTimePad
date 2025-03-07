@@ -533,15 +533,27 @@ Results of collision rates are approximately equal given lower accuracy ($\pm n$
 
 \begin{tikzpicture}
 \begin{axis}[
-	xlabel={Collision Rate},
-	ylabel={Inaccuracy ($n$)},
-	title={Collision Rate (\%) vs. Inaccuracy ($n$)}
+	xlabel={Inaccuracy ($n$)},
+	ylabel={Collision Rate},
+	title={Collision Rate (\%) vs. Inaccuracy ($n$) - Full-Time-Pad}
 ]
     \addplot[line width=2pt] coordinates { (0, 0.387944) (1, 1.23085) (2, 1.947) (3, 2.6934) (4, 3.43444) (5, 4.34972) (6, 5.01302) (7, 5.76555) (8, 6.46944) (9, 7.32843) (10, 8.089) (11, 8.80936) (12, 9.46232) (13, 10.2348) (14, 11.0953) (15, 11.7479) (16, 12.4418) (17, 13.2418) (18, 13.8825) (19, 14.5875) (20, 15.3251) (21, 16.1903) (22, 16.8807) (23, 17.4958) (24, 18.2008) (25, 18.7749) (26, 19.5741) (27, 20.4339) (28, 20.8969) (29, 21.7869) (30, 22.3851) (31, 23.0653) (32, 23.7699) (33, 24.4397) (34, 25.1298) (35, 25.9766) (36, 26.5453) (37, 27.0267) (38, 27.9523) (39, 28.521) (40, 29.1441) (41, 29.9157) (42, 30.4469) (43, 31.0761) (44, 31.8532) (45, 32.3679) (46, 33.0277) (47, 33.634) (48, 34.3482) (49, 34.8912) (50, 35.4902) (51, 36.3369) (52, 36.9198) (53, 37.2687) (54, 37.9925) (55, 38.7301) (56, 39.1429) (57, 39.7568) (58, 40.5553) (59, 41.078) (60, 41.7965) (61, 42.2423) (62, 43.0162) (63, 43.3238) (64, 44.1349) (65, 44.6856) (66, 45.175) (67, 45.6717) (68, 46.4545) (69, 46.9229) (70, 47.4621) (71, 47.9201) (72, 48.6914) (73, 49.2096) (74, 49.7652) (75, 50.4163) (76, 50.7924) (77, 51.4415) (78, 51.9868) (79, 52.3303) (80, 53.0806) (81, 53.5876) (82, 54.0958) (83, 54.3704) (84, 55.2459) (85, 55.6484) (86, 56.1409) (87, 56.551) (88, 57.1193) (89, 57.7987) (90, 58.385) (91, 58.7477) (92, 59.0411) (93, 59.8154) (94, 60.1578) (95, 60.7767) (96, 61.1769) (97, 61.8084) (98, 62.1572) (99, 62.8435) };
 \end{axis}
 \end{tikzpicture}
 
-This graph demonstrates how lower accuracy of comparison results in higher collision rate. The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d}. The consistent non-volatile increase in the numbers are a good thing.
+
+\begin{tikzpicture}
+\begin{axis}[
+	xlabel={Inaccuracy ($n$)},
+	ylabel={Collision Rate},
+	title={Collision Rate (\%) vs. Inaccuracy ($n$) - SHA-256}
+]
+    \addplot[line width=2pt] coordinates { ( 0 ,  0.3892) ( 1 ,  1.1595) ( 2 ,  1.9355) ( 3 ,  2.7233) ( 4 ,  3.4838) ( 5 ,  4.2365) ( 6 ,  5.0348) ( 7 ,  5.7695) ( 8 ,  6.5087) ( 9 ,  7.2367) ( 10 ,  8.0378) ( 11 ,  8.7856) ( 12 ,  9.4707) ( 13 ,  10.2047) ( 14 ,  11.016) ( 15 ,  11.7348) ( 16 ,  12.4712) ( 17 ,  13.2122) ( 18 ,  13.8864) ( 19 ,  14.6361) ( 20 ,  15.2711) ( 21 ,  16.0554) ( 22 ,  16.7715) ( 23 ,  17.5102) ( 24 ,  18.2131) ( 25 ,  18.8909) ( 26 ,  19.6227) ( 27 ,  20.3477) ( 28 ,  20.9966) ( 29 ,  21.6957) ( 30 ,  22.4265) ( 31 ,  23.1505) ( 32 ,  23.7803) ( 33 ,  24.3886) ( 34 ,  25.1278) ( 35 ,  25.7777) ( 36 ,  26.4899) ( 37 ,  27.2345) ( 38 ,  27.8369) ( 39 ,  28.475) ( 40 ,  29.0958) ( 41 ,  29.815) ( 42 ,  30.439) ( 43 ,  31.1199) ( 44 ,  31.6981) ( 45 ,  32.348) ( 46 ,  33.0169) ( 47 ,  33.6563) ( 48 ,  34.2855) ( 49 ,  34.9763) ( 50 ,  35.5488) ( 51 ,  36.242) ( 52 ,  36.7191) ( 53 ,  37.4965) ( 54 ,  37.9781) ( 55 ,  38.6314) ( 56 ,  39.2417) ( 57 ,  39.8771) ( 58 ,  40.4771) ( 59 ,  41.1545) ( 60 ,  41.6244) ( 61 ,  42.2525) ( 62 ,  42.8118) ( 63 ,  43.4897) ( 64 ,  43.9408) ( 65 ,  44.6032) ( 66 ,  45.2462) ( 67 ,  45.8056) ( 68 ,  46.389) ( 69 ,  46.916) ( 70 ,  47.5006) ( 71 ,  48.0506) ( 72 ,  48.5943) ( 73 ,  49.2425) ( 74 ,  49.7856) ( 75 ,  50.284) ( 76 ,  50.8606) ( 77 ,  51.4374) ( 78 ,  51.9111) ( 79 ,  52.462) ( 80 ,  52.9676) ( 81 ,  53.5196) ( 82 ,  54.0679) ( 83 ,  54.6068) ( 84 ,  55.1519) ( 85 ,  55.5852) ( 86 ,  56.1477) ( 87 ,  56.5577) ( 88 ,  57.1957) ( 89 ,  57.6864) ( 90 ,  58.1098) ( 91 ,  58.6916) ( 92 ,  59.2562) ( 93 ,  59.6927) ( 94 ,  60.2409) ( 95 ,  60.6937) ( 96 ,  61.1448) ( 97 ,  61.6383) ( 98 ,  62.1711) ( 99 ,  62.5994) };
+\end{axis}
+\end{tikzpicture}
+
+
+This graph demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d}. The consistent non-volatile increase in the numbers are a good thing.
 \\
 \subsection{Reverse Engineering the Transformation}
 
@@ -614,7 +626,7 @@ There are 5 numbers for r, this is because $16 \mod 5 \neq 0$, after 16 iteratio
 
 If you were to rotate 32-bit unsigned integer (x)
 \[
-sum_{i=0}^4 i = 89
+\sum_{i=0}^4 r_i = 89
 \]
 \\
 number of times, the net rotation would be 89 (a prime number). $x \ggg 89$ would produce a net rotation of $x \ggg 25$, since $89 \mod 32=25$. Knowing that $GCD(25, 32) = 1$, the minimum number of times where the expression $x \ggg 89$ is repeated till rotated $x$ equals $x$ is $89 \times 32 = 2848$. This means that only after $2848$ iterations would rotated x equal x. Whereas if there was a singular number for $r$, the number of rotations for rotated $x$ to equal $x$ would be $r \times 32$ (e.g. $r=23, 23 \times 32 = 736$). \\
@@ -754,12 +766,12 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
 \begin{algorithmic}[1]  % The [1] enables line numbering
-\State \textbf{Input:} 32-byte bytearray key (\texttt{key})
+\State \textbf{Input:} 32-byte bytearray key (\texttt{key}), \texttt{64-bit encryption\_index}
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
 \State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
-\State \textttencryption_index} \gets \texttt{encryption_index + 1}
+\State \texttt{encryption\_index} $\gets$ \texttt{encryption\_index} + 1
 \For{$i=0$ to $16$}
 	\State index $\gets i \ll 2$
 	\State i1mod $\gets index \mod 8$
