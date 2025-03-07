@@ -759,6 +759,7 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
 \State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State \textttencryption_index} \gets \texttt{encryption_index + 1}
 \For{$i=0$ to $16$}
 	\State index $\gets i \ll 2$
 	\State i1mod $\gets index \mod 8$
@@ -821,11 +822,9 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \end{algorithmic}
 \end{algorithm}
 
-
-
 \subsection {Key Reuse}
 
-In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last 2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the plaintext is long (not just per message but per 32-byte segment of every message sent.)
+In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last 2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the plaintext is long (not just incremented per message but per 32-byte segment of every message sent.)
 
 \subsection {Long Plaintexts}
 

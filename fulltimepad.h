@@ -192,7 +192,7 @@ class FullTimePad
 			friend void inv_transformation(uint8_t *transformed_k);
 			#endif
 
-			inline uint64_t get_encryption_index() const noexcept;
+			inline const uint64_t& get_encryption_index() const noexcept;
 
 			// if you want the destructor called to safely destroy key after use is over
 			// this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else

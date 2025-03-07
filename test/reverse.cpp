@@ -48,14 +48,14 @@ void inv_transformation(uint8_t *transformed_k)
 	uint32_t *k = FullTimePad::endian_8_to_32_arr(transformed_k); // length of k is 8
 
 	uint32_t A[8] = {
-		0x184f03e9,
-		0x216c46df,
+		0,	// encryption index
+		0,	// encryption index
 		0x119f904f,
-		0x64997dfd,
-		0x2a5497bd,
+		0x73d44db5,
 		0x3918fa83,
-		0xaf820335,
-		0x85096c2e,
+		0x5546b403,
+		0x216c46df,
+		0x64997dfd,
 	};
 
 
@@ -102,17 +102,17 @@ int main()
 	// if two plaintexts are the same (or are known), and the ciphertexts are known or if one plaintext and ciphertext are known. then you can find the hash(key)
 	// Are there any patterns between hash(key1) xor hash(key2) where key1 and key2 have 1-bit difference?
 	// And most importantly, is it possible to find the key using hash(key). Make inv_hash to test it
-	//uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+	// uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 	uint8_t key[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
 	uint32_t A[8] = {
-		0x184f03e9, 
-		0x216c46df,
+		0,	// encryption index
+		0,	// encryption index
 		0x119f904f,
-		0x64997dfd,
-		0x2a5497bd,
+		0x73d44db5,
 		0x3918fa83,
-		0xaf820335,
-		0x85096c2e,
+		0x5546b403,
+		0x216c46df,
+		0x64997dfd,
 	};
 
 	// check if when A is given as key, does it cancel out
@@ -122,8 +122,10 @@ int main()
 		key[i*4+2] = ( A[i] >> 8 ) & 0xff;
 		key[i*4+3] = ( A[i] >> 0 ) & 0xff;
 	}
+
 	FullTimePad fulltimepad = FullTimePad(key);
 
+	// print the given key	
 	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
 	std::cout << std::endl;
 

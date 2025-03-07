@@ -108,7 +108,7 @@ void FullTimePad::terminate() noexcept
 	terminate_k = true;
 }
 
-uint64_t FullTimePad::get_encryption_index() const noexcept
+const uint64_t &FullTimePad::get_encryption_index() const noexcept
 {
 	return encryption_index;
 }
