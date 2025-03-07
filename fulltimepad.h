@@ -209,8 +209,7 @@ class FullTimePad
 			// ct: ciphertext data
 			// length: length of pt, and ct
 			// encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
-			void transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index_nonce);
-
+			void transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index);
 
 			// Destructor
 			~FullTimePad();
