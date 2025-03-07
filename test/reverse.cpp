@@ -129,7 +129,7 @@ int main()
 	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
 	std::cout << std::endl;
 
-	fulltimepad.hash(key);
+	fulltimepad.hash(key, 0);
 
 	// inverse the key:
 	inv_transformation(key);

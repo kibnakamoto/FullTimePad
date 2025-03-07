@@ -29,7 +29,7 @@ void benchmark_hash_time_attack_v()
 
 		// get the average of 100 repetations to get more consistent numbers
 		for(int j=0;j<1000;j++) {
-			fulltimepad.hash(transformed_key);
+			fulltimepad.hash(transformed_key, 0); // key is different each time so encryption index can be the same
 		}
     	auto end = std::chrono::high_resolution_clock::now(); // end timing
     	std::chrono::duration<double> timer = end - start; // how long calculation took
@@ -70,7 +70,7 @@ void benchmark_hash()
 	// call hash function 1,000,000 times
 	FullTimePad fulltimepad = FullTimePad(key);
     for (size_t i = 0; i < 1000000; ++i) {
-		fulltimepad.hash(transformed_key);
+		fulltimepad.hash(transformed_key, i);
     }
 
     auto end = std::chrono::high_resolution_clock::now();

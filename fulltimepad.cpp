@@ -108,11 +108,6 @@ void FullTimePad::terminate() noexcept
 	terminate_k = true;
 }
 
-const uint64_t &FullTimePad::get_encryption_index() const noexcept
-{
-	return encryption_index;
-}
-
 FullTimePad::FullTimePad(uint8_t *initial_key)
 {
 	init_key = initial_key;
@@ -122,13 +117,19 @@ FullTimePad::FullTimePad(uint8_t *initial_key)
 
 // key: 256-bit (32-byte) key, should be allocated with length keysize
 // key should be empty as it's only a place holder for the value in init_key
-void FullTimePad::hash(uint8_t *key)
+void FullTimePad::hash(uint8_t *key, uint64_t encryption_index)
 {
 	// Incorporate the the encryption_index here
 	A[0] = encryption_index >> 32;
 	A[1] = encryption_index; // implicit & 0xffffffff
-
-	encryption_index++; // increment encryption index per encryption
+	
+	// reset A
+	A[2] = 0x119f904f;
+	A[3] = 0x73d44db5;
+	A[4] = 0x3918fa83;
+	A[5] = 0x5546b403;
+	A[6] = 0x216c46df;
+	A[7] = 0x64997dfd;
 	
 	// make copy of key to transform and to preserve init_key
 	memcpy(key, init_key, keysize);
@@ -137,7 +138,6 @@ void FullTimePad::hash(uint8_t *key)
 
 	// transformation iterations
 	transformation(key);
-
 }
 
 // encrypt/decrypt
@@ -145,14 +145,17 @@ void FullTimePad::hash(uint8_t *key)
 // pt: plaintext data
 // ct: ciphertext data
 // length: length of pt, and ct
-// encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
-void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length)
+// encryption_index_nonce: encryption index
+void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index)
 {
-	for(uint8_t i=0;i<length;i++) {
-		// generate unieqe key based on encryption index
-		hash(transformed_key); // incorporate encryption index
-
-		ct[i] = pt[i] ^ transformed_key[i];
+	// generate unieqe key based on encryption index and encrypt
+	const uint32_t segment = length/32 + (length%32 != 0);
+	for(uint32_t i=0;i<segment;i++) {
+		hash(transformed_key, encryption_index); // incorporate encryption index
+		for(uint8_t j=0;j<length;j++) {
+			ct[j] = pt[j] ^ transformed_key[j];
+		}
+		encryption_index++;
 	}
 }
 
@@ -164,6 +167,7 @@ FullTimePad::~FullTimePad()
 		delete[] init_key;
 	}
 
+	memset(transformed_key, 0, keysize); // set to 0s for a safe memory deletion before deallocation
 	delete[] transformed_key;
 }
 

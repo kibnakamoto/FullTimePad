@@ -88,8 +88,8 @@ void brute_force_random()
 		// generate transformed(key)
 		FullTimePad fulltimepad1 = FullTimePad(k1);
 		FullTimePad fulltimepad2 = FullTimePad(k2);
-		fulltimepad1.hash(k1);
-		fulltimepad2.hash(k2);
+		fulltimepad1.hash(k1, 0); // since keys are unieqe each time, encryption index can stay the same
+		fulltimepad2.hash(k2, 0);
 
 		test_collision(k1, k2, highest_collision);
 
@@ -141,7 +141,7 @@ void brute_force_incr()
 
 	// generate transformed(k1) once
 	FullTimePad fulltimepad1 = FullTimePad(k1);
-	fulltimepad1.hash(transformed_k1);
+	fulltimepad1.hash(transformed_k1, 0);
 
 	while(true) {
 		if(doprint) {
@@ -171,7 +171,7 @@ void brute_force_incr()
 
 		// generate transformed(k2)
 		FullTimePad fulltimepad2 = FullTimePad(k2);
-		fulltimepad2.hash(transformed_k2);
+		fulltimepad2.hash(transformed_k2, 0); // testing brute-forcing so encryption index should be same
 
 		// compare the transformed keys
 		test_collision(transformed_k1, transformed_k2, highest_collision);

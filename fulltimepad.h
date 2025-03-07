@@ -172,9 +172,6 @@ class FullTimePad
 			// safely delete the inital key
 			bool terminate_k = false;
 			
-			// keep encryption index as a member to make sure avoid side-channel vulnerability
-			uint64_t encryption_index = 0;
-		
 			// iterations for the main transformation loop
 			void transformation(uint8_t *key); // length of k is 8
 		
@@ -195,8 +192,6 @@ class FullTimePad
 			friend void inv_transformation(uint8_t *transformed_k);
 			#endif
 
-			inline const uint64_t& get_encryption_index() const noexcept;
-
 			// if you want the destructor called to safely destroy key after use is over
 			// this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else
 			inline void terminate() noexcept;
@@ -206,7 +201,7 @@ class FullTimePad
 			FullTimePad(uint8_t *initial_key);
 
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
-			void hash(uint8_t *key);
+			void hash(uint8_t *key, uint64_t encryption_index_nonce);
 
 			// encrypt/decrypt
 			// key is the initial key, return heap allocated key output
@@ -214,7 +209,8 @@ class FullTimePad
 			// ct: ciphertext data
 			// length: length of pt, and ct
 			// encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
-			void transform(uint8_t *pt, uint8_t *ct, uint32_t length);
+			void transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index_nonce);
+
 
 			// Destructor
 			~FullTimePad();

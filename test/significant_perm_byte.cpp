@@ -67,8 +67,8 @@ double find_collision_rate_random_key(uint32_t n)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key);
-		fulltimepad2.hash(oldkey);
+		fulltimepad1.hash(initial_key, 0);
+		fulltimepad2.hash(oldkey, 0);
 		double temp_rate = 0;
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
@@ -110,8 +110,8 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key);
-		fulltimepad2.hash(oldkey);
+		fulltimepad1.hash(initial_key, 0);
+		fulltimepad2.hash(oldkey, 0);
 		double temp_rate = 0;
 		for(int i=0;i<32;i++) {
 			 if((int)initial_key[i] <= (int)oldkey[i]+range && (int)initial_key[i] >= (int)oldkey[i]-range) { // check if it's in range with accuracy of range
@@ -149,8 +149,8 @@ double find_collision_rate(uint32_t n)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key);
-		fulltimepad2.hash(oldkey);
+		fulltimepad1.hash(initial_key, 0);
+		fulltimepad2.hash(oldkey, 0);
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
 				collision_rate++;

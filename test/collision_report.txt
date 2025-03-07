@@ -1,7 +1,7 @@
 
-Higher Collision Rate: 3.125%	i: 2
-Higher Collision Rate: 6.25%	i: 68
-Higher Collision Rate: 9.375%	i: 681
-Higher Collision Rate: 12.5%	i: 21980
+Higher Collision Rate: 3.125%	i: 35
+Higher Collision Rate: 9.375%	i: 234
+Higher Collision Rate: 12.5%	i: 117139
+Higher Collision Rate: 15.625%	i: 1231709
 
-Highest Collision Rate: 12.5%	i: 2069633
+Highest Collision Rate: 15.625%	i: 8191471
