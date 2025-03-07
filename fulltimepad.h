@@ -165,6 +165,9 @@ class FullTimePad
 		
 			// initial key, before any permutation
 			uint8_t *init_key;
+
+			// placeholder transformed key
+			uint8_t *transformed_key;
 		
 			// safely delete the inital key
 			bool terminate_k = false;

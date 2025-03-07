@@ -116,6 +116,8 @@ const uint64_t &FullTimePad::get_encryption_index() const noexcept
 FullTimePad::FullTimePad(uint8_t *initial_key)
 {
 	init_key = initial_key;
+	transformed_key = new uint8_t[keysize];
+	
 }
 
 // key: 256-bit (32-byte) key, should be allocated with length keysize
@@ -146,16 +148,12 @@ void FullTimePad::hash(uint8_t *key)
 // encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
 void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length)
 {
-	uint8_t *key = new uint8_t[keysize];
-	
 	for(uint8_t i=0;i<length;i++) {
 		// generate unieqe key based on encryption index
-		hash(key); // incorporate encryption index
+		hash(transformed_key); // incorporate encryption index
 
-		ct[i] = pt[i] ^ key[i];
+		ct[i] = pt[i] ^ transformed_key[i];
 	}
-
-	delete[] key;
 }
 
 // Destructor
@@ -165,6 +163,8 @@ FullTimePad::~FullTimePad()
 		memset(init_key, 0, keysize); // set to 0s for a safe memory deletion before deallocation
 		delete[] init_key;
 	}
+
+	delete[] transformed_key;
 }
 
 #endif /* FULLTIMEPAD_CPP */
