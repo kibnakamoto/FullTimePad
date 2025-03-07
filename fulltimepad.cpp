@@ -103,9 +103,14 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 
 // if you want the destructor called to safely destroy key after use is over
 // this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else
-inline void FullTimePad::terminate() noexcept
+void FullTimePad::terminate() noexcept
 {
 	terminate_k = true;
+}
+
+uint64_t FullTimePad::get_encryption_index() const noexcept
+{
+	return encryption_index;
 }
 
 FullTimePad::FullTimePad(uint8_t *initial_key)
@@ -117,7 +122,11 @@ FullTimePad::FullTimePad(uint8_t *initial_key)
 // key should be empty as it's only a place holder for the value in init_key
 void FullTimePad::hash(uint8_t *key)
 {
-	// TODO: use the encryption_index here
+	// Incorporate the the encryption_index here
+	A[0] = encryption_index >> 32;
+	A[1] = encryption_index; // implicit & 0xffffffff
+
+	encryption_index++; // increment encryption index per encryption
 	
 	// make copy of key to transform and to preserve init_key
 	memcpy(key, init_key, keysize);
@@ -135,14 +144,14 @@ void FullTimePad::hash(uint8_t *key)
 // ct: ciphertext data
 // length: length of pt, and ct
 // encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
-void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint32_t encryption_index)
+void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length)
 {
 	uint8_t *key = new uint8_t[keysize];
-
-	// generate unieqe key based on encryption index
-	hash(key); // incorporate encryption index
 	
 	for(uint8_t i=0;i<length;i++) {
+		// generate unieqe key based on encryption index
+		hash(key); // incorporate encryption index
+
 		ct[i] = pt[i] ^ key[i];
 	}
 

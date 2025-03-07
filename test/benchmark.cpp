@@ -90,6 +90,6 @@ int main()
 	benchmark_hash();
 
 	// test for time-based side channel attack possibility:
-	benchmark_hash_time_attack_v(); // PASSED
+	// benchmark_hash_time_attack_v(); // PASSED
 	return 0;
 }

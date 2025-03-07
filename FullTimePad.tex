@@ -448,12 +448,6 @@ Linear Cryptoanalysis is used to find linear connections between ciphertext and 
 Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
 
 Here is data for SHA-256 hashing algortihm, what percentage of bytes can be equal, if this number gets to 100\%, this means that there is a successful collision. i is the number of hashes that are generated to get $n$\% equality.
-higher comp: 3.125%	i: 2
-higher comp: 6.25%	i: 6
-higher comp: 9.375%	i: 2648
-higher comp: 12.5%	i: 36595
-higher comp: 15.625%	i: 6167198
-higher comp: 18.75%	i: 530210645
 
 \begin{table}[h!]
 \centering
@@ -718,28 +712,28 @@ For the modular addition, a constant array of 8 values is used (\texttt{A}):
 
 \begin{center}
 	\begin{tabular}{c}
-		\texttt{0x184f03e9} \\
-		\texttt{0x216c46df} \\
+		$\texttt{encryption index} \gg 32$ \\
+		$\texttt{encryption index \& 0xffffffff}$ \\
 		\texttt{0x119f904f} \\
-		\texttt{0x64997dfd} \\
-		\texttt{0x2a5497bd} \\
+		\texttt{0x73d44db5} \\
 		\texttt{0x3918fa83} \\
-		\texttt{0xaf820335} \\
-		\texttt{0x85096c2e} \\
+		\texttt{0x5546b403} \\
+		\texttt{0x216c46df} \\
+		\texttt{0x64997dfd} \\
 	\end{tabular}
 \end{center}
 
 \texttt{A} is derived as follows:
 \\
-start with the message: "\textbf{decrypts}" (8 digit message with 8 uneiqe characters)
+Start with the message: "\textbf{cipher}" (6 digit message with 6 uneiqe characters)
 \\
-take every ascii encoding of each character of the message and calculate to the 32nd power and take the first 32-bits:
+Take every ascii encoding of each character of the message and calculate to the 32nd power and take the first 32-bits:
 \\
 Example:\\
-"d": 100 in ascii encoding\\
-In python: hex($100^{32}$)[:10] = \texttt{0x184f03e9}
+"c": 99 in ascii encoding\\
+In python: hex($99^{32}$)[:10] = \texttt{0x0x119f904f}
 \\
-the word \textbf{decrypts} and $\textbf{A}_i$ is arbitrary. In other words, it's nothing up my sleeve numbers. This is an initial array. In the confusion algorithm, every $\textbf{A}_i$ is modified twice. This makes the algorithm harder to reverse.
+The word \textbf{cipher} and $\textbf{A}_i$ is arbitrary. In other words, it's "nothing up my sleeve numbers". This is an initial array. In the transformation algorithm, every $\textbf{A}_i$ is modified twice (in 16 iterations). This provides the confusion. The reason why the first 2 values are the 64-bit encryption index is because this was the most efficient way to diffuse in the encryption index.
 
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 
@@ -764,18 +758,16 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
-\COMMENT{Vector used for dynamic permutation, dynamically permutated key placeholder with length of keysize.}
-\COMMENT{Use stack memory}
 \State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
 \For{$i=0$ to $16$}
-	\State int index $\gets i \ll 2$
-	\State int i1mod $\gets index \mod 8$
-	\State int i2mod $\gets index+1) \mod 8$
-	\State int i3mod $\gets index+2) \mod 8$
-	\State int i4mod $\gets index+3) \mod 8$
-	\State int imod8 $\gets i \mod 8$
-	\State int imod9 $\gets (i+1) \mod 8$
-	\State int rmod $\gets i \mod 5$ \\
+	\State index $\gets i \ll 2$
+	\State i1mod $\gets index \mod 8$
+	\State i2mod $\gets index+1) \mod 8$
+	\State i3mod $\gets index+2) \mod 8$
+	\State i4mod $\gets index+3) \mod 8$
+	\State imod8 $\gets i \mod 8$
+	\State imod9 $\gets (i+1) \mod 8$
+	\State rmod $\gets i \mod 5$ \\
 
 	\COMMENT{No unwanted overflow, so convert to uint64\_t}
 	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
@@ -812,13 +804,32 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{endian\_8\_to\_32\_arr} \label{dynamic_permutation}
+
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{The endian\_8\_to\_32\_arr() in the transformation function}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} 32-byte bytearray ($B$)
+\State \textbf{Output:} 32-byte bytearray ($B$) permutated to flip endiannes if necesarry
+\If {big endian system}
+	\For{$j=0$ to $32$}
+		\State swap $B_i$ with $B_{i+3}$
+		\State swap $B_{i+1}$ with $B_{i+2}$
+	\EndFor
+\EndIf
+\State \textbf{Return} reinterpret\_cast \textless uint32\_t* \textgreater ($B$)
+\end{algorithmic}
+\end{algorithm}
+
+
+
 \subsection {Key Reuse}
 
-In order to reuse the key, there is an encryption index which is a number that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm by incrementing the initial key by encryption index. In other words, the key is incremented per encryption.
+In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last 2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the plaintext is long (not just per message but per 32-byte segment of every message sent.)
 
 \subsection {Long Plaintexts}
 
-When there are long plaintexts used, the encryption index should be incremented.
+When there are long plaintexts used, the encryption index should be incremented by 1 the same way as key reuse. It might be logical to randomly generate the encryption index per plaintext so that you don't have to keep track of incrementing the encryption index for all plaintexts but rather per plaintext. This isn't an issue in the algorithm itself but rather a side-channel exploit. My implementation of the algorithm doesn't impose this problem as long as you don't use the same key for 2 \texttt{FullTimePad} Objects.
 
 \subsection {Encryption/Decryption operation}
 

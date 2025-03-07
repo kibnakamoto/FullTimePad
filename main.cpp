@@ -29,7 +29,6 @@ int main()
 			col/=32;
 			collision_rate += col;
 		}
-		memcpy(oldkey, initial_key, 32);
 		for(int i=0;i<32;i++) std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
 		std::cout << std::endl;
 	}
