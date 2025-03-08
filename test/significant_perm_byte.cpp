@@ -306,6 +306,13 @@ int main(int argc, char *argv[])
 		check_bytes_permutation<FullTimePad::Version10>(collision_calc);
 	}
 
+	// To run with random keys (no patterns in input):
+	// Use ./significant_perm_byte -r -2.0
+	// Use ./significant_perm_byte -r -1.1
+	// Use ./significant_perm_byte -r -1.0 or just ./collision -r
+	// where the number denotes version of transformation algorithm
+	// For non-random keys, remove -r
+
 	std::cout << std::endl;
 	return 0;
 }

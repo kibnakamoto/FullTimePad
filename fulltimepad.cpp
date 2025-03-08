@@ -84,13 +84,13 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 
 			uint8_t rmod = i % 5; // 5 rotation values
 								  // TODO: TRY REMOVING % FP ! DOWN HERE, MAYBE UNNECESARY, TEST VALUES, ALSO FOR VERSION 1.1, 2.0
-			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+			k[i1mod] = ( ((uint64_t)k[i1mod] + A[imod8])  + rotr(k[i1mod], r[rmod]) ) % fp;
 
 			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 
 			A[imod9] ^= sum;
 
-			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+			k[i2mod] = ( ((uint64_t)k[i2mod] + A[imod9]) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
 
 			A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
 
@@ -111,13 +111,13 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			uint8_t imod9 = (i+1) % 8;
 		
 			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+			k[i1mod] = ( ((uint64_t)k[i1mod] + A[imod8])  + rotr(k[i1mod], r[rmod]) ) % fp;
 		
 			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 
 			A[imod9] = (A[imod9] ^ sum) % fp;
 		
-			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+			k[i2mod] = ( ((uint64_t)k[i2mod] + A[imod9]) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
 			
 			A[imod8] = (A[imod8] ^ k[i2mod]) % fp;
 		
