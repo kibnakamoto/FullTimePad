@@ -761,7 +761,7 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 \section {Cipher}
 
-\subsection{Transformation}
+\subsection{Transformation - Version 1.0 - Prioritize Complexity}
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
@@ -785,7 +785,7 @@ Some of the values are xored because xor operator offers 256 combinations per by
 	\COMMENT{No unwanted overflow, so convert to uint64\_t}
 	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
 
-	\State $ \text{uint32\_t sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
 
 	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
 
@@ -794,6 +794,92 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 	\State $k_{i3mod} \gets \text{(uint64\_t)} A_{imod8} \oplus k_{i3mod} + A_{imod9} \oplus k_{i4mod} \pmod p$
 	\State $k_{i4mod} \gets  \text{(uint64\_t)} A_{imod8} \oplus k_{i4mod} + A_{imod9} \oplus k_{i3mod} \pmod p$ \\
+
+	\COMMENT{Permutate the bytearray key}
+	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+\EndFor
+\State \textbf{Return} $\texttt{key}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Transformation - Version 1.1 - Prioritize Speed \& Complexity}
+
+This version of the transformation offers more speed less complexity. This is preferred to the previous option since the other has more unnecessary operations that add complexity but isn't really needed, the previous option is better suited for when speed doesn't matter as much as security, or when slower algorithms are appreciated.
+
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{The key transformation operation per encryption}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} 32-byte bytearray key (\texttt{key}), \texttt{64-bit encryption\_index}
+\State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
+\State \textbf{Begin}
+\COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
+\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State increment \texttt{encryption\_index} by 1 each encryption
+\For{$i=0$ to $16$}
+	\State index $\gets i \ll 2$
+	\State i1mod $\gets index \mod 8$
+	\State i2mod $\gets index+1) \mod 8$
+	\State i3mod $\gets index+2) \mod 8$
+	\State i4mod $\gets index+3) \mod 8$
+	\State imod8 $\gets i \mod 8$
+	\State imod9 $\gets (i+1) \mod 8$
+	\State rmod $\gets i \mod 5$ \\
+
+	\COMMENT{No unwanted overflow, so convert to uint64\_t}
+	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
+
+	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+
+	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+
+	\State $k_{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
+	\State $A_{imod8} \gets A_{imod8} \oplus k_{i2mod} \pmod p$
+
+	\State $k_{i3mod} \gets A_{imod8} \oplus k_{i3mod} \pmod p$
+	\State $k_{i4mod} \gets A_{imod8} \oplus k_{i4mod} \pmod p$ \\
+
+	\COMMENT{Permutate the bytearray key}
+	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+\EndFor
+\State \textbf{Return} $\texttt{key}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Transformation - Version 2.0 - Prioritize Speed}
+
+This version of the transformation prioritizes speed. This is preferred to the previous option if complexity doesn't matter as much. This is still secure, but not as secure as Version 1.0. This version is the updated Version 1.1, the main difference is removing the galois field as this still provides a good confusion
+
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{The key transformation operation per encryption}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} 32-byte bytearray key (\texttt{key}), \texttt{64-bit encryption\_index}
+\State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
+\State \textbf{Begin}
+\COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
+\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State increment \texttt{encryption\_index} by 1 each encryption
+\For{$i=0$ to $16$}
+	\State index $\gets i \ll 2$
+	\State i1mod $\gets index \mod 8$
+	\State i2mod $\gets index+1) \mod 8$
+	\State i3mod $\gets index+2) \mod 8$
+	\State i4mod $\gets index+3) \mod 8$
+	\State imod8 $\gets i \mod 8$
+	\State imod9 $\gets (i+1) \mod 8$
+	\State rmod $\gets i \mod 5$ \\
+
+	\COMMENT{No unwanted overflow, so convert to uint64\_t}
+	\State $k_{i1mod} \gets k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}$
+
+	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
+
+	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+
+	\State $k_{i2mod} \gets k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod}$
+	\State $A_{imod8} \gets A_{imod8} \oplus k_{i2mod}$
+
+	\State $k_{i3mod} \gets A_{imod8} \oplus k_{i3mod}$
+	\State $k_{i4mod} \gets A_{imod8} \oplus k_{i4mod}$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);

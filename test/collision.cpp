@@ -58,6 +58,7 @@ void gen_rand_key(uint8_t *key)
 }
 
 // brute-force the key by generating 2 random keys
+template<FullTimePad::Version version>
 void brute_force_random()
 {
 	std::ofstream textfile("collision_report.txt");
@@ -88,8 +89,8 @@ void brute_force_random()
 		// generate transformed(key)
 		FullTimePad fulltimepad1 = FullTimePad(k1);
 		FullTimePad fulltimepad2 = FullTimePad(k2);
-		fulltimepad1.hash(k1, 0); // since keys are unieqe each time, encryption index can stay the same
-		fulltimepad2.hash(k2, 0);
+		fulltimepad1.hash<version>(k1, 0); // since keys are unieqe each time, encryption index can stay the same
+		fulltimepad2.hash<version>(k2, 0);
 
 		test_collision(k1, k2, highest_collision);
 
@@ -123,6 +124,7 @@ void brute_force_random()
 }
 
 // brute-force the key by generating 1 random key and incrementing it till it's similiar
+template<FullTimePad::Version version>
 void brute_force_incr()
 {
 	std::ofstream textfile("collision_report.txt");
@@ -141,7 +143,7 @@ void brute_force_incr()
 
 	// generate transformed(k1) once
 	FullTimePad fulltimepad1 = FullTimePad(k1);
-	fulltimepad1.hash(transformed_k1, 0);
+	fulltimepad1.hash<version>(transformed_k1, 0);
 
 	while(true) {
 		if(doprint) {
@@ -171,7 +173,7 @@ void brute_force_incr()
 
 		// generate transformed(k2)
 		FullTimePad fulltimepad2 = FullTimePad(k2);
-		fulltimepad2.hash(transformed_k2, 0); // testing brute-forcing so encryption index should be same
+		fulltimepad2.hash<version>(transformed_k2, 0); // testing brute-forcing so encryption index should be same
 
 		// compare the transformed keys
 		test_collision(transformed_k1, transformed_k2, highest_collision);
@@ -215,10 +217,36 @@ int main(int argc, char *argv[])
 
 	// parse user input to determine how the brute-force should be performed (random or incremented)
 	if(argc > 1 && strcmp(argv[1], "-r") == 0) {
-		brute_force_random();
+		if((argc > 1 && strcmp(argv[1], "-2.0") == 0) || (argc > 2 && strcmp(argv[2], "-2.0") == 0)) {
+			std::cout << "RUNNING RANDOM KEY - TRANSFORMATION ALGORTIHM 2.0";
+			brute_force_random<FullTimePad::Version20>();
+		} else if((argc > 1 && strcmp(argv[1], "-1.1") == 0) || (argc > 2 && strcmp(argv[2], "-1.1") == 0)) {
+			std::cout << "RUNNING RANDOM KEY - TRANSFORMATION ALGORTIHM 1.1";
+			brute_force_random<FullTimePad::Version11>();
+		} else { // default use version 1.0
+			std::cout << "RUNNING RANDOM KEY - TRANSFORMATION ALGORTIHM 1.0";
+			brute_force_random<FullTimePad::Version10>();
+		}
 	} else {
-		brute_force_incr();
+		if((argc > 1 && strcmp(argv[1], "-2.0") == 0) || (argc > 2 && strcmp(argv[2], "-2.0") == 0)) {
+			std::cout << "RUNNING INCREMENTING KEY - TRANSFORMATION ALGORTIHM 2.0";
+			brute_force_incr<FullTimePad::Version20>();
+		} else if((argc > 1 && strcmp(argv[1], "-1.1") == 0) || (argc > 2 && strcmp(argv[2], "-1.1") == 0)) {
+			std::cout << "RUNNING INCREMENTING KEY - TRANSFORMATION ALGORTIHM 1.1";
+			brute_force_incr<FullTimePad::Version11>();
+		} else { // default use version 1.0
+			std::cout << "RUNNING INCREMENTING KEY - TRANSFORMATION ALGORTIHM 1.0";
+			brute_force_incr<FullTimePad::Version10>();
+		}
+
 	}
+
+	// To run with random keys (no patterns in input):
+	// Use ./collision -r -2.0
+	// Use ./collision -r -1.1
+	// Use ./collision -r -1.0 or just ./collision -r
+	// where the number denotes version of transformation algorithm
+	// For non-random keys, remove -r
 
 	return 0;
 }

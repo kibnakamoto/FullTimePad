@@ -370,13 +370,14 @@ void signal_handler(int sig) {
 
 int main(int argc, char *argv[])
 {
+	std::cout << "\n----------DEPRECATED FILE - NO LONGER NEEDED AS CONFUSION AND DIFFUSION ARE ALREADY MAXIMIZED----------\n\n";
 	CollisionCalculation collision_calc;
 
 	// parse user input to determine how the collision calculation should be performed
-	if(argc > 1 && strcmp(argv[1], "-r") == 0) {
+	if(argc > 1 && strcmp(argv[1], "-r") == 0) { // for random key: run with ./best_permutation -r
 		collision_calc = random_key;
 	} else {
-		collision_calc = incrementing_key;
+		collision_calc = incrementing_key; // for incrementing key (pattern): run with ./best_permutation
 	}
 
 	double best_collision_rate = UINT32_MAX;

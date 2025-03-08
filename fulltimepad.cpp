@@ -61,7 +61,7 @@ uint32_t *FullTimePad::endian_8_to_32_arr(uint8_t *key)
 	return reinterpret_cast<uint32_t*>(key);
 }
 
-// iterations for the main transformation loop
+template<FullTimePad::Version version>
 void FullTimePad::transformation(uint8_t *key) // length of k is 8
 {
 	// vector used for dynamic permutation, dynamically permutated key placeholder
@@ -71,35 +71,92 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 	// 32-bit array ints for key for arithmetic ARX manipulations
 	uint32_t *k = endian_8_to_32_arr(key);
 
-	for(uint8_t i=0;i<16;i++) {
-		uint8_t index = i<<2;
-		uint8_t i1mod = index % 8;
-		uint8_t i2mod = (index+1) % 8;
-		uint8_t i3mod = (index+2) % 8;
-		uint8_t i4mod = (index+3) % 8;
-		uint8_t imod8 = i % 8;
-		uint8_t imod9 = (i+1) % 8;
-	
-		uint8_t rmod = i % 5; // 5 rotation values
-		k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
-	
-		uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+	// run the wanted version
+	if constexpr (version == FullTimePad::Version10) {
+		for(uint8_t i=0;i<16;i++) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
 
-		A[imod9] ^= sum;
-	
-		k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+			uint8_t rmod = i % 5; // 5 rotation values
+								  // TODO: TRY REMOVING % FP ! DOWN HERE, MAYBE UNNECESARY, TEST VALUES, ALSO FOR VERSION 1.1, 2.0
+			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+
+			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+
+			A[imod9] ^= sum;
+
+			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+
+			A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+
+			k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
+			k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
+
+			// permutate the bytearray key
+			dynamic_permutation(key, p, i);
+		}
+	} else if constexpr(version == FullTimePad::Version11) {
+		for(uint8_t i=0;i<16;i++) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
 		
-		A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
-	
-		k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
-		k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
-	
-		// permutate the bytearray key
-		dynamic_permutation(key, p, i);
+			uint8_t rmod = i % 5; // 5 rotation values
+			k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+		
+			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+
+			A[imod9] = (A[imod9] ^ sum) % fp;
+		
+			k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+			
+			A[imod8] = (A[imod8] ^ k[i2mod]) % fp;
+		
+			k[i3mod] = (A[imod8] ^ k[i3mod]) % fp;
+			k[i4mod] = (A[imod8] ^ k[i4mod]) % fp;
+		
+			// permutate the bytearray key
+			dynamic_permutation(key, p, i);
+		}
+	} else { // Version 2.0
+		for(uint8_t i=0;i<16;i++) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
+
+			uint8_t rmod = i % 5; // 5 rotation values
+			k[i1mod] = k[i1mod] + A[imod8] + rotr(k[i1mod], r[rmod]);
+
+			uint32_t sum = k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7];
+
+			A[imod9] = A[imod9] ^ sum;
+
+			k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
+
+			A[imod8] = A[imod8] ^ k[i2mod];
+
+			k[i3mod] = A[imod8] ^ k[i3mod];
+			k[i4mod] = A[imod8] ^ k[i4mod];
+
+			// permutate the bytearray key
+			dynamic_permutation(key, p, i);
+		}
 	}
-
-
 }
+
 
 // if you want the destructor called to safely destroy key after use is over
 // this is to make sure that the key is deleted safely and that the ownership of the init_key isn't managed somewhere else
@@ -117,6 +174,7 @@ FullTimePad::FullTimePad(uint8_t *initial_key)
 
 // key: 256-bit (32-byte) key, should be allocated with length keysize
 // key should be empty as it's only a place holder for the value in init_key
+template<FullTimePad::Version version>
 void FullTimePad::hash(uint8_t *key, uint64_t encryption_index)
 {
 	// Incorporate the the encryption_index here
@@ -137,7 +195,7 @@ void FullTimePad::hash(uint8_t *key, uint64_t encryption_index)
 	// permutate the key based on the V array
 
 	// transformation iterations
-	transformation(key);
+	transformation<version>(key);
 }
 
 // encrypt/decrypt
@@ -145,13 +203,15 @@ void FullTimePad::hash(uint8_t *key, uint64_t encryption_index)
 // pt: plaintext data
 // ct: ciphertext data
 // length: length of pt, and ct
-// encryption_index_nonce: encryption index
+// encryption_index: encryption index
+// version: version of encryption algorithm (1.0, 1.1, 2.0)
+template<FullTimePad::Version version>
 void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index)
 {
 	// generate unieqe key based on encryption index and encrypt
 	const uint32_t segment = length/32 + (length%32 != 0);
 	for(uint32_t i=0;i<segment;i++) {
-		hash(transformed_key, encryption_index); // incorporate encryption index
+		hash<version>(transformed_key, encryption_index); // incorporate encryption index
 		for(uint8_t j=0;j<length;j++) {
 			ct[j] = pt[j] ^ transformed_key[j];
 		}
@@ -170,5 +230,16 @@ FullTimePad::~FullTimePad()
 	memset(transformed_key, 0, keysize); // set to 0s for a safe memory deletion before deallocation
 	delete[] transformed_key;
 }
+
+// Explicit instantiation
+// For encrypt/decrypt (transform)
+template void FullTimePad::transform<FullTimePad::Version10>(uint8_t *, uint8_t *, uint32_t, uint64_t);
+template void FullTimePad::transform<FullTimePad::Version11>(uint8_t *, uint8_t *, uint32_t, uint64_t);
+template void FullTimePad::transform<FullTimePad::Version20>(uint8_t *, uint8_t *, uint32_t, uint64_t);
+
+// For hash
+template void FullTimePad::hash<FullTimePad::Version10>(uint8_t *, uint64_t);
+template void FullTimePad::hash<FullTimePad::Version11>(uint8_t *, uint64_t);
+template void FullTimePad::hash<FullTimePad::Version20>(uint8_t *, uint64_t);
 
 #endif /* FULLTIMEPAD_CPP */

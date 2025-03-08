@@ -51,6 +51,7 @@ void gen_rand_key(uint8_t *key)
 }
 
 // calculate the collision rate with random key
+template<FullTimePad::Version version>
 double find_collision_rate_random_key(uint32_t n)
 {
 	double collision_rate = 0;
@@ -67,8 +68,8 @@ double find_collision_rate_random_key(uint32_t n)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key, 0);
-		fulltimepad2.hash(oldkey, 0);
+		fulltimepad1.hash<version>(initial_key, 0);
+		fulltimepad2.hash<version>(oldkey, 0);
 		double temp_rate = 0;
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
@@ -94,6 +95,7 @@ double find_collision_rate_random_key(uint32_t n)
 }
 
 // calculate the collision rate with random key
+template<FullTimePad::Version version>
 double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 {
 	double collision_rate = 0;
@@ -110,8 +112,8 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key, 0);
-		fulltimepad2.hash(oldkey, 0);
+		fulltimepad1.hash<version>(initial_key, 0);
+		fulltimepad2.hash<version>(oldkey, 0);
 		double temp_rate = 0;
 		for(int i=0;i<32;i++) {
 			 if((int)initial_key[i] <= (int)oldkey[i]+range && (int)initial_key[i] >= (int)oldkey[i]-range) { // check if it's in range with accuracy of range
@@ -120,7 +122,7 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 		}
 
 		// print the percentage changes when one bit of data is changed in key
-		double col = temp_rate/32*100;
+		// double col = temp_rate/32*100;
 		collision_rate += temp_rate;
 
 		//if(col < 10)
@@ -138,6 +140,7 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 
 
 // calculate the collision rate with incrementing integers key
+template<FullTimePad::Version version>
 double find_collision_rate(uint32_t n)
 {
 	double collision_rate = 0;
@@ -149,8 +152,8 @@ double find_collision_rate(uint32_t n)
 		FullTimePad fulltimepad1 = FullTimePad(initial_key);
 		FullTimePad fulltimepad2 = FullTimePad(oldkey);
 
-		fulltimepad1.hash(initial_key, 0);
-		fulltimepad2.hash(oldkey, 0);
+		fulltimepad1.hash<version>(initial_key, 0);
+		fulltimepad2.hash<version>(oldkey, 0);
 		for(int i=0;i<32;i++) {
 			if(initial_key[i] == oldkey[i]) {
 				collision_rate++;
@@ -166,6 +169,7 @@ double find_collision_rate(uint32_t n)
 
 // find if a particular byte affects collision rate more or less
 // print the average  collision rates to test the avalanche effect. Higher collision means lower avalanche effect.
+template<FullTimePad::Version version>
 void check_bytes_permutation(CollisionCalculation collision_calc)
 {
 	double total = 0;
@@ -173,7 +177,7 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 	if(collision_calc == random_key) {
 		for(int i=0;i<32;i++) {
 			// get collision rate at i'th index of key
-			double rate = find_collision_rate_random_key(i);
+			double rate = find_collision_rate_random_key<version>(i);
 
 			std::cout << " avr =  ";
 			if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
@@ -208,7 +212,7 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 			double prev_rate = 0;
 			for(int i=0;i<32;i++) {
 				// get collision rate at i'th index of key
-				double rate = differential_cryptoanalysis_random_key(i, range);
+				double rate = differential_cryptoanalysis_random_key<version>(i, range);
 
 				// std::cout << " avr =  ";
 				// if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
@@ -240,7 +244,7 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 	} else {
 		for(int i=0;i<32;i++) {
 			// get collision rate at i'th index of key
-			double rate = find_collision_rate(i);
+			double rate = find_collision_rate<version>(i);
 
 			if (rate < 10) // pad single-digit data with extra zero so it takes the same amount of space on screen (for organization)
 				std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << rate << "% : " << i << "\t";
@@ -280,15 +284,27 @@ int main(int argc, char *argv[])
 	// parse user input to determine how the collision calculation should be performed
 	if(argc > 1 && strcmp(argv[1], "-r") == 0) {
 		collision_calc = random_key;
+		std::cout << "\nRUNNING RANDOM KEY - ";
 	} else if(argc > 1 && strcmp(argv[1], "-d") == 0) { // differential analysis
+		std::cout << "\nRUNNING DIFFERENTIAL CRYPTOANALYSIS - ";
 		collision_calc = differential_cryptoanalysis;
 	} else {
+		std::cout << "\nRUNNING INCREMENTING KEY - ";
 		collision_calc = incrementing_key;
 	}
 
 	// catch signal interrupt
 	signal(SIGINT, signal_handler);
-	check_bytes_permutation(collision_calc);
+	if ((argc > 1 && strcmp(argv[1], "-2.0") == 0) || (argc > 2 && strcmp(argv[2], "-2.0") == 0)) {
+		std::cout << "TRANSFORMATION ALGORITHM 2.0\n";
+		check_bytes_permutation<FullTimePad::Version20>(collision_calc);
+	} else if((argc > 1 && strcmp(argv[1], "-1.1") == 0) || (argc > 2 && strcmp(argv[2], "-1.1") == 0)) {
+		std::cout << "TRANSFORMATION ALGORITHM 1.1\n";
+		check_bytes_permutation<FullTimePad::Version11>(collision_calc);
+	} else { // Defaults to transformation version 1.0
+		std::cout << "TRANSFORMATION ALGORITHM 1.0\n";
+		check_bytes_permutation<FullTimePad::Version10>(collision_calc);
+	}
 
 	std::cout << std::endl;
 	return 0;

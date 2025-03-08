@@ -36,7 +36,6 @@ static consteval bool is_big_endian() {
 // 256-bit Full-Time-Pad Cipher
 class FullTimePad
 {
-	public:
 
 			// ideal permutations: would have 1 byte shifted to each another 32-bit number.
 			// e.g. byte 0 goes to byte 4
@@ -81,6 +80,15 @@ class FullTimePad
 			}};
 
 			static consteval std::array<std::array<uint8_t, 32>, 16> get_n_V();
+
+	public:
+			// select version in transformation function
+			enum Version {
+				Version10 = 10, // Version 1.0 - Most complexity, less speed
+				Version11 = 11, // Version 1.1 - Less complexity, more speed
+				Version20 = 20 // Version 2.0 - less complexity, most speed -- preffered to version 1.1 as galois field doesn't affect everything as much as anticipated
+			};
+
 	private: 
 			// constant array used in the transformation of the key
 			uint32_t A[8] = {
@@ -173,6 +181,7 @@ class FullTimePad
 			bool terminate_k = false;
 			
 			// iterations for the main transformation loop
+			template<Version version=Version10>
 			void transformation(uint8_t *key); // length of k is 8
 		
 			// dynamically permutate the key during iteration
@@ -189,6 +198,7 @@ class FullTimePad
 	public:
 			// for testing purposes
 			#ifdef REVERSE_CPP
+			template<Version version>
 			friend void inv_transformation(uint8_t *transformed_k);
 			#endif
 
@@ -201,6 +211,7 @@ class FullTimePad
 			FullTimePad(uint8_t *initial_key);
 
 			// key: 256-bit (32-byte) key, should be allocated with length keysize
+			template<Version version=Version10>
 			void hash(uint8_t *key, uint64_t encryption_index_nonce);
 
 			// encrypt/decrypt
@@ -209,6 +220,7 @@ class FullTimePad
 			// ct: ciphertext data
 			// length: length of pt, and ct
 			// encryption_index: each encrypted value needs it's own encryption index to keep keys unieqe and to avoid collisions
+			template<Version version=Version10>
 			void transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index);
 
 			// Destructor

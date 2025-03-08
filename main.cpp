@@ -17,7 +17,7 @@ int main()
 
 	// update by 1 and test again, to see collision resistance.
 	for(int m=0;m<256;m++) {
-		fulltimepad.transform(pt, ct, 32, encryption_index); // encrypt
+		fulltimepad.transform<FullTimePad::Version10>(pt, ct, 32, encryption_index); // encrypt
 		if(m != 0) { // don't compare first one
 			double col = 0;
 			for(int i=0;i<32;i++) {
@@ -30,7 +30,7 @@ int main()
 		}
 
 		// to decrypt:
-		fulltimepad.transform(ct, decrypted, 32, encryption_index); // decrypt
+		fulltimepad.transform<FullTimePad::Version10>(ct, decrypted, 32, encryption_index); // decrypt
 		for(int i=0;i<32;i++) {
 			if (pt[i] != decrypted[i]) {// this could mean that encryption_index or key is wrong
 				std::cout << "FATAL: DECRYPTED CIPHERTEXT NOT EQUAL TO PLAINTEXT";

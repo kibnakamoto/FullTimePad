@@ -31,13 +31,8 @@
 
 #include "../fulltimepad.h"
 
-// how the collision calculation should be performed
-enum CollisionCalculation {
-	incrementing_key,
-	random_key
-};
-
 // inverse the key transformation
+template<FullTimePad::Version version>
 void inv_transformation(uint8_t *transformed_k)
 {
 	// vector used for dynamic permutation, dynamically permutated key placeholder
@@ -47,6 +42,7 @@ void inv_transformation(uint8_t *transformed_k)
 	// 32-bit array ints for key for arithmetic ARX manipulations
 	uint32_t *k = FullTimePad::endian_8_to_32_arr(transformed_k); // length of k is 8
 
+	 // assumes that encryption index = 0 as this is the simplest form of the calcuation, in other words, if reversed algorithm for encryption index=0, then reversing the algorithm for encryption index != 0 would only be easier.
 	uint32_t A[8] = {
 		0,	// encryption index
 		0,	// encryption index
@@ -58,34 +54,82 @@ void inv_transformation(uint8_t *transformed_k)
 		0x64997dfd,
 	};
 
+	if constexpr(version == FullTimePad::Version10) {
+		for(int8_t i=15;i>=0;i--) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
+			uint8_t rmod = i % 5; // 5 rotation values
 
-	for(int8_t i=15;i>=0;i--) {
-		uint8_t index = i<<2;
-		uint8_t i1mod = index % 8;
-		uint8_t i2mod = (index+1) % 8;
-		uint8_t i3mod = (index+2) % 8;
-		uint8_t i4mod = (index+3) % 8;
-		uint8_t imod8 = i % 8;
-		uint8_t imod9 = (i+1) % 8;
-		uint8_t rmod = i % 5; // 5 rotation values
+			// permutate the bytearray key
+			FullTimePad::dynamic_permutation(transformed_k, p, i);
 
-		// permutate the bytearray key
-		FullTimePad::dynamic_permutation(transformed_k, p, i);
+			k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) - (A[imod9] ^ k[i3mod]) ) % FullTimePad::fp;
 
-		k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) - (A[imod9] ^ k[i3mod]) ) % FullTimePad::fp;
+			k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) - (A[imod9] ^ k[i4mod]) ) % FullTimePad::fp;
+			
+			A[imod8] ^= ((uint64_t)k[i2mod] + FullTimePad::rotl(k[i1mod], FullTimePad::r[(i+1)%5])) % FullTimePad::fp;
 
-		k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) - (A[imod9] ^ k[i4mod]) ) % FullTimePad::fp;
-		
-		A[imod8] ^= ((uint64_t)k[i2mod] + FullTimePad::rotl(k[i1mod], FullTimePad::r[(i+1)%5])) % FullTimePad::fp;
+			k[i2mod] = ( ( ((uint64_t)k[i2mod] - A[imod9]) % FullTimePad::fp) - FullTimePad::rotr(k[i2mod], FullTimePad::r[rmod])  ) % FullTimePad::fp; // uint64_t to make sure there is no unwanted overflow
+			A[imod9] ^= ((uint64_t)k[0] - k[1] - k[2] - k[3] - k[4] - k[5] - k[6] - k[7]) % FullTimePad::fp;
 
-		k[i2mod] = ( ( ((uint64_t)k[i2mod] - A[imod9]) % FullTimePad::fp) - FullTimePad::rotr(k[i2mod], FullTimePad::r[rmod])  ) % FullTimePad::fp; // uint64_t to make sure there is no unwanted overflow
+			k[i1mod] = ( ( ((uint64_t)k[i1mod] - A[imod8]) % FullTimePad::fp) - FullTimePad::rotl(k[i1mod], FullTimePad::r[rmod])  ) % FullTimePad::fp;
+		}
+	} else if constexpr(version == FullTimePad::Version11) {
+		for(int8_t i=15;i>=0;i--) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
+			uint8_t rmod = i % 5; // 5 rotation values
 
-		// A[i2mod] ^= k[i1mod]; // add all values. interlink all values of k to A
-		A[imod9] ^= ((uint64_t)k[0] - k[1] - k[2] - k[3] - k[4] - k[5] - k[6] - k[7]) % FullTimePad::fp;
+			// permutate the bytearray key
+			FullTimePad::dynamic_permutation(transformed_k, p, i);
 
-		k[i1mod] = ( ( ((uint64_t)k[i1mod] - A[imod8]) % FullTimePad::fp) - FullTimePad::rotl(k[i1mod], FullTimePad::r[rmod])  ) % FullTimePad::fp;
+			k[i4mod] = (A[imod8] ^ k[i4mod]) % FullTimePad::fp;
+			k[i3mod] = (A[imod8] ^ k[i3mod]) % FullTimePad::fp;
+			
+			A[imod8] = (A[imod8] ^ k[i2mod]) % FullTimePad::fp;
+
+			k[i2mod] = ( ( ((uint64_t)k[i2mod] - A[imod9]) % FullTimePad::fp) - FullTimePad::rotr(k[i2mod], FullTimePad::r[rmod])  ) % FullTimePad::fp; // uint64_t to make sure there is no unwanted overflow
+
+			A[imod9] ^= ((uint64_t)k[0] - k[1] - k[2] - k[3] - k[4] - k[5] - k[6] - k[7]) % FullTimePad::fp;
+
+			k[i1mod] = ( ( ((uint64_t)k[i1mod] - A[imod8]) % FullTimePad::fp) - FullTimePad::rotl(k[i1mod], FullTimePad::r[rmod])  ) % FullTimePad::fp;
+		}
+	} else { // Version 2.0
+		for(int8_t i=15;i>=0;i--) {
+			uint8_t index = i<<2;
+			uint8_t i1mod = index % 8;
+			uint8_t i2mod = (index+1) % 8;
+			uint8_t i3mod = (index+2) % 8;
+			uint8_t i4mod = (index+3) % 8;
+			uint8_t imod8 = i % 8;
+			uint8_t imod9 = (i+1) % 8;
+			uint8_t rmod = i % 5; // 5 rotation values
+
+			// permutate the bytearray key
+			FullTimePad::dynamic_permutation(transformed_k, p, i);
+
+			k[i4mod] = A[imod8] ^ k[i4mod];
+			k[i3mod] = A[imod8] ^ k[i3mod];
+			
+			A[imod8] = A[imod8] ^ k[i2mod];
+
+			k[i2mod] = k[i2mod] - A[imod9] - FullTimePad::rotr(k[i2mod], FullTimePad::r[rmod]);
+
+			A[imod9] ^= k[0] - k[1] - k[2] - k[3] - k[4] - k[5] - k[6] - k[7];
+
+			k[i1mod] = k[i1mod] - A[imod8] - FullTimePad::rotl(k[i1mod], FullTimePad::r[rmod]);
+		}
 	}
-	
 }
 
 // generate a random 32-byte key
@@ -97,45 +141,58 @@ void gen_rand_key(uint8_t *key)
 	for(uint8_t i=0;i<32;i++) key[i] = dist(gen);
 }
 
-int main()
+template<FullTimePad::Version version>
+void test_each_version()
 {
 	// if two plaintexts are the same (or are known), and the ciphertexts are known or if one plaintext and ciphertext are known. then you can find the hash(key)
 	// Are there any patterns between hash(key1) xor hash(key2) where key1 and key2 have 1-bit difference?
 	// And most importantly, is it possible to find the key using hash(key). Make inv_hash to test it
 	// uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 	uint8_t key[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
-	uint32_t A[8] = {
-		0,	// encryption index
-		0,	// encryption index
-		0x119f904f,
-		0x73d44db5,
-		0x3918fa83,
-		0x5546b403,
-		0x216c46df,
-		0x64997dfd,
-	};
+	//uint32_t A[8] = {
+	//	0,	// encryption index
+	//	0,	// encryption index
+	//	0x119f904f,
+	//	0x73d44db5,
+	//	0x3918fa83,
+	//	0x5546b403,
+	//	0x216c46df,
+	//	0x64997dfd,
+	//};
 
-	// check if when A is given as key, does it cancel out
-	for(int i=0;i<8;i++) {
-		key[i*4+0] = ( A[i] >> 24 ) & 0xff;
-		key[i*4+1] = ( A[i] >> 16 ) & 0xff;
-		key[i*4+2] = ( A[i] >> 8 ) & 0xff;
-		key[i*4+3] = ( A[i] >> 0 ) & 0xff;
-	}
+	//// check if when A is given as key, does it cancel out
+	//for(int i=0;i<8;i++) {
+	//	key[i*4+0] = ( A[i] >> 24 ) & 0xff;
+	//	key[i*4+1] = ( A[i] >> 16 ) & 0xff;
+	//	key[i*4+2] = ( A[i] >> 8 ) & 0xff;
+	//	key[i*4+3] = ( A[i] >> 0 ) & 0xff;
+	//}
 
 	FullTimePad fulltimepad = FullTimePad(key);
 
 	// print the given key	
+	std::cout << "input key:    ";
 	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
 	std::cout << std::endl;
 
-	fulltimepad.hash(key, 0);
+	fulltimepad.hash<version>(key, 0);
 
 	// inverse the key:
-	inv_transformation(key);
+	inv_transformation<version>(key);
 
+	std::cout << "reversed key: ";
 	for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << key[i]+0;
 	std::cout << std::endl;
+}
+
+int main()
+{
+	std::cout << "\nTESTING REVERSE - TRANSFORMATION VERSION 1.0\n";
+	test_each_version<FullTimePad::Version10>();
+	std::cout << "\nTESTING REVERSE - TRANSFORMATION VERSION 1.1\n";
+	test_each_version<FullTimePad::Version11>();
+	std::cout << "\nTESTING REVERSE - TRANSFORMATION VERSION 2.0\n";
+	test_each_version<FullTimePad::Version20>();
 	return 0;
 }
 #pragma GCC diagnostic pop
