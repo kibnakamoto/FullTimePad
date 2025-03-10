@@ -62,7 +62,7 @@
 
 \begin{abstract}
 		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order. This algorithm is not necesarrily a substitute for existing algorithms. This version of the algorithm is better suited towards cases where performance can be sacrificed, ChaCha20 is objectively faster, AES with AES-NI instruction set is faster, but algorithms that are a little slower can be better at limiting brute-force attacks.
+		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order.
 
 		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
 		% TODO: how to deal with long messsages
@@ -972,10 +972,11 @@ Encryption operation is the same as decryption
 	\COMMENT{create a copy of unmodified $k$, and transform it using an incrementing unieqe \texttt{encryption\_index}}
 	\COMMENT{Then, encrypt using plaintext xor transformed key = ciphertext}
 	\State copy = copy($k$)
-	\State $c \gets c | p \oplus \mathrb{transformation(copy,} \texttt{encryption\_index})$
-\EndFor
-\State for the remainder:
-\State $c \gets c | p \oplus \mathrb{transformation(copy,} \texttt{encryption\_index})$
+	\State $c \gets c \,||\, p \oplus \mathrm{transformation(copy, } \texttt{  encryption\_index})$
+\EndFor\\
+\\
+\COMMENT{For the remainder:}
+\State $c \gets c \,||\, p \oplus \mathrm{transformation(copy, } \texttt{  encryption\_index})$
 \State \textbf{Return} $c$
 \end{algorithmic}
 \end{algorithm}
