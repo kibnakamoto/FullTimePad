@@ -208,6 +208,10 @@ What if the plaintext and ciphertext are known, then it is possible to find $k$ 
 
 $\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confusion
 
+\subsection {NIST SP 800-22 - Statistical Test Suite - Official NIST Randomness Test}
+
+using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been testing using a fixed key (0-31) and plaintext (0-31). Their values had a very obvious pattern, every time, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input provides a very good avalanche effect, and therefore has a proper avalanche effect.
+
 \subsection{Brute-Force}
 
 Due to the use of a galois field. The total number of combinations per 256-bit key isn't $a=2^{256}$, but rather $b=4294967291^8$ where $p=4294967291$ for arithmetic in $F_p$ and there are 8 32-bit numbers in a 256-bit key.
@@ -326,17 +330,15 @@ $\texttt{transform(} key_1 \texttt{)} = \texttt{transform(} key_2 \texttt{)}$ \\
 For example: $x + y = 16$ \\
 
 $ x,y \in \mathbb{Z}, 0 \leq x,y < 256$ \\
-there are 17-combinations for x to satisfy this equation, and simultaniously, there are 17 combinations for y to satisfy the equation, so a total of $17$ combinations.
+there are 17-combinations for x to satisfy this expression, and simultaniously, there are 17 combinations for y to satisfy the expression, so there is a total of $17$ combinations.
 \\
-But for $x + y = z$, there are $257$ combinations to try. if the result of an arithmetic operation is known, there may be ways to get the same end-result with less combinations to brute-force. Knowing the value of $z$ reduced the number of combinations by $15$ times.
-\\
-This means that the calculation done on \ref{birthday_problem} for the birthday problem would be irrelevant because there is a better algorithm than random brute forcing (to find collisions for \texttt{transform(key)})
+But for $x + y = z$, there are $256$ combinations to try. if the result of an arithmetic operation is known, there may be ways to get the same end-result with less combinations to brute-force. Knowing the value of $z$ reduced the number of combinations by $15$ times.
 
 $\therefore$ if there is an operation that can provide the same output for a wide range of inputs, there can be a collision attack. Collision attacks can be used to derive the same transformed key using a different input key and decrypt the plaintext without actually having the original key.
 \\
-In the context of this encryption algorithm (using addition as an example): keysize is 32-bytes
+In the context of this encryption algorithm (using addition as an example operation): keysize is 32-bytes
 \\
-so for byte n: $x_n + y_n = z_n$\\
+so for each byte n: $x_n + y_n = z_n$\\
 $ x,y,z \in \mathbb{Z}, 0 \leq x,y,z < 256$\\
 \\
 Number of combinations can be represented by 
@@ -363,7 +365,7 @@ To test if this offers enough collision resistance: think of this problem as an 
 \textbf{3.} $x+y+z+v=16 \texttt{\hspace{1cm} offers n=969 combinations (determined experimentally)}$\\
 $x,y,z,v \in \mathbb{Z}, 0 \leq x,y,z,v < 256$\\
 
-So there has to be an equation or algorithm to summarize the relationship between number of variables ($l$) and the sum of the addition operation ($16$);
+So there has to be an equation or algorithm to summarize the relationship between number of variables ($\ell$) and the sum of the addition operation ($16$);
 
 Knowing that equation \textbf{1.} is the simplest equation and it offers 17 combinations. Then if the rest of the equations are represented in 2-variable fashion. we can find number of combinations $n$:
 
@@ -389,38 +391,38 @@ For equation \textbf{3.}: There are 6 ways to represent as 2-variable equation
 The number of ways a multi-variable equation can be represented as a 2 variable equation can be summarized by the following:
 
 \[
-\\ \sum_{i=1}^{l-1} i
+\\ \sum_{i=1}^{\ell-1} i
 \]
 
 Using some number crunching and logic, I found that there is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
 
 \[
-		\\ n_l \propto \frac{\displaystyle \sum_{i=1}^{l-1}}{\displaystyle \sum_{i=1}^{l-2}}
+		\\ n_\ell \approx \propto \frac{\displaystyle \sum_{i=1}^{\ell-1}}{\displaystyle \sum_{i=1}^{\ell-2}} \times k \hspace{1cm} \texttt{where k is a multiplier:} k \in \mathbb{N} 
 \]
 
 Using more number crunching: I found the following recursive formula that finds the number of combinations that satisfies x+y+\dots = 16:
 
 \[
-		\\ n_l = (n_{l-1} \frac{\displaystyle \sum_{i=1}^{x}}{\displaystyle \sum_{i=1}^{x-1}} +17) \times 3 - 17 \times 3( (x+1) \mod 2 )
+		\\ n_\ell = (n_{\ell-1} \frac{\displaystyle \sum_{i=1}^{x}}{\displaystyle \sum_{i=1}^{x-1}} +17) \times 3 - 17 \times 3( (x+1) \mod 2 )
 \]
-where $x = l-1$ \quad and x should be incremented until correct answer is reached for $l \geq 6$ and $n_{l-1}$ is previous number of combinations.
+where $x = \ell-1$ \quad and x should be incremented until correct answer is reached for $\ell \geq 6$ and $n_{\ell-1}$ is previous number of combinations.
 This formula doesn't translate to cases where the 2-variable equation doesn't have 17 combinations.
 
 Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following equation that satisfies all cases:
 
 \[
-\\ \prod_{i=0}^{l-1} \frac{(x+i)}{1+i}
+\\ \prod_{i=0}^{\ell-1} \frac{(x+i)}{1+i}
 \]
 \\
 where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
 
 Using this equation for the context of this encryption algorithm:
 
-Recall:
+maximum 32-bit number:
 \[
-\\ c = \sum_{i=1}^{l-1} i
+\\ c = 2^{32}-1 = \texttt{0xffffffff}
 \]
-where $l=8$ since 8 32-bit segments to the 256-bit key
+where $\ell=8$ since 8 32-bit segments to the 256-bit key
 then, $x = c + 1$
 
 the total number of combinations according to the equation is between $1$ and \\$2871827628774669857283799072180574717903946432793745331030345747716374528 \approx 2.9 \times 10^{72}$
@@ -440,6 +442,13 @@ Related key attacks isn't possible considering that it requires that \texttt{tra
 \subsection{Time Based Attacks}
 
 Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again. This is tested in \texttt{test/benchmark} in function \texttt{benchmark\_hash\_time\_attack\_v()}. This test passed. The keys with small numbers have the same speed as keys with large numbers (This was never in doubt), therefore algorithm is proven to be constant time.
+\\
+\texttt{----------TESTING SIDE CHANNEL ATTACKS----------\\
+TESTING TRANSFORMATION VERSION 1.0: PASSED (NO SIDE CHANNEL): data is consistent\\
+TESTING TRANSFORMATION VERSION 1.1: PASSED (NO SIDE CHANNEL): data is consistent\\
+TESTING TRANSFORMATION VERSION 2.0: PASSED (NO SIDE CHANNEL): data is consistent}\\
+
+Tested for time-based side-channel attacks by comparing the computation time for different key values, If computation time for smaller key (32 0s) approximately equals to computation time for (32 255s) key, then data is consistent. This test is to see if there was a side-channel vulnerability (hardware/software) where someone approximates the value of the key by timing the calculation speed.
 
 \subsection{Linear Cryptoanalysis}
 
@@ -568,7 +577,9 @@ $\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
 
 \subsubsection{Different Permutation Matrices}
 
-tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.
+Tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.
+
+In terms of efficiency, the permutation matrix should be a uniform permutation matrix. The current matrix is non-uniform, which might provide better diffusion (more random), it also creates the issue of efficiency. So in terms of computation speed, reducing the number of times the memory is accessed is required. To achieve this, I will implement an updated version with uniform matrix and perform benchmark tests, based on results of both avalanche effect and cryptoanalysis testing, I will keep/undo the tests.
 
 \subsubsection{Number of Rounds}
 
@@ -598,7 +609,7 @@ every addition operation is done in a prime galois field as every $k_i \in \math
 
 Cicadas only surface once every 17 years. Assuming that their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
 let x be the time interval for when the cicadas surface \\
-let t be the time interval for when the predetors surface \\
+let y be the time interval for when the predetors surface \\
 We can conclude:\\
 $GCD(x,y) = 1$, then they meet up every $x \times y$ years. \\
 Whereas if $GCD(x,y) \neq 1$, then they meet up every $x$ years (assuming $x > y$). \\
@@ -757,7 +768,26 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 \section{Performance}
 
-% TODO: write about performance, benchmark tests, etc.
+In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. If the existing non-uniform permutation matrix is replaced with a uniform one, there will be the option of using AVX (256-bit) CPU register and permutating might become efficient in which case speeds might surpass/approach ChaCha20 (with the right hardware). This requires further testing and results will change based on each system. But Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all encryptions are within the context of speed, some are more focused on how secure the data is. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.
+
+Benchmark tests show the following results: 
+
+\texttt{----------TESTING SPEED----------\\
+TESTING TRANSFORMATION VERSION 1.0: Computation Time for 1000000 key transformations: 1.06539 seconds\\
+Hashrate: 938625 keys per second\\
+\\
+TESTING TRANSFORMATION VERSION 1.1: Computation Time for 1000000 key transformations: 0.938767 seconds\\
+Hashrate: 1065226 keys per second\\
+\\
+TESTING TRANSFORMATION VERSION 2.0: Computation Time for 1000000 key transformations: 0.251569 seconds\\
+Hashrate: 3975052 keys per second\\
+}
+\\
+On the same device (12th Gen Intel(R) Core(TM) i7-12700H, DDR5 RAM). The ChaCha20 benchmark tests yield the following results:\\
+\texttt{Time taken to encrypt 1000000 32-byte messages: 0.0869328 seconds\\
+Encryption rate: 11503131 messages per second}\\
+\\
+This means that ChaCha20 is 2.8 times faster than \texttt{Full-Time-Pad} transformation version 2.0. This can be minimized with further optimization, even to a negligible amount.\\
 
 \section {Cipher}
 
@@ -771,32 +801,32 @@ Some of the values are xored because xor operator offers 256 combinations per by
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
 \State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
-\State \texttt{encryption\_index} $\gets$ \texttt{encryption\_index} + 1
 \For{$i=0$ to $16$}
-	\State index $\gets i \ll 2$
-	\State i1mod $\gets index \mod 8$
-	\State i2mod $\gets index+1) \mod 8$
-	\State i3mod $\gets index+2) \mod 8$
-	\State i4mod $\gets index+3) \mod 8$
-	\State imod8 $\gets i \mod 8$
-	\State imod9 $\gets (i+1) \mod 8$
-	\State rmod $\gets i \mod 5$ \\
+	\State $\mathrm{index} \gets i \ll 2$
+	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
+	\State $\mathrm{i2mod} \gets \mathrm{index}+1) \mod 8$
+	\State $\mathrm{i3mod} \gets \mathrm{index}+2) \mod 8$
+	\State $\mathrm{i4mod} \gets \mathrm{index}+3) \mod 8$
+	\State $\mathrm{imod8} \gets i \mod 8$
+	\State $\mathrm{imod9} \gets (i+1) \mod 8$
+	\State $\mathrm{rmod} \gets i \mod 5$ \\
 
 	\COMMENT{No unwanted overflow, so convert to uint64\_t}
-	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
+	\State $k_\mathrm{i1mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}  \pmod p $
 
-	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
 
-	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+	\State $A_\mathrm{imod9} \gets A_{imod9} \oplus \text{sum}$
 
-	\State $k_{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
-	\State $A_{imod8} \gets A_{imod8} \oplus \text{(uint64\_t)} k_{i2mod} + k_{i1mod} \ggg r_{(i+1) \mod 5} \pmod p$
+	\State $k_\mathrm{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus \mathrm{(uint64\_t)} k_\mathrm{i2mod} + k_\mathrm{i1mod} \ggg r_{(i+1) \mod 5} \pmod p$
 
-	\State $k_{i3mod} \gets \text{(uint64\_t)} A_{imod8} \oplus k_{i3mod} + A_{imod9} \oplus k_{i4mod} \pmod p$
-	\State $k_{i4mod} \gets  \text{(uint64\_t)} A_{imod8} \oplus k_{i4mod} + A_{imod9} \oplus k_{i3mod} \pmod p$ \\
+	\State $k_\mathrm{i3mod} \gets \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod} \pmod p$
+	\State $k_\mathrm{i4mod} \gets  \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod} \pmod p$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+\State increment \texttt{encryption\_index} by 1 for each plaintext
 \EndFor
 \State \textbf{Return} $\texttt{key}$
 \end{algorithmic}
@@ -813,34 +843,34 @@ This version of the transformation offers more speed less complexity. This is pr
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
-\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
-\State increment \texttt{encryption\_index} by 1 each encryption
+\State $\mathrm{uint32\_t *k} \gets$ endian\_8\_to\_32\_arr(\texttt{key})
 \For{$i=0$ to $16$}
-	\State index $\gets i \ll 2$
-	\State i1mod $\gets index \mod 8$
-	\State i2mod $\gets index+1) \mod 8$
-	\State i3mod $\gets index+2) \mod 8$
-	\State i4mod $\gets index+3) \mod 8$
-	\State imod8 $\gets i \mod 8$
-	\State imod9 $\gets (i+1) \mod 8$
-	\State rmod $\gets i \mod 5$ \\
+	\State $\mathrm{index} \gets i \ll 2$
+	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
+	\State $\mathrm{i2mod} \gets \mathrm{index}+1) \mod 8$
+	\State $\mathrm{i3mod} \gets \mathrm{index}+2) \mod 8$
+	\State $\mathrm{i4mod} \gets \mathrm{index}+3) \mod 8$
+	\State $\mathrm{imod8} \gets i \mod 8$
+	\State $\mathrm{imod9} \gets (i+1) \mod 8$
+	\State $\mathrm{rmod} \gets i \mod 5$ \\
 
 	\COMMENT{No unwanted overflow, so convert to uint64\_t}
-	\State $k_{i1mod} \gets \text{(uint64\_t)} k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}  \pmod p $
+	\State $k_\mathrm{i1mod} \gets \text{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}  \pmod p $
 
-	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
 
-	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+	\State $A_\mathrm{imod9} \gets A_\mathrm{imod9} \oplus \mathrm{sum}$
 
-	\State $k_{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
-	\State $A_{imod8} \gets A_{imod8} \oplus k_{i2mod} \pmod p$
+	\State $k_\mathrm{i2mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod} \pmod p$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod} \pmod p$
 
-	\State $k_{i3mod} \gets A_{imod8} \oplus k_{i3mod} \pmod p$
-	\State $k_{i4mod} \gets A_{imod8} \oplus k_{i4mod} \pmod p$ \\
+	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod} \pmod p$
+	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod} \pmod p$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
 \EndFor
+\State increment \texttt{encryption\_index} by 1 for each plaintext
 \State \textbf{Return} $\texttt{key}$
 \end{algorithmic}
 \end{algorithm}
@@ -857,33 +887,34 @@ This version of the transformation prioritizes speed. This is preferred to the p
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
 \State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
-\State increment \texttt{encryption\_index} by 1 each encryption
 \For{$i=0$ to $16$}
-	\State index $\gets i \ll 2$
-	\State i1mod $\gets index \mod 8$
-	\State i2mod $\gets index+1) \mod 8$
-	\State i3mod $\gets index+2) \mod 8$
-	\State i4mod $\gets index+3) \mod 8$
-	\State imod8 $\gets i \mod 8$
-	\State imod9 $\gets (i+1) \mod 8$
-	\State rmod $\gets i \mod 5$ \\
+	\State $\mathrm{index} \gets i \ll 2$
+	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
+	\State $\mathrm{i2mod} \gets \mathrm{index}+1) \mod 8$
+	\State $\mathrm{i3mod} \gets \mathrm{index}+2) \mod 8$
+	\State $\mathrm{i4mod} \gets \mathrm{index}+3) \mod 8$
+	\State $\mathrm{imod8} \gets i \mod 8$
+	\State $\mathrm{imod9} \gets (i+1) \mod 8$
+	\State $\mathrm{rmod} \gets i \mod 5$ \\
+	
+	\State $k_\mathrm{i1mod} \gets k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}$
 
-	\COMMENT{No unwanted overflow, so convert to uint64\_t}
-	\State $k_{i1mod} \gets k_{i1mod} + A_{imod8} + k_{i1mod} \ggg r_{rmod}$
+	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
 
-	\State $ \text{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
+	\State $A_\mathrm{imod9} \gets A_\mathrm{imod9} \oplus \mathrm{sum}$
 
-	\State $A_{imod9} \gets A_{imod9} \oplus \text{sum}$
+	\State $k_\mathrm{i2mod} \gets k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod}$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod}$
 
-	\State $k_{i2mod} \gets k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod}$
-	\State $A_{imod8} \gets A_{imod8} \oplus k_{i2mod}$
+	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod}$
+	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod}$ \\
 
-	\State $k_{i3mod} \gets A_{imod8} \oplus k_{i3mod}$
-	\State $k_{i4mod} \gets A_{imod8} \oplus k_{i4mod}$ \\
-
-	\COMMENT{Permutate the bytearray key}
-	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+	\COMMENT{Permutate the bytearray key only 4 times}
+	\If {$i \mod 4 = 0$}
+		\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
+	\EndIf
 \EndFor
+\State increment \texttt{encryption\_index} by 1 for each plaintext
 \State \textbf{Return} $\texttt{key}$
 \end{algorithmic}
 \end{algorithm}
@@ -899,7 +930,7 @@ This version of the transformation prioritizes speed. This is preferred to the p
 \For{$j=0$ to $32$}
 		\State $P_j = B_{V_{i_j}}$
 \EndFor
-\State \textbf{Return} $\texttt{P}$
+\State \textbf{Return} $P$
 \end{algorithmic}
 \end{algorithm}
 
@@ -926,11 +957,29 @@ In order to reuse the key, there is an encryption index which is a 64-bit nonce 
 
 \subsection {Long Plaintexts}
 
-When there are long plaintexts used, the encryption index should be incremented by 1 the same way as key reuse. It might be logical to randomly generate the encryption index per plaintext so that you don't have to keep track of incrementing the encryption index for all plaintexts but rather per plaintext. This isn't an issue in the algorithm itself but rather a side-channel exploit. My implementation of the algorithm doesn't impose this problem as long as you don't use the same key for 2 \texttt{FullTimePad} Objects.
+When there are long plaintexts used, the encryption index should be incremented by 1 the same way as key reuse. It might be logical to randomly generate the encryption index per plaintext so that you don't have to keep track of incrementing the encryption index for all plaintexts but rather per plaintext. This isn't an issue in the algorithm itself but rather a side-channel exploit if you don't update encryption index. My implementation of the algorithm doesn't impose this problem as long as you don't use the same key for 2 \texttt{FullTimePad} Objects.
 
 \subsection {Encryption/Decryption operation}
 
 Encryption operation is the same as decryption
+
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{Encrypt/Decrypt transform Function}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} plaintext ($p$), length ($\ell$), 32-byte original key ($k$), encryption index/nonce (\texttt{encryption\_index})
+\State \textbf{Output:} ciphertext ($c$)
+\For {each 32-byte segment of plaintext}
+	\COMMENT{create a copy of unmodified $k$, and transform it using an incrementing unieqe \texttt{encryption\_index}}
+	\COMMENT{Then, encrypt using plaintext xor transformed key = ciphertext}
+	\State copy = copy($k$)
+	\State $c \gets c | p \oplus \mathrb{transformation(copy,} \texttt{encryption\_index})$
+\EndFor
+\State for the remainder:
+\State $c \gets c | p \oplus \mathrb{transformation(copy,} \texttt{encryption\_index})$
+\State \textbf{Return} $c$
+\end{algorithmic}
+\end{algorithm}
+
 
 \end{document}
 
