@@ -83,8 +83,8 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			uint8_t imod9 = (i+1) % 8;
 
 			uint8_t rmod = i % 5; // 5 rotation values
-								  // TODO: TRY REMOVING % FP ! DOWN HERE, MAYBE UNNECESARY, TEST VALUES, ALSO FOR VERSION 1.1, 2.0
-			k[i1mod] = ( ((uint64_t)k[i1mod] + A[imod8])  + rotr(k[i1mod], r[rmod]) ) % fp;
+								  // TODO: get rid of k[i1mod]. It's rotated then added, maybe add another value instead (or nothing). Like k[i3mod]
+			k[i1mod] = ( (uint64_t)k[i1mod] + A[imod8]  + rotr(k[i1mod], r[rmod]) ) % fp;
 
 			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 
@@ -111,7 +111,7 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			uint8_t imod9 = (i+1) % 8;
 		
 			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = ( ((uint64_t)k[i1mod] + A[imod8])  + rotr(k[i1mod], r[rmod]) ) % fp;
+			k[i1mod] = ( (uint64_t)k[i1mod] + A[imod8]  + rotr(k[i1mod], r[rmod]) ) % fp;
 		
 			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
 
@@ -138,7 +138,7 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			uint8_t imod9 = (i+1) % 8;
 
 			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = k[i1mod] + A[imod8] + rotr(k[i1mod], r[rmod]);
+			k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
 
 			uint32_t sum = k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7];
 
@@ -151,8 +151,10 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			k[i3mod] = A[imod8] ^ k[i3mod];
 			k[i4mod] = A[imod8] ^ k[i4mod];
 
-			// permutate the bytearray key
-			dynamic_permutation(key, p, i);
+			// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
+			if(i % 4 == 0) {
+				dynamic_permutation(key, p, i);
+			}
 		}
 	}
 }
@@ -209,13 +211,23 @@ template<FullTimePad::Version version>
 void FullTimePad::transform(uint8_t *pt, uint8_t *ct, uint32_t length, uint64_t encryption_index)
 {
 	// generate unieqe key based on encryption index and encrypt
-	const uint32_t segment = length/32 + (length%32 != 0);
+	// for each 32-byte segment of the plaintext
+	const uint32_t segment = length/32;
 	for(uint32_t i=0;i<segment;i++) {
 		hash<version>(transformed_key, encryption_index); // incorporate encryption index
-		for(uint8_t j=0;j<length;j++) {
+		for(uint8_t j=0;j<32;j++) {
 			ct[j] = pt[j] ^ transformed_key[j];
 		}
 		encryption_index++;
+	}
+
+	// for the remainder:
+	const uint32_t final_length = length%32;
+	if (final_length != 0) {
+		hash<version>(transformed_key, encryption_index); // incorporate encryption index
+		for(uint8_t j=0;j<final_length;j++) {
+			ct[j] = pt[j] ^ transformed_key[j];
+		}
 	}
 }
 

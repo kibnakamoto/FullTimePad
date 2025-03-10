@@ -25,8 +25,8 @@ void benchmark_hash_time_attack_v()
 		for(int j=0;j<32;j++) {
 			key[j] = i;
 		}
-    	auto start = std::chrono::high_resolution_clock::now(); // start timing
 		FullTimePad fulltimepad = FullTimePad(key);
+    	auto start = std::chrono::high_resolution_clock::now(); // start timing
 
 		// get the average of 100 repetations to get more consistent numbers
 		for(int j=0;j<1000;j++) {
@@ -45,7 +45,31 @@ void benchmark_hash_time_attack_v()
 	}
 
 	if(consistent) {
-		std::cout << "PASSED (NO SIDE CHANNEL): data is consistent\n";
+	
+		// check for first and last speed.
+		if(round(speeds[0]/speeds[255]) != 1)
+			consistent = false;
+
+		if(consistent) { // if still consistent
+			// However, test if speed were consistently growing: It shouldn't
+			double counter=0;
+			for(int i=1;i<256;i++) {
+				if(speeds[i] > speeds[i-1]) { // if current speed is bigger than previous speed, computation time is increasing as numbers get bigger
+					counter++;
+				}
+			}
+			if(round(256/counter) == 2) { // final check, half the time, the speeds should be bigger then previous and vice versa.
+				std::cout << "PASSED (NO SIDE CHANNEL): data is consistent " << " \n";
+			} else {
+				std::cout << "FAILED (POTENTIAL SIDE-CHANNEL): data is increasing consistently " << " \n";
+				for(int i=0;i<256;i++) {
+					std::cout << speeds[i] << "\t";
+				}
+			}
+		} else {
+			std::cout << "FAILED (POTENTIAL SIDE-CHANNEL): first and last data isn\'t consistent\nRATIO (speed[0]/speed[255]):\n";
+			std::cout << speeds[0]/speeds[255] << "\t";
+		}
 	} else {
 		std::cout << "FAILED (POTENTIAL SIDE-CHANNEL): data isn\'t consistent\nDATA:\n";
 		for(int i=1;i<256;i++) {
@@ -66,11 +90,11 @@ void benchmark_hash()
     uint8_t transformed_key[32];
 	gen_rand_key(key);
 
-    // Start the clock to measure encryption time
-    auto start = std::chrono::high_resolution_clock::now();
-
-	// call hash function 1,000,000 times
 	FullTimePad fulltimepad = FullTimePad(key);
+
+    // Start the clock to measure encryption time
+	// call hash function 1,000,000 times
+    auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < 1000000; ++i) {
 		fulltimepad.hash<version>(transformed_key, i);
     }
@@ -96,6 +120,10 @@ int main()
 	benchmark_hash<FullTimePad::Version11>();
 	std::cout << "\nTESTING TRANSFORMATION VERSION 2.0: ";
 	benchmark_hash<FullTimePad::Version20>();
+
+	/*
+	 * Upon further testing, The permutation can be made more efficient by using a uniform permutation matrix rather than a non-uniform permutation matrix. In Other words, instead of placeholder vector, use swapping.
+	 * */
 
 	// test for time-based side channel attack possibility:
 	std::cout << "\n\n----------TESTING SIDE CHANNEL ATTACKS----------";

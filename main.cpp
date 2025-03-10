@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <fstream>
+#include <bitset>
 
 #include "fulltimepad.h"
 
@@ -14,6 +16,24 @@ int main()
 	uint8_t initial_key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 	uint64_t encryption_index = 0;
 	FullTimePad fulltimepad = FullTimePad(initial_key);
+
+	std::ofstream file("test/keystream20", std::ios::binary); // run with the NIST SP 800-22 test suite.
+    for (int i = 0; i < 3907; i++) { // 1 million bits
+		fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
+
+    	// Convert each byte to 8-bit binary and write to file
+    	for (int j = 0; j < 32; j++) {
+    	    file << std::bitset<8>(ct[j]);  // Convert each byte to an 8-bit string
+		}
+
+    	file << "\n";  // Newline after each ciphertext
+		encryption_index++;
+    }
+    file.close();
+
+	exit(0);
+
+
 
 	// update by 1 and test again, to see collision resistance.
 	for(int m=0;m<256;m++) {
