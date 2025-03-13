@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <chrono>
 #include <random>
@@ -20,6 +21,8 @@ void benchmark_hash_time_attack_v()
 	uint8_t *key = new uint8_t[32];
     uint8_t transformed_key[32];
 	double speeds[256]; // keep an array of all speeds. Compare after it's done
+	constexpr int reps = (version == FullTimePad::Version20) ? 10000 : 1000;
+
 	for(int i=0;i<256;i++) {
 		// assign key to 32 0s to 32 255s
 		for(int j=0;j<32;j++) {
@@ -28,20 +31,22 @@ void benchmark_hash_time_attack_v()
 		FullTimePad fulltimepad = FullTimePad(key);
     	auto start = std::chrono::high_resolution_clock::now(); // start timing
 
-		// get the average of 100 repetations to get more consistent numbers
-		for(int j=0;j<1000;j++) {
+		// get the average of 1000 repetations to get more consistent numbers
+		for(int j=0;j<reps;j++) {
 			fulltimepad.hash<version>(transformed_key, 0); // key is different each time so encryption index can be the same
 		}
     	auto end = std::chrono::high_resolution_clock::now(); // end timing
     	std::chrono::duration<double> timer = end - start; // how long calculation took
-		speeds[i] = timer.count()/1000;
+		speeds[i] = timer.count()/reps;
 	}
 
 	// analyize speed data (check if they are consistent)
 	bool consistent = true;
 	for(int i=1;i<256;i++) {
-		if(round(speeds[i]/speeds[i-1]) != 1)
+		if(round(speeds[i]/speeds[i-1]) != 1) {
 			consistent = false;
+			std::cout << "FAILED at: " << std::setprecision(5) << speeds[i] << " " << speeds[i-1];
+		}
 	}
 
 	if(consistent) {
@@ -63,7 +68,7 @@ void benchmark_hash_time_attack_v()
 			} else {
 				std::cout << "FAILED (POTENTIAL SIDE-CHANNEL): data is increasing consistently " << " \n";
 				for(int i=0;i<256;i++) {
-					std::cout << speeds[i] << "\t";
+					std::cout << std::setprecision(5) << speeds[i] << "\t";
 				}
 			}
 		} else {

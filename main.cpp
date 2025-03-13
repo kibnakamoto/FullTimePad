@@ -5,6 +5,7 @@
 #include "fulltimepad.h"
 
 // This is an example file
+// TODO: make the optimization for  version 1.0, version 1.1 as well.
 
 int main()
 {
