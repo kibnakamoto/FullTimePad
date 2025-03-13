@@ -1,8 +1,15 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
+# CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
 EXEC = fulltimepad 
 OBJS = main.o fulltimepad.o
 PDF_DOC_FILES = FullTimePad.pdf FullTimePad.toc FullTimePad.aux FullTimePad.log FullTimePad.out
+
+# if debug mode
+ifeq ($(MAKECMDGOALS), debug)
+	CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -g
+else 
+	CXXFLAGS = -std=c++20 -Wall -pedantic -Wextra -O4
+endif
 
 all: ${EXEC}
 

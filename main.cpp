@@ -17,27 +17,27 @@ int main()
 	uint64_t encryption_index = 0;
 	FullTimePad fulltimepad = FullTimePad(initial_key);
 
-	std::ofstream file("test/keystream20", std::ios::binary); // run with the NIST SP 800-22 test suite.
-    for (int i = 0; i < 3907; i++) { // 1 million bits
-		fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
+	// std::ofstream file("test/keystream20", std::ios::binary); // run with the NIST SP 800-22 test suite.
+    // for (int i = 0; i < 3907; i++) { // 1 million bits
+	// 	fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
 
-    	// Convert each byte to 8-bit binary and write to file
-    	for (int j = 0; j < 32; j++) {
-    	    file << std::bitset<8>(ct[j]);  // Convert each byte to an 8-bit string
-		}
+    // 	// Convert each byte to 8-bit binary and write to file
+    // 	for (int j = 0; j < 32; j++) {
+    // 	    file << std::bitset<8>(ct[j]);  // Convert each byte to an 8-bit string
+	// 	}
 
-    	file << "\n";  // Newline after each ciphertext
-		encryption_index++;
-    }
-    file.close();
+    // 	file << "\n";  // Newline after each ciphertext
+	// 	encryption_index++;
+    // }
+    // file.close();
 
-	exit(0);
+	// exit(0);
 
 
 
 	// update by 1 and test again, to see collision resistance.
 	for(int m=0;m<256;m++) {
-		fulltimepad.transform<FullTimePad::Version10>(pt, ct, 32, encryption_index); // encrypt
+		fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
 		if(m != 0) { // don't compare first one
 			double col = 0;
 			for(int i=0;i<32;i++) {
@@ -50,7 +50,7 @@ int main()
 		}
 
 		// to decrypt:
-		fulltimepad.transform<FullTimePad::Version10>(ct, decrypted, 32, encryption_index); // decrypt
+		fulltimepad.transform<FullTimePad::Version20>(ct, decrypted, 32, encryption_index); // decrypt
 		for(int i=0;i<32;i++) {
 			if (pt[i] != decrypted[i]) {// this could mean that encryption_index or key is wrong
 				std::cout << "FATAL: DECRYPTED CIPHERTEXT NOT EQUAL TO PLAINTEXT";

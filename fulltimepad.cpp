@@ -128,34 +128,148 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			dynamic_permutation(key, p, i);
 		}
 	} else { // Version 2.0
-		for(uint8_t i=0;i<16;i++) {
-			uint8_t index = i<<2;
-			uint8_t i1mod = index % 8;
-			uint8_t i2mod = (index+1) % 8;
-			uint8_t i3mod = (index+2) % 8;
-			uint8_t i4mod = (index+3) % 8;
-			uint8_t imod8 = i % 8;
-			uint8_t imod9 = (i+1) % 8;
+	auto single_iteration = [](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &j, uint32_t &l,
+							   uint32_t e, uint32_t f, uint32_t g, uint32_t h, // e,f,g,h is for values for sum
+							   uint8_t &&rmod) {
+ 		// k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
+		a = a + rotr(a, r[rmod]) + j;
+		// OR - for second half, a is a,e, j is j,l,m,n,o,q,s,t
+		// e = e + rotr(e, r[rmod]) + l;
 
-			uint8_t rmod = i % 5; // 5 rotation values
-			k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
+ 		uint32_t sum = a + b + c + d + e + f + g + h;
 
-			uint32_t sum = k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7];
+		// A[imod9] = l,m,n,o,q,s,t,j
+ 		// A[imod9] = A[imod9] ^ sum;
+		l = l ^ sum;
+		// l is the mentioned above. goes from l, to j
 
-			A[imod9] = A[imod9] ^ sum;
+ 		// k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
+		b = b + l + rotl(b, r[rmod]);
+		// OR - for second half, b is b,f
 
-			k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
+ 		// A[imod8] = A[imod8] ^ k[i2mod];
+		j = j ^ b;
+		// OR - for second half, b is b,f
 
-			A[imod8] = A[imod8] ^ k[i2mod];
+ 		// k[i3mod] = A[imod8] ^ k[i3mod];
+		c = j ^ c;
+		// OR - for second half, c is c,g
 
-			k[i3mod] = A[imod8] ^ k[i3mod];
-			k[i4mod] = A[imod8] ^ k[i4mod];
+ 		// k[i4mod] = A[imod8] ^ k[i4mod];
+		d = j ^ d;
+		// OR - for second half, d is d,h
+	};
 
-			// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
-			if(i % 4 == 0) {
-				dynamic_permutation(key, p, i);
-			}
-		}
+	uint32_t a = k[0];
+	uint32_t b = k[1];
+	uint32_t c = k[2];
+	uint32_t d = k[3];
+	uint32_t e = k[4];
+	uint32_t f = k[5];
+	uint32_t g = k[6];
+	uint32_t h = k[7];
+
+	uint32_t j = A[0]; // no i as i is for index
+	uint32_t l = A[1];
+	uint32_t m = A[2];
+	uint32_t n = A[3];
+	uint32_t o = A[4];
+	uint32_t q = A[5];
+	uint32_t s = A[6];
+	uint32_t t = A[7];
+
+	// assign back to k before permutation
+	auto assign = [k](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &e, uint32_t &f, uint32_t &g, uint32_t &h) {
+		k[0] = a;
+		k[1] = b;
+		k[2] = c;
+		k[3] = d;
+		k[4] = e;
+		k[5] = f;
+		k[6] = g;
+		k[7] = h;
+	};
+
+	// assign k back to letters after permutation
+	auto assign_k = [&]() {
+		a = k[0];
+		b = k[1];
+		c = k[2];
+		d = k[3];
+		e = k[4];
+		f = k[5];
+		g = k[6];
+		h = k[7];
+
+	};
+
+ 	// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
+	// do permutate: 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+
+	single_iteration(a,b,c,d,j,l,e,f,g,h, 0); // permutate
+	assign(a,b,c,d,e,f,g,h);
+ 	dynamic_permutation(key, p, 0);
+	assign_k();
+	single_iteration(e,f,g,h,l,m,a,b,c,d, 1);
+	single_iteration(a,b,c,d,m,n,e,f,g,h, 2);
+	single_iteration(e,f,g,h,n,o,a,b,c,d, 3);
+	single_iteration(a,b,c,d,o,q,e,f,g,h, 4); // permutate
+	assign(a,b,c,d,e,f,g,h);
+ 	dynamic_permutation(key, p, 4);
+	assign_k();
+	single_iteration(e,f,g,h,q,s,a,b,c,d, 0);
+	single_iteration(a,b,c,d,s,t,e,f,g,h, 1);
+	single_iteration(e,f,g,h,t,j,a,b,c,d, 2);
+	single_iteration(a,b,c,d,j,l,e,f,g,h, 3); // permutate
+	assign(a,b,c,d,e,f,g,h);
+ 	dynamic_permutation(key, p, 8);
+	assign_k();
+	single_iteration(e,f,g,h,l,m,a,b,c,d, 4);
+	single_iteration(a,b,c,d,m,n,e,f,g,h, 0);
+	single_iteration(e,f,g,h,n,o,a,b,c,d, 1);
+	single_iteration(a,b,c,d,o,q,e,f,g,h, 2); // permutate
+	assign(a,b,c,d,e,f,g,h);
+ 	dynamic_permutation(key, p, 12);
+	assign_k();
+	single_iteration(e,f,g,h,q,s,a,b,c,d, 3);
+	single_iteration(a,b,c,d,s,t,e,f,g,h, 4);
+	single_iteration(e,f,g,h,t,j,a,b,c,d, 0);
+	assign(a,b,c,d,e,f,g,h);
+
+ 		// for(uint8_t i=0;i<16;i++) {
+ 		// 	uint8_t index = i<<2;
+ 		// 	uint8_t i1mod = index % 8;
+ 		// 	uint8_t i2mod = (index+1) % 8;
+ 		// 	uint8_t i3mod = (index+2) % 8;
+ 		// 	uint8_t i4mod = (index+3) % 8;
+ 		// 	uint8_t imod8 = i % 8;
+ 		// 	uint8_t imod9 = (i+1) % 8;
+ 
+ 		// 	uint8_t rmod = i % 5; // 5 rotation values
+ 		// 	k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
+ 
+ 		// 	uint32_t sum = k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7];
+ 
+ 		// 	A[imod9] = A[imod9] ^ sum;
+ 
+ 		// 	k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
+ 
+ 		// 	A[imod8] = A[imod8] ^ k[i2mod];
+ 
+ 		// 	k[i3mod] = A[imod8] ^ k[i3mod];
+ 		// 	k[i4mod] = A[imod8] ^ k[i4mod];
+ 
+ 		// 	// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
+ 		// 	if( (i & 3) == 0) {
+ 		// 		dynamic_permutation(key, p, i);
+ 		// 	}
+
+		// 	for(int j=0;j<8;j++) {
+		// 		std::cout << std::hex << std::setw(8) << std::setfill('0') << k[j];
+		// 	}
+		// 	std::cout << std::endl;
+ 		// }
+		// exit(0);
 	}
 }
 
