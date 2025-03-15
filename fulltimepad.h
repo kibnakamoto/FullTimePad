@@ -90,17 +90,6 @@ class FullTimePad
 			};
 
 	private: 
-			// constant array used in the transformation of the key
-			uint32_t A[8] = {
-				0,	// encryption index 
-				0,	// encryption index 
-				0x119f904f,
-				0x73d44db5,
-				0x3918fa83,
-				0x5546b403,
-				0x216c46df,
-				0x64997dfd,
-			};
 			
 			// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
 			static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
@@ -182,7 +171,7 @@ class FullTimePad
 			
 			// iterations for the main transformation loop
 			template<Version version=Version10>
-			void transformation(uint8_t *key); // length of k is 8
+			void transformation(uint8_t *key, uint64_t encryption_index); // length of k is 8
 		
 			// dynamically permutate the key during iteration
 			// key: permutated 32-byte key

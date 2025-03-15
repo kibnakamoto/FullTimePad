@@ -41,7 +41,7 @@ consteval std::array<std::array<uint8_t, 32>, 16> FullTimePad::get_n_V() {
 // ni: iteration index
 void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 {
-	constexpr std::array<std::array<uint8_t, 32>, 16> n_V = get_n_V();
+	static constexpr std::array<std::array<uint8_t, 32>, 16> n_V = get_n_V();
 
 	for(uint8_t i=0;i<keysize;i++) {
 		p[i] = key[n_V[ni][i]];
@@ -62,17 +62,33 @@ uint32_t *FullTimePad::endian_8_to_32_arr(uint8_t *key)
 }
 
 template<FullTimePad::Version version>
-void FullTimePad::transformation(uint8_t *key) // length of k is 8
+void FullTimePad::transformation(uint8_t *key, uint64_t encryption_index) // length of k is 8
 {
 	// vector used for dynamic permutation, dynamically permutated key placeholder
 	// use stack memory but for really large nubmer of encryptions performed at once, it might be too much for stack, but that is very unlikely.
-	uint8_t p[keysize];
+	static thread_local uint8_t p[keysize];
 
 	// 32-bit array ints for key for arithmetic ARX manipulations
 	uint32_t *k = endian_8_to_32_arr(key);
 
 	// run the wanted version
 	if constexpr (version == FullTimePad::Version10) {
+		// constant array used in the transformation of the key
+		uint32_t A[8] = {
+			0,	// encryption index 
+			0,	// encryption index 
+			0x119f904f,
+			0x73d44db5,
+			0x3918fa83,
+			0x5546b403,
+			0x216c46df,
+			0x64997dfd,
+		};
+
+		// Incorporate the the encryption_index here
+		A[0] = encryption_index >> 32;
+		A[1] = encryption_index; // implicit & 0xffffffff
+
 		for(uint8_t i=0;i<16;i++) {
 			uint8_t index = i<<2;
 			uint8_t i1mod = index % 8;
@@ -83,7 +99,6 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			uint8_t imod9 = (i+1) % 8;
 
 			uint8_t rmod = i % 5; // 5 rotation values
-								  // TODO: get rid of k[i1mod]. It's rotated then added, maybe add another value instead (or nothing). Like k[i3mod]
 			k[i1mod] = ( (uint64_t)k[i1mod] + A[imod8]  + rotr(k[i1mod], r[rmod]) ) % fp;
 
 			uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
@@ -101,6 +116,22 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			dynamic_permutation(key, p, i);
 		}
 	} else if constexpr(version == FullTimePad::Version11) {
+		// constant array used in the transformation of the key
+		uint32_t A[8] = {
+			0,	// encryption index 
+			0,	// encryption index 
+			0x119f904f,
+			0x73d44db5,
+			0x3918fa83,
+			0x5546b403,
+			0x216c46df,
+			0x64997dfd,
+		};
+
+		// Incorporate the the encryption_index here
+		A[0] = encryption_index >> 32;
+		A[1] = encryption_index; // implicit & 0xffffffff
+
 		for(uint8_t i=0;i<16;i++) {
 			uint8_t index = i<<2;
 			uint8_t i1mod = index % 8;
@@ -128,113 +159,117 @@ void FullTimePad::transformation(uint8_t *key) // length of k is 8
 			dynamic_permutation(key, p, i);
 		}
 	} else { // Version 2.0
-	auto single_iteration = [](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &j, uint32_t &l,
-							   uint32_t e, uint32_t f, uint32_t g, uint32_t h, // e,f,g,h is for values for sum
-							   uint8_t &&rmod) {
- 		// k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
-		a = a + rotr(a, r[rmod]) + j;
-		// OR - for second half, a is a,e, j is j,l,m,n,o,q,s,t
-		// e = e + rotr(e, r[rmod]) + l;
+		auto single_iteration = [](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &j, uint32_t &l,
+								   uint32_t e, uint32_t f, uint32_t g, uint32_t h, // e,f,g,h is for values for sum
+								   const uint8_t &&rmod) {
+ 			// k[i1mod] = k[i1mod] + rotr(k[i1mod], r[rmod]) + A[imod8];
+			a += rotr(a, r[rmod]) + j;
+			// OR - for second half, a is a,e, j is j,l,m,n,o,q,s,t
+			// e = e + rotr(e, r[rmod]) + l;
 
- 		uint32_t sum = a + b + c + d + e + f + g + h;
+ 			uint32_t sum = a + b + c + d + e + f + g + h;
 
-		// A[imod9] = l,m,n,o,q,s,t,j
- 		// A[imod9] = A[imod9] ^ sum;
-		l = l ^ sum;
-		// l is the mentioned above. goes from l, to j
 
- 		// k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
-		b = b + l + rotl(b, r[rmod]);
-		// OR - for second half, b is b,f
+			// A[imod9] = l,m,n,o,q,s,t,j
+ 			// A[imod9] = A[imod9] ^ sum;
+			l ^= sum;
+			// l is the mentioned above. goes from l, to j
 
- 		// A[imod8] = A[imod8] ^ k[i2mod];
-		j = j ^ b;
-		// OR - for second half, b is b,f
+ 			// k[i2mod] = k[i2mod] + A[imod9] + rotl(k[i2mod], r[rmod]);
+			b += l + rotl(b, r[rmod]);
+			// OR - for second half, b is b,f
 
- 		// k[i3mod] = A[imod8] ^ k[i3mod];
-		c = j ^ c;
-		// OR - for second half, c is c,g
+ 			// A[imod8] = A[imod8] ^ k[i2mod];
+			j ^= b;
+			// OR - for second half, b is b,f
 
- 		// k[i4mod] = A[imod8] ^ k[i4mod];
-		d = j ^ d;
-		// OR - for second half, d is d,h
-	};
+ 			// k[i3mod] = A[imod8] ^ k[i3mod];
+			c ^= j;
+			// OR - for second half, c is c,g
 
-	uint32_t a = k[0];
-	uint32_t b = k[1];
-	uint32_t c = k[2];
-	uint32_t d = k[3];
-	uint32_t e = k[4];
-	uint32_t f = k[5];
-	uint32_t g = k[6];
-	uint32_t h = k[7];
+ 			// k[i4mod] = A[imod8] ^ k[i4mod];
+			d ^= j;
+			// OR - for second half, d is d,h
+		};
 
-	uint32_t j = A[0]; // no i as i is for index
-	uint32_t l = A[1];
-	uint32_t m = A[2];
-	uint32_t n = A[3];
-	uint32_t o = A[4];
-	uint32_t q = A[5];
-	uint32_t s = A[6];
-	uint32_t t = A[7];
+		uint32_t a = k[0];
+		uint32_t b = k[1];
+		uint32_t c = k[2];
+		uint32_t d = k[3];
+		uint32_t e = k[4];
+		uint32_t f = k[5];
+		uint32_t g = k[6];
+		uint32_t h = k[7];
 
-	// assign back to k before permutation
-	auto assign = [k](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &e, uint32_t &f, uint32_t &g, uint32_t &h) {
-		k[0] = a;
-		k[1] = b;
-		k[2] = c;
-		k[3] = d;
-		k[4] = e;
-		k[5] = f;
-		k[6] = g;
-		k[7] = h;
-	};
+		// Incorporate the the encryption_index here
+		uint32_t j = encryption_index >> 32;
+		uint32_t l = encryption_index; // implicit & 0xffffffff
 
-	// assign k back to letters after permutation
-	auto assign_k = [&]() {
-		a = k[0];
-		b = k[1];
-		c = k[2];
-		d = k[3];
-		e = k[4];
-		f = k[5];
-		g = k[6];
-		h = k[7];
+		// reset A values
+		uint32_t m = 0x119f904f;
+		uint32_t n = 0x73d44db5;
+		uint32_t o = 0x3918fa83;
+		uint32_t q = 0x5546b403;
+		uint32_t s = 0x216c46df;
+		uint32_t t = 0x64997dfd;
 
-	};
+		// assign back to k before permutation
+		auto assign = [k](uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, uint32_t &e, uint32_t &f, uint32_t &g, uint32_t &h) {
+			k[0] = a;
+			k[1] = b;
+			k[2] = c;
+			k[3] = d;
+			k[4] = e;
+			k[5] = f;
+			k[6] = g;
+			k[7] = h;
+		};
 
- 	// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
-	// do permutate: 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+		// assign k back to letters after permutation
+		auto assign_k = [&]() {
+			a = k[0];
+			b = k[1];
+			c = k[2];
+			d = k[3];
+			e = k[4];
+			f = k[5];
+			g = k[6];
+			h = k[7];
 
-	single_iteration(a,b,c,d,j,l,e,f,g,h, 0); // permutate
-	assign(a,b,c,d,e,f,g,h);
- 	dynamic_permutation(key, p, 0);
-	assign_k();
-	single_iteration(e,f,g,h,l,m,a,b,c,d, 1);
-	single_iteration(a,b,c,d,m,n,e,f,g,h, 2);
-	single_iteration(e,f,g,h,n,o,a,b,c,d, 3);
-	single_iteration(a,b,c,d,o,q,e,f,g,h, 4); // permutate
-	assign(a,b,c,d,e,f,g,h);
- 	dynamic_permutation(key, p, 4);
-	assign_k();
-	single_iteration(e,f,g,h,q,s,a,b,c,d, 0);
-	single_iteration(a,b,c,d,s,t,e,f,g,h, 1);
-	single_iteration(e,f,g,h,t,j,a,b,c,d, 2);
-	single_iteration(a,b,c,d,j,l,e,f,g,h, 3); // permutate
-	assign(a,b,c,d,e,f,g,h);
- 	dynamic_permutation(key, p, 8);
-	assign_k();
-	single_iteration(e,f,g,h,l,m,a,b,c,d, 4);
-	single_iteration(a,b,c,d,m,n,e,f,g,h, 0);
-	single_iteration(e,f,g,h,n,o,a,b,c,d, 1);
-	single_iteration(a,b,c,d,o,q,e,f,g,h, 2); // permutate
-	assign(a,b,c,d,e,f,g,h);
- 	dynamic_permutation(key, p, 12);
-	assign_k();
-	single_iteration(e,f,g,h,q,s,a,b,c,d, 3);
-	single_iteration(a,b,c,d,s,t,e,f,g,h, 4);
-	single_iteration(e,f,g,h,t,j,a,b,c,d, 0);
-	assign(a,b,c,d,e,f,g,h);
+		};
+
+ 		// permutate the bytearray key 4 times rather than 16 (faster, doesn't effect security too much)
+		// do permutate: 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+
+		single_iteration(a,b,c,d,j,l,e,f,g,h, 0); // permutate
+		assign(a,b,c,d,e,f,g,h);
+ 		dynamic_permutation(key, p, 0);
+		assign_k();
+		single_iteration(e,f,g,h,l,m,a,b,c,d, 1);
+		single_iteration(a,b,c,d,m,n,e,f,g,h, 2);
+		single_iteration(e,f,g,h,n,o,a,b,c,d, 3);
+		single_iteration(a,b,c,d,o,q,e,f,g,h, 4); // permutate
+		assign(a,b,c,d,e,f,g,h);
+ 		dynamic_permutation(key, p, 4);
+		assign_k();
+		single_iteration(e,f,g,h,q,s,a,b,c,d, 0);
+		single_iteration(a,b,c,d,s,t,e,f,g,h, 1);
+		single_iteration(e,f,g,h,t,j,a,b,c,d, 2);
+		single_iteration(a,b,c,d,j,l,e,f,g,h, 3); // permutate
+		assign(a,b,c,d,e,f,g,h);
+ 		dynamic_permutation(key, p, 8);
+		assign_k();
+		single_iteration(e,f,g,h,l,m,a,b,c,d, 4);
+		single_iteration(a,b,c,d,m,n,e,f,g,h, 0);
+		single_iteration(e,f,g,h,n,o,a,b,c,d, 1);
+		single_iteration(a,b,c,d,o,q,e,f,g,h, 2); // permutate
+		assign(a,b,c,d,e,f,g,h);
+ 		dynamic_permutation(key, p, 12);
+		assign_k();
+		single_iteration(e,f,g,h,q,s,a,b,c,d, 3);
+		single_iteration(a,b,c,d,s,t,e,f,g,h, 4);
+		single_iteration(e,f,g,h,t,j,a,b,c,d, 0);
+		assign(a,b,c,d,e,f,g,h);
 
  		// for(uint8_t i=0;i<16;i++) {
  		// 	uint8_t index = i<<2;
@@ -293,25 +328,13 @@ FullTimePad::FullTimePad(uint8_t *initial_key)
 template<FullTimePad::Version version>
 void FullTimePad::hash(uint8_t *key, uint64_t encryption_index)
 {
-	// Incorporate the the encryption_index here
-	A[0] = encryption_index >> 32;
-	A[1] = encryption_index; // implicit & 0xffffffff
-	
-	// reset A
-	A[2] = 0x119f904f;
-	A[3] = 0x73d44db5;
-	A[4] = 0x3918fa83;
-	A[5] = 0x5546b403;
-	A[6] = 0x216c46df;
-	A[7] = 0x64997dfd;
-	
 	// make copy of key to transform and to preserve init_key
 	memcpy(key, init_key, keysize);
 
 	// permutate the key based on the V array
 
 	// transformation iterations
-	transformation<version>(key);
+	transformation<version>(key, encryption_index);
 }
 
 // encrypt/decrypt
