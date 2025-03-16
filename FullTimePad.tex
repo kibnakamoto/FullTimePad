@@ -62,11 +62,7 @@
 
 \begin{abstract}
 		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte array form using a constant permutation matrix. To acheive the confusion, the key is manipulated in it's 32-bit integer representation using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different byte order.
-
-		% TODO: how is the uneiqeness of each key gaurenteed, incrementing key, IV. etc.
-		% TODO: how to deal with long messsages
-		
+		To achieve diffusion, the key is permutated in it's byte form using a constant permutation matrix. Due to the optimizations in modern devices (Vectorization, Cache \& Parallelization), this is really fast. To acheive the confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different bytes of the key. This high-speed (around 2x the speed of ChaCha20) algorithm is a revolution in cryptography as it makes use of modern hardware accelarations for permutations unlike older algorithms which offers zero non-uniform shuffling.
 
 \end{abstract}
 
@@ -577,7 +573,8 @@ $\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
 
 \subsubsection{Different Permutation Matrices}
 
-Tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.
+Tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.\\
+Using Bent functions to generate a non-uniform permutation matrix is also possible.
 
 In terms of efficiency, the permutation matrix should be a uniform permutation matrix. The current matrix is non-uniform, which might provide better diffusion (more random), it also creates the issue of efficiency. So in terms of computation speed, reducing the number of times the memory is accessed is required. To achieve this, I will implement an updated version with uniform matrix and perform benchmark tests, based on results of both avalanche effect and cryptoanalysis testing, I will keep/undo the tests.
 
@@ -663,6 +660,8 @@ I would represent the transformation algorithm with a game of cards. Imagine tha
 \subsection{Dynamic Matrix Permutation}
 
 Considering the use of \texttt{reinterpret\_cast} for representing the bytearray (key) as 32-bit segments (for confusion operations), the endiannes of the computer will affect the matrix. the matrix given in this documentation is the big endian version as the algorithm is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. This is in the C++ implementation of \texttt{Full-Time-Pad} and the python Deravation program mentioned below.
+\\
+This generates a non-uniform permutation matrix. Which is a "key" concept in uniform randomization of the transposition of bytes.
 
 \subsubsection{Deravation}
 
@@ -768,26 +767,30 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 \section{Performance}
 
-In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. If the existing non-uniform permutation matrix is replaced with a uniform one, there will be the option of using AVX (256-bit) CPU register and permutating might become efficient in which case speeds might surpass/approach ChaCha20 (with the right hardware). This requires further testing and results will change based on each system. But Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all encryptions are within the context of speed, some are more focused on how secure the data is. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.
+In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.\\
 
 Benchmark tests show the following results: 
 
 \texttt{----------TESTING SPEED----------\\
-TESTING TRANSFORMATION VERSION 1.0: Computation Time for 1000000 key transformations: 1.06539 seconds\\
-Hashrate: 938625 keys per second\\
+TESTING TRANSFORMATION VERSION 1.0: Computation Time for 1000000 key transformations: 0.641983 seconds\\
+Hashrate: 1557674 keys per second\\
 \\
-TESTING TRANSFORMATION VERSION 1.1: Computation Time for 1000000 key transformations: 0.938767 seconds\\
-Hashrate: 1065226 keys per second\\
+TESTING TRANSFORMATION VERSION 1.1: Computation Time for 1000000 key transformations: 0.526699 seconds\\
+Hashrate: 1898618 keys per second\\
 \\
-TESTING TRANSFORMATION VERSION 2.0: Computation Time for 1000000 key transformations: 0.251569 seconds\\
-Hashrate: 3975052 keys per second\\
+TESTING TRANSFORMATION VERSION 2.0: Computation Time for 1000000 key transformations: 0.0899326 seconds\\
+Hashrate: 11119439 keys per second\\
 }
 \\
 On the same device (12th Gen Intel(R) Core(TM) i7-12700H, DDR5 RAM). The ChaCha20 benchmark tests yield the following results:\\
-\texttt{Time taken to encrypt 1000000 32-byte messages: 0.0869328 seconds\\
-Encryption rate: 11503131 messages per second}\\
+\texttt{Time taken to encrypt 1000000 32-byte messages: 0.160442 seconds\\
+Encryption rate: 6232781 keys per second}\\
 \\
-This means that ChaCha20 is 2.8 times faster than \texttt{Full-Time-Pad} transformation version 2.0. This can be minimized with further optimization, even to a negligible amount.\\
+This means that \texttt{Full-Time-Pad} transformation version 2.0 is around 2 times faster than ChaCha20. However, ChaCha20 has 64-byte keystreams while my algorithm has 32-byte. So Mine is 2x faster for encrypting unieqe plaintexts under 32 bytes. So my algorithm would be 0.1798652s to generate 1000000 64-byte blocks. So ChaCha20 is 11\% faster considering this fact. So it really depends on how you designed the encryptions. These tests are under the assumption that there are full optimizations possible (modern hardware).
+\\
+One must also consider that my algorithm could be redesigned to generate 64-byte blocks faster than ChaCha20 as longer keystream doesn't mean a linear increase in time. This is a potential upgrade in future version of this algorithm.
+\\
+Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor implementation. Implementation could be improved, yet the speed wouldn't be affected too significantly.
 
 \section {Cipher}
 
