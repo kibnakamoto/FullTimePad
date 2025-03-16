@@ -43,8 +43,12 @@ void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 {
 	static constexpr std::array<std::array<uint8_t, 32>, 16> n_V = get_n_V();
 
-	for(uint8_t i=0;i<keysize;i++) {
+	for(uint8_t i=0;i<keysize;i+=4) {
+		// process multiple indexes at once. this is to make better use of parallelism in modern processors (4 operations happen simultaniously)
 		p[i] = key[n_V[ni][i]];
+		p[i+1] = key[n_V[ni][i+1]];
+		p[i+2] = key[n_V[ni][i+2]];
+		p[i+3] = key[n_V[ni][i+3]];
 	}
 	memcpy(key, p, keysize); // copy the repurmutated values
 }
@@ -53,7 +57,7 @@ void FullTimePad::dynamic_permutation(uint8_t *key, uint8_t *p, uint8_t ni)
 uint32_t *FullTimePad::endian_8_to_32_arr(uint8_t *key)
 {
 	if constexpr(!is_big_endian()) {
-	    for (uint8_t i=0;i<FullTimePad::keysize;i+=4) {
+		for (uint8_t i=0;i<FullTimePad::keysize;i+=4) {
        		std::swap(key[i], key[i+3]);
        		std::swap(key[i+1], key[i+2]);
     	}

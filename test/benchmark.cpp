@@ -101,7 +101,8 @@ void benchmark_hash()
 	// call hash function 1,000,000 times
     auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < 1000000; ++i) {
-		fulltimepad.hash<version>(transformed_key, i);
+		fulltimepad.hash<version>(transformed_key, i); // i is encryption index;
+
     }
 
     auto end = std::chrono::high_resolution_clock::now();
