@@ -1,6 +1,9 @@
 # Compiled Object files
 *.o
 
+# NIST randomness test. Implementation in https://github.com/stevenang/randomness_testsuite. This isn't associated with this project in any way. Just testing information in the documentation
+test/randomness_testsuite/
+
 # Executables
 fulltimepad
 test/best_permutation
