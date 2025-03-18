@@ -99,10 +99,11 @@ template<FullTimePad::Version version>
 double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 {
 	double collision_rate = 0;
-	uint8_t tmp[32];
 	uint8_t initial_key[32];
 	uint8_t oldkey[32];
-	gen_rand_key(tmp); // initialize a random initial key
+	//uint8_t tmp[32];
+	// gen_rand_key(tmp); // initialize a random initial key
+	uint8_t tmp[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 	memcpy(oldkey, tmp, 32);
 	for(int k=1;k<256;k++) { // calculate average collision rate
 		memcpy(initial_key, tmp, 32);
@@ -122,8 +123,8 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 		}
 
 		// print the percentage changes when one bit of data is changed in key
-		// double col = temp_rate/32*100;
-		collision_rate += temp_rate;
+		double col = temp_rate/32*100;
+		collision_rate += col;
 
 		//if(col < 10)
 		//	std::cout << std::dec << std::fixed << std::setprecision(4) << '0' << col << "%";
@@ -132,10 +133,10 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 		//std::cout << ": n=" << n << "\t";
 		//if(k%10 == 0) std::cout << std::endl;
 	}
-	collision_rate/=32*255;
+	collision_rate/=255;
 	//for(int i=0;i<32;i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << initial_key[i]+0 << ", ";
 	//std::cout << std::endl;
-	return collision_rate*100;
+	return collision_rate;
 }
 
 
@@ -206,7 +207,7 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 			}
 		}
 	} else if(collision_calc == differential_cryptoanalysis) {
-		for(uint8_t range=0;range<100;range++) { // inaccuracy range
+		for(uint16_t range=0;range<256;range++) { // inaccuracy range
 			total = 0;
 			double prev = 0;
 			double prev_rate = 0;
@@ -235,7 +236,9 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 				prev = rate;
 			}
 			total/=32;
-			std::cout << "(accuracy range, collision rate): (" << range+0 << ", " << total << ")" << "\n";
+			//std::cout << "(accuracy range, collision rate): (" << range+0 << ", " << total << ")" << "\n";
+			std::cout << "(" << range+0 << ", " << total << ")" << " ";
+			if(range == 127) std::cout << "\n";
 
 			if(fail_count != 0) {
 				std::cout << "\nTHERE ARE " << fail_count << " COUNTS OF INCONSISTENT CHANGES IN RATES (" << (fail_count<2 ? "LOW CHANCE OF" : "CHANCE OF") << " POTENTIAL STATISTICAL PATTERN)";
