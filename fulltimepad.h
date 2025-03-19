@@ -76,7 +76,6 @@ class FullTimePad
 					{16, 9, 1, 24, 17, 8, 0, 25, 30, 7, 15, 22, 31, 6, 14, 23, 28, 5, 13, 20, 29, 4, 12, 21, 18, 11, 3, 26, 19, 10, 2, 27},
 					{24, 16, 9, 1, 25, 17, 8, 0, 22, 30, 7, 15, 23, 31, 6, 14, 20, 28, 5, 13, 21, 29, 4, 12, 26, 18, 11, 3, 27, 19, 10, 2},
 					{1, 24, 16, 9, 0, 25, 17, 8, 15, 22, 30, 7, 14, 23, 31, 6, 13, 20, 28, 5, 12, 21, 29, 4, 3, 26, 18, 11, 2, 27, 19, 10},
-
 			}};
 
 			static consteval std::array<std::array<uint8_t, 32>, 16> get_n_V();
@@ -86,7 +85,7 @@ class FullTimePad
 			enum Version {
 				Version10 = 10, // Version 1.0 - Most complexity, less speed
 				Version11 = 11, // Version 1.1 - Less complexity, more speed
-				Version20 = 20 // Version 2.0 - less complexity, most speed -- preffered to version 1.1 as galois field doesn't affect everything as much as anticipated
+				Version20 = 20 // Version 2.0 - less complexity, most speed
 			};
 
 	private: 

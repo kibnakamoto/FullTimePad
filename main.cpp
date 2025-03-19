@@ -18,23 +18,23 @@ int main()
 	uint64_t encryption_index = 0;
 	FullTimePad fulltimepad = FullTimePad(initial_key);
 
-	// std::ofstream file("test/keystream20", std::ios::binary); // run with the NIST SP 800-22 test suite.
-    // for (int i = 0; i < 3907; i++) { // 1 million bits
-	// 	fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
+	//std::ofstream file("test/keystream20", std::ios::binary); // run with the NIST SP 800-22 test suite.
+    //for (int i = 0; i < 3907; i++) { // 1 million bits
+	//	initial_key[0] = i>>8;
+	//	initial_key[1] = i;
+	//	fulltimepad.transform<FullTimePad::Version20>(pt, ct, 32, encryption_index); // encrypt
 
-    // 	// Convert each byte to 8-bit binary and write to file
-    // 	for (int j = 0; j < 32; j++) {
-    // 	    file << std::bitset<8>(ct[j]);  // Convert each byte to an 8-bit string
-	// 	}
+    //	// Convert each byte to 8-bit binary and write to file
+    //	for (int j = 0; j < 32; j++) {
+    //	    file << std::bitset<8>(ct[j]);  // Convert each byte to an 8-bit string
+	//	}
 
-    // 	file << "\n";  // Newline after each ciphertext
-	// 	encryption_index++;
-    // }
-    // file.close();
+    //	file << "\n";  // Newline after each ciphertext
+	//	//encryption_index++;
+    //}
+    //file.close();
 
-	// exit(0);
-
-
+	//exit(0);
 
 	// update by 1 and test again, to see collision resistance.
 	for(int m=0;m<256;m++) {

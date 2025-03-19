@@ -11,6 +11,7 @@ test/significant_perm_byte
 test/reverse
 test/collision
 test/benchmark
+test/repetition
 
 # Latex Files
 FullTimePad.log
