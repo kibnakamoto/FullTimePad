@@ -101,9 +101,9 @@ double differential_cryptoanalysis_random_key(uint32_t n, uint8_t range)
 	double collision_rate = 0;
 	uint8_t initial_key[32];
 	uint8_t oldkey[32];
-	//uint8_t tmp[32];
-	// gen_rand_key(tmp); // initialize a random initial key
-	uint8_t tmp[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+	uint8_t tmp[32];
+	gen_rand_key(tmp); // initialize a random initial key
+	//uint8_t tmp[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 	memcpy(oldkey, tmp, 32);
 	for(int k=1;k<256;k++) { // calculate average collision rate
 		memcpy(initial_key, tmp, 32);
@@ -237,7 +237,8 @@ void check_bytes_permutation(CollisionCalculation collision_calc)
 			}
 			total/=32;
 			//std::cout << "(accuracy range, collision rate): (" << range+0 << ", " << total << ")" << "\n";
-			std::cout << "(" << range+0 << ", " << total << ")" << " ";
+			//std::cout << "(" << range+0 << ", " << total << ")" << " ";
+			std::cout << total << ", ";
 			if(range == 127) std::cout << "\n";
 
 			if(fail_count != 0) {

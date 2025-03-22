@@ -11,10 +11,11 @@
 template<uint32_t len=256>
 double cross_check_matrix(std::array<std::array<uint8_t, 32>, len>  matrix, double *collisions_i)
 {
+	memset(collisions_i, 0, 31*sizeof(double));
+
 	double avg = 0; // average collision rate overall
-	for(uint32_t i=1;i<len;i++) {
-		collisions_i[i-1] = 0;
-		for(uint8_t j=1;j<32;j++) { // 0
+	for(uint8_t j=1;j<32;j++) { // 0
+		for(uint32_t i=1;i<len;i++) {
 			uint8_t half1 = matrix[i][j] & 0x0f; // first half: 0000(1111)
 			uint8_t half2 = matrix[i][j]>>4; // second half (0000)1111
 
@@ -29,24 +30,24 @@ double cross_check_matrix(std::array<std::array<uint8_t, 32>, len>  matrix, doub
 			if(half1 == prev_half1 || half1 == prev_half2 ||
 			   half2 == prev_half1 || half2 == prev_half2 || 
 			   half2 == side_half1 || half2 == side_half2) {
-				collisions_i[i-1]++;
+				collisions_i[j-1]++;
 			}
 		}
-		collisions_i[i-1]/=31;
-		avg += collisions_i[i-1];
+		collisions_i[j-1]/=len-1;
+		avg += collisions_i[j-1];
 	}
 
-	return avg/(len-1); // average number of collisions
+	return avg/31; // average number of collisions
 }
 
 template<uint32_t len=256>
 void analyze_cross_check(std::array<std::array<uint8_t, 32>, len> matrix)
 {
-	double *collisions_i = new double[len-1]; // collisions per index, don't get the average as certain indexes/numbers may provide more patterns.
+	double *collisions_i = new double[31]; // collisions per index, avg per byte
 	double avg = cross_check_matrix<len>(matrix, collisions_i);
 
 	std::cout << std::endl;
-	for(uint32_t i=0;i<len-1;i++) {
+	for(uint32_t i=0;i<31;i++) {
 		std::cout << std::fixed << std::setprecision(3) << collisions_i[i] << " ";
 	}
 	std::cout << std::endl << "avg: " << avg << "\n";
@@ -67,7 +68,7 @@ void gen_rand_matrix_fulltimepad(std::array<std::array<uint8_t, 32>, len> &rmatr
 	}
 }
 
-// generate a random matrix
+// generate a random matrix (not cryptographically secure random but this doesn't matter for this test)
 template<uint32_t len=256>
 void gen_rand_matrix(std::array<std::array<uint8_t, 32>, len> &rmatrix) {
 	for(uint32_t i=0;i<len;i++) {
@@ -81,29 +82,83 @@ void gen_rand_matrix(std::array<std::array<uint8_t, 32>, len> &rmatrix) {
 // check how many repetitions each value has in the matrix
 template<uint32_t len=256>
 void check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
-	uint32_t **counter = new uint32_t*[len];
-	
-	double rate = 0;
+	double counter[len][32];
+	std::vector<std::vector<uint8_t>> unique(len);
 	for(uint32_t i=0;i<len;i++) {
-		counter[i] = new uint32_t[32];
-		for(uint8_t j=0;j<32;j++) {
-			uint8_t value = matrix[i][j];
+		memset(counter[i], 0, 32*sizeof(double));
+		unique[i].insert(unique[i].end(), &matrix[i][0], &matrix[i][0]+32); // copy the matrix
+	}
+
+	// store matrix in vector matrix (copied). Remove values when needed, counter's length is dynamically determined
+	// Length of counter should be the number of uneiqe values.
+	double rate = 0; // average rate
+	for(uint32_t i=0;i<len;i++) {
+		for(uint8_t j=0;j<unique[i].size();j++) {
 			for(uint32_t k=0;k<len;k++) {
-				for(uint8_t n=0;n<32;n++) {
-					if (value == matrix[k][n]) {
-						if(k != i && n != j) {
-							counter[i][j]++;
-						}
+				for(uint8_t n=0;n<unique[k].size();n++) {
+					if (unique[i][j] == unique[k][n] && k != i && n != j) {
+						counter[i][j]++;
+						unique[k].erase(unique[k].begin() + n); // remove nth element so it doesn't find it again
 					}
 				}
 			}
+			//counter[i][j]/=unique[i].size();
 			//std::cout << counter[i][j] << " ";
 			rate+=counter[i][j];
 		}
 	}
-	rate/=len*32;
-	std::cout << std::endl << "rate: " << rate << "\n\n";
 
+	// TODO:
+	// analyze which values are larger than the average +- accuracy number in the counter matrix. 
+	// This could tell us which values are irregular and might need further checks
+	
+	double repetitions=0; // number of repeated values out of a pool of len*32 values.
+	for(uint32_t i=0;i<len;i++) {
+		for(uint8_t j=0;j<32;j++) {
+				if(counter[i][j] != 0) {
+					repetitions++;
+					//std::cout << counter[i][j] << " ";
+				}
+		}
+	}
+	rate/=len*32; // calculate average rate
+	
+
+	std::cout << std::endl << "count (check_repetitions): " << repetitions << " | rate of repetition: " << rate << "\n\n";
+}
+
+// check which values are more common (0-256). Not ordered by byte
+template<uint32_t len=256>
+void check_common(std::array<std::array<uint8_t, 32>, len> matrix)
+{
+	double instances[256]; // number of instances of k found in matrix
+	memset(instances, 0, 256*sizeof(double));
+
+	for(uint32_t i=0;i<256;i++) {
+		for(uint8_t j=0;j<32;j++) {
+			for(uint16_t k=0;k<256;k++) { // all numbers in uint8_t
+				if(matrix[i][j] == k) {
+					instances[k]++;
+					break;
+				}
+			}
+		}
+	}
+
+	// analyze the data, chances of each instance should be around the same. they should all be divided by 256 to get the chances at which they are equal to k=0-256
+	static constexpr double goal_rate = 1.0/256;
+	double avg = 0;
+	std::cout << std::endl;
+	for(uint16_t k=0;k<256;k++) {
+		instances[k]/=len*32; // 8192 (len*32) bytes checked, get average
+		// std::cout << std::setprecision(6) << instances[k] << " ";
+		avg+=instances[k];
+	}
+	avg/=256;
+	std::cout << std::endl << "avg (check_common):" << avg;
+	
+	// TODO: check if avg is good, equal to goal_rate. cout PASSED/FAILED. check each value, maybe graph them to further analyze
+	
 }
 
 int main()
@@ -634,14 +689,18 @@ int main()
 	// based on the data matrix, check if previous value at matrix[i-1][j] has a similiar bit. Do a cross check. And check the values beside the value
 	std::cout << std::endl << "matrix: ";
 	analyze_cross_check<nkeys>(matrix);
-
-	// rate of repitition, how many times same values exist in matrix
+	std::cout << std::endl << "check chances of data being a certain byte (0-256): ";
+	check_common<nkeys>(matrix);
+	std::cout << std::endl << "check chances of bytes repeating: "; // rate of repitition, how many times same values exist in matrix
 	check_repetitions<nkeys>(matrix);
 	std::cout << std::endl;
 
 	// for random data:
 	std::cout << std::endl << "random matrix: ";
 	analyze_cross_check<nkeys>(matrix_rand);
+	std::cout << std::endl << "check chances of data being a certain byte (0-256): ";
+	check_common<nkeys>(matrix_rand);
+	std::cout << std::endl << "check chances of bytes repeating: ";
 	check_repetitions<nkeys>(matrix_rand);
 	std::cout << std::endl;
 

@@ -258,11 +258,12 @@ void FullTimePad::transformation(uint8_t *key, uint64_t encryption_index) // len
 		single_iteration(e,f,g,h,q,s,a,b,c,d, 0);
 		single_iteration(a,b,c,d,s,t,e,f,g,h, 1);
 		single_iteration(e,f,g,h,t,j,a,b,c,d, 2);
-		single_iteration(a,b,c,d,j,l,e,f,g,h, 3); // permutate
-		assign(a,b,c,d,e,f,g,h); // 9 rounds
+		single_iteration(a,b,c,d,j,l,e,f,g,h, 3); // dont permutate
+		//assign(a,b,c,d,e,f,g,h); // 9 rounds
  		//dynamic_permutation(key, p, 8);
 		//assign_k();
-		//single_iteration(e,f,g,h,l,m,a,b,c,d, 4);
+		single_iteration(e,f,g,h,l,m,a,b,c,d, 4); // 10 rounds
+		assign(a,b,c,d,e,f,g,h);
 		//single_iteration(a,b,c,d,m,n,e,f,g,h, 0);
 		//single_iteration(e,f,g,h,n,o,a,b,c,d, 1);
 		//single_iteration(a,b,c,d,o,q,e,f,g,h, 2); // permutate
