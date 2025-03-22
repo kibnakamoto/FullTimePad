@@ -164,10 +164,10 @@ uint32_t *check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
 	}
 
 	// TODO:
-	// analyze which values are larger than the average +- accuracy number in the counter matrix. 
-	// This could tell us which values are irregular and might need further checks
-	
+	// analyze if all values in counter matrix are in correct range
+	// This could tell us which values are irregular and might need further adjustments
 	uint32_t repetitions=0; // number of repeated values out of a pool of len*32 values.
+	uint32_t fail_rate=0;
 	for(uint32_t i=0;i<len;i++) {
 		for(uint8_t j=0;j<32;j++) {
 				if(counter[i][j] != 0) {
@@ -175,15 +175,23 @@ uint32_t *check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
 #ifdef PRINT_MATRIX
 					std::cout << counter[i][j] << " ";
 #endif
+					if(counter[i][j] > 50) { // 50 determined experimentally
+						fail_rate++;
+					}
 				}
 		}
 	}
 	rate/=len*32; // calculate average rate
 	rate*=100; // %
 	
+	if(fail_rate) {
+		std::cout << std::endl << "FAILED (check_repetitions): repetition counter out of optimal range with " << (double)fail_rate/32*100 << "% failrate";
+	} else {
+		std::cout << std::endl << "PASSED (check_repetitions): Repetition Counter in Optimal Range";
+	}
 
 	// count: number of unique bytes in matrix that repeated
-	std::cout << "count (check_repetitions): " << repetitions << " | rate of repetition: " << rate << "%";
+	std::cout << "\ncount (check_repetitions): " << repetitions << " | rate of repetition: " << rate << "%";
 	uint32_t *out = new uint32_t[2]; // return for analyzing in another function
 	out[0] = repetitions;
 	out[1] = rate;
