@@ -1,3 +1,26 @@
+/*
+ * Author: Taha
+ * Date: Feb 6, 2025
+ *
+ * Full-Time-Pad Symmetric Stream Cipher
+ *  Copyright (C) 2025  Taha
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ * This file has 3 functions for cryptoanalysis. They all test for matrix (256 generated Full-Time-Pad 2.0 keys with 1-bit difference) and sha256 hashes (or any other verified random data, have to use insecure rng in  gen_rand_matrix since c++ doesn't have a secure rng). 
+ * This test was conducted as I thought I saw certain patterns. Comparing to verified-random data, the numbers being similiar means the data is close. It also helps to print each value and visualize them for more accuracy. I didn't see any patterns. If you want to check them uncomment PRINT_MATRIX macro on line 31. It might help to graph this data to better visuallize but I haven't seen any obvious patterns.
+ *
+ * Simply put this file is for verifying data bias. 
+ */
+
 #include <iostream>
 #include <stdint.h>
 #include <cstring>
@@ -6,6 +29,8 @@
 #include <random>
 
 #include "../fulltimepad.h"
+
+// #define PRINT_MATRIX
 
 // cross check how many collisions per 4-bits
 template<uint32_t len=256>
@@ -68,6 +93,19 @@ void gen_rand_matrix_fulltimepad(std::array<std::array<uint8_t, 32>, len> &rmatr
 	}
 }
 
+// generate a matrix, non-random keys passed through the fulltimepad algorithm
+template<uint32_t len=256>
+void gen_uniform_matrix_fulltimepad(std::array<std::array<uint8_t, 32>, len> &rmatrix) {
+	for(uint32_t i=0;i<len;i++) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<uint8_t> dist(0, 0xff);
+		for(uint8_t j=0;j<32;j++) rmatrix[i][j] = j;
+		FullTimePad fulltimepad = FullTimePad((uint8_t*)&rmatrix[i][0]);
+		fulltimepad.hash<FullTimePad::Version20>(&rmatrix[i][0], i);
+	}
+}
+
 // generate a random matrix (not cryptographically secure random but this doesn't matter for this test)
 template<uint32_t len=256>
 void gen_rand_matrix(std::array<std::array<uint8_t, 32>, len> &rmatrix) {
@@ -80,8 +118,9 @@ void gen_rand_matrix(std::array<std::array<uint8_t, 32>, len> &rmatrix) {
 }
 
 // check how many repetitions each value has in the matrix
+// e.g. how many times matrix[0][0] exists in matrix
 template<uint32_t len=256>
-void check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
+uint32_t *check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
 	double counter[len][32];
 	std::vector<std::vector<uint8_t>> unique(len);
 	for(uint32_t i=0;i<len;i++) {
@@ -103,7 +142,6 @@ void check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
 				}
 			}
 			//counter[i][j]/=unique[i].size();
-			//std::cout << counter[i][j] << " ";
 			rate+=counter[i][j];
 		}
 	}
@@ -112,29 +150,64 @@ void check_repetitions(std::array<std::array<uint8_t, 32>, len> matrix) {
 	// analyze which values are larger than the average +- accuracy number in the counter matrix. 
 	// This could tell us which values are irregular and might need further checks
 	
-	double repetitions=0; // number of repeated values out of a pool of len*32 values.
+	uint32_t repetitions=0; // number of repeated values out of a pool of len*32 values.
 	for(uint32_t i=0;i<len;i++) {
 		for(uint8_t j=0;j<32;j++) {
 				if(counter[i][j] != 0) {
 					repetitions++;
-					//std::cout << counter[i][j] << " ";
+#ifdef PRINT_MATRIX
+					std::cout << counter[i][j] << " ";
+#endif
 				}
 		}
 	}
 	rate/=len*32; // calculate average rate
+	rate*=100; // %
 	
 
-	std::cout << std::endl << "count (check_repetitions): " << repetitions << " | rate of repetition: " << rate << "\n\n";
+	// count: number of unique bytes in matrix that repeated
+	std::cout << "count (check_repetitions): " << repetitions << " | rate of repetition: " << rate << "%";
+	uint32_t *out = new uint32_t[2]; // return for analyzing in another function
+	out[0] = repetitions;
+	out[1] = rate;
+	return out;
+}
+
+// analyze whether tests passed/failed
+void analyze_repetition(uint32_t *out1, uint32_t *out2)
+{
+	uint32_t repetitions1 = out1[0];
+	uint32_t repetitions2 = out2[0];
+	uint32_t rate1 = out1[1];
+	uint32_t rate2 = out2[1];
+
+	if(repetitions1/100 == repetitions2/100) { // an approximate estimation determined experimentally
+		std::cout << std::endl << "PASSED (check_repetitions): Expected Count of Repeated Unique Bytes in Matrix";
+	} else {
+		std::cout << std::endl << "FAILED (check_repetitions): Unexpected count of repeated unique bytes in matrix";
+	}
+
+	if(rate1 == rate2) {
+		std::cout << std::endl << "PASSED (check_repetitions): Expected Rate of Repetitions";
+	} else {
+		std::cout << std::endl << "FAILED (check_repetitions): Unexpected rate of repetitions";
+	}
+	std::cout << std::endl;
+
+	delete[] out1;
+	delete[] out2;
 }
 
 // check which values are more common (0-256). Not ordered by byte
+// e.g. how many instances of 0x00, 0x01, etc found in matrix.
+// This can tell us potential data bias
 template<uint32_t len=256>
 void check_common(std::array<std::array<uint8_t, 32>, len> matrix)
 {
 	double instances[256]; // number of instances of k found in matrix
 	memset(instances, 0, 256*sizeof(double));
 
-	for(uint32_t i=0;i<256;i++) {
+	for(uint32_t i=0;i<len;i++) {
 		for(uint8_t j=0;j<32;j++) {
 			for(uint16_t k=0;k<256;k++) { // all numbers in uint8_t
 				if(matrix[i][j] == k) {
@@ -147,18 +220,49 @@ void check_common(std::array<std::array<uint8_t, 32>, len> matrix)
 
 	// analyze the data, chances of each instance should be around the same. they should all be divided by 256 to get the chances at which they are equal to k=0-256
 	static constexpr double goal_rate = 1.0/256;
+	static uint32_t goal1000 = round(goal_rate*1000);
 	double avg = 0;
-	std::cout << std::endl;
 	for(uint16_t k=0;k<256;k++) {
 		instances[k]/=len*32; // 8192 (len*32) bytes checked, get average
-		// std::cout << std::setprecision(6) << instances[k] << " ";
+#ifdef PRINT_MATRIX
+		std::cout << std::setprecision(6) << instances[k] << " "; // all values should be around 1/256
+#endif
 		avg+=instances[k];
 	}
 	avg/=256;
-	std::cout << std::endl << "avg (check_common):" << avg;
+	std::cout << std::endl << "avg (check_common):" << avg << "\n";
 	
-	// TODO: check if avg is good, equal to goal_rate. cout PASSED/FAILED. check each value, maybe graph them to further analyze
+	// Check if avg is good, equal to goal_rate. cout PASSED/FAILED. check each value, maybe graph them to further analyze
+	if(avg == goal_rate) {
+		std::cout << "PASSED (check_common): Data Average is Random";
+	} else {
+		std::cout << "POTENTIAL FAILURE (check_common): Data might not be random, requires manual analysis.";
+	}
+	std::cout << "\n";
 	
+	// Analyze each individual data by checking a range
+	uint16_t fail_rate = 0;
+	for(uint16_t k=0;k<256;k++) {
+		std::stringstream ss;
+		ss << std::setprecision(4) << instances[k];
+		double instance; // rounded instance
+		ss >> instance;
+		instance = round(instance*1000); // round *1000 for rounding to 4th digit since instance[k] is around 0.00(x)xxx
+		if(instance > goal1000+2 || instance < goal1000-2) { // +-2 is precision (determined experimentally)
+				std::cout << "  k:" << k << " (" <<  instance << ")";
+				fail_rate++; // potential fail rate, not too accurate, mainly ignore it unless it's higher. But still analyze further to check if the fail should be expected
+		}
+	}
+	
+	if(fail_rate) {
+			double frate = (double)fail_rate/256*100;
+
+			// if 8 fails or more, high rail rate
+			std::cout << "\nFAILED (check_common - " << frate << "% | " << (frate < 8.0/256*100 ? "LOW" : "HIGH") << " FAILRATE): Data at some instances failed. Instances denoted above";
+	} else {
+			std::cout << "PASSED (check_common): All Instances Random";
+	}
+	std::cout << "\n";
 }
 
 int main()
@@ -425,7 +529,7 @@ int main()
 
 	}};
 	
-	// default sha-256 generated values. Should be secure numbers, the goal is to make sure that fulltimepad generates the same rates in the check functions
+	// default sha-256 generated values. Should be secure random numbers, the goal is to make sure that fulltimepad generates the same rates in the check functions
 	std::array<std::array<uint8_t, 32>, nkeys> matrix_rand = {{
 		{99, 13, 205, 41, 102, 196, 51, 102, 145, 18, 84, 72, 187, 178, 91, 79, 244, 18, 164, 156, 115, 45, 178, 200, 171, 193, 184, 88, 27, 215, 16, 221},
 		{202, 194, 245, 149, 120, 22, 48, 228, 233, 41, 198, 249, 213, 171, 57, 134, 200, 97, 215, 49, 180, 198, 203, 134, 131, 128, 53, 60, 72, 232, 13, 97},
@@ -686,13 +790,15 @@ int main()
 	}};
 	//gen_rand_matrix_fulltimepad<nkeys>(matrix_rand);
 
+	uint32_t *cr_out1, *cr_out2; // check_repetitions out
+
 	// based on the data matrix, check if previous value at matrix[i-1][j] has a similiar bit. Do a cross check. And check the values beside the value
 	std::cout << std::endl << "matrix: ";
 	analyze_cross_check<nkeys>(matrix);
 	std::cout << std::endl << "check chances of data being a certain byte (0-256): ";
 	check_common<nkeys>(matrix);
 	std::cout << std::endl << "check chances of bytes repeating: "; // rate of repitition, how many times same values exist in matrix
-	check_repetitions<nkeys>(matrix);
+	cr_out1 = check_repetitions<nkeys>(matrix);
 	std::cout << std::endl;
 
 	// for random data:
@@ -701,8 +807,11 @@ int main()
 	std::cout << std::endl << "check chances of data being a certain byte (0-256): ";
 	check_common<nkeys>(matrix_rand);
 	std::cout << std::endl << "check chances of bytes repeating: ";
-	check_repetitions<nkeys>(matrix_rand);
+	cr_out2 = check_repetitions<nkeys>(matrix_rand);
 	std::cout << std::endl;
+
+	// analyze check_repetitions
+	analyze_repetition(cr_out1, cr_out2);
 
 	return 0;
 }
