@@ -14,7 +14,15 @@
 \usepackage{float} % so that algorithms stay in correct section
 \usepackage{pgfplots} % plot graph
 \usepackage{subcaption} % for putting graphs side-by-side
-\usepackage{pdfpages}
+\usepackage{pdfpages} % include pdf graph
+\usepackage[backend=biber, sorting=ynt]{biblatex} % Use biblatex with biber backend
+
+\addbibresource{./references.bib}
+
+% TODO: Cite
+% princeton paper: http://palms.princeton.edu/PALMSopen/lee01efficient.pdf [1]
+% Lee, R., Shi, Z., & Yang, X. (n.d.). Princeton. Efficient Permutation Instructions for Fast Software Cryptography. http://palms.ee.princeton.edu/PALMSopen/lee01efficient.pdf
+
 
 \setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
 
@@ -63,8 +71,8 @@
 
 
 \begin{abstract}
-		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encrypion Scheme is a secure algorithm but there are 2 main security risks. One, a key cannot be reused. Two, plaintext length equals key length which is very inefficient when dealing with long plaintexts. These 2 security risks only exist due to a lack of confusion and diffusion per ciphertext. As denoted by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography, A secure cryptographic algorithm requires confusion and diffusion. The \texttt{Full-Time-Pad} symmetric stream cipher is developed based on the \texttt{One-Time-Pad} with solutions to the security risks while maintaining high speed computation. \
-		To achieve diffusion, the key is permutated in it's byte form using a constant permutation matrix. Due to the optimizations in modern devices (Vectorization, Cache \& Parallelization), this is really fast. To acheive the confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition in $F_p$, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different bytes of the key. This high-speed (around 2x the speed of ChaCha20) algorithm is a revolution in cryptography as it makes use of modern hardware accelarations for permutations unlike older algorithms which offers zero non-uniform shuffling.
+		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encryption Scheme is secure. But there are two security risks: A key cannot be reused, and plaintext length equals key length which is inefficient for long plaintexts. These security risks only exist due to a lack of confusion and diffusion per ciphertext. As stated by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. This paper introduces the \texttt{Full-Time-Pad} symmetric stream cipher which is based on the \texttt{One-Time-Pad} algorithm with solutions to the security risks mentioned above.
+		To achieve diffusion, the key is permutated in its byte form using a constant permutation matrix. Due to the optimizations in modern devices (Vectorization, Cache \& Parallelization), this is really fast. To achieve the confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different bytes of the key. This high-speed (around 3x the speed of ChaCha20) algorithm makes use of modern hardware accelerations unlike older algorithms.
 
 \end{abstract}
 
@@ -78,7 +86,11 @@
 
 \section{Introduction}
 
+In this proposal, we will demonstrate how modern optimizations mixed with simple operations make a fast encryption algorithm. There are many similiar works in the field such as Efficient Permutation Instructions for Fast Software Cryptography 
 
+% TODO: Cite
+% princeton paper: http://palms.princeton.edu/PALMSopen/lee01efficient.pdf [1]
+% Lee, R., Shi, Z., & Yang, X. (n.d.). Princeton. Efficient Permutation Instructions for Fast Software Cryptography. http://palms.ee.princeton.edu/PALMSopen/lee01efficient.pdf
 
 \subsection {Pre-requisite Terminology}
  
@@ -95,7 +107,7 @@
 		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
 		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
 		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
-		\textbf{Galois Field}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Finite Field where there are only limited number of numbers. Only prime galois fields ($F_p$) are used where size of the field is denoted by prime number p \\
+		\textbf{Galois Field}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Finite field where there are only limited number of numbers. Only prime galois fields ($F_p$) are used where size of the field is denoted by prime number p \\
 		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
 		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
 \end{tabular}
@@ -811,7 +823,7 @@ Take every ascii encoding of each character of the message and calculate to the 
 \\
 Example:\\
 "c": 99 in ascii encoding\\
-In python: hex($99^{32}$)[:10] = \texttt{0x0x119f904f}
+In python: hex($99^{32}$)[:10] = \texttt{0x119f904f}
 \\
 The word \textbf{cipher} and $\textbf{A}_i$ is arbitrary. In other words, it's "nothing up my sleeve numbers". This is an initial array. In the transformation algorithm, every $\textbf{A}_i$ is modified twice (in 16 iterations). This provides the confusion. The reason why the first 2 values are the 64-bit encryption index is because this was the most efficient way to diffuse in the encryption index.
 
@@ -825,21 +837,24 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 \section{Performance}
 
-In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.\\
-
+In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.
+\\
 Benchmark tests show the following results: 
-
+\\
 \texttt{----------TESTING SPEED----------\\
-TESTING TRANSFORMATION VERSION 1.0: Computation Time for 1000000 key transformations: 0.641983 seconds\\
-Hashrate: 1557674 keys per second\\
-\\
-TESTING TRANSFORMATION VERSION 1.1: Computation Time for 1000000 key transformations: 0.526699 seconds\\
-Hashrate: 1898618 keys per second\\
-\\
-TESTING TRANSFORMATION VERSION 2.0: Computation Time for 1000000 key transformations: 0.059143 seconds
+TESTING TRANSFORMATION VERSION 1.0:\\
+Computation Time for 1000000 key transformations: 0.641983 seconds\\
+Hashrate: 1557674 keys per second
+\\\\
+TESTING TRANSFORMATION VERSION 1.1:\\
+Computation Time for 1000000 key transformations: 0.526699 seconds\\
+Hashrate: 1898618 keys per second
+\\\\
+TESTING TRANSFORMATION VERSION 2.0:\\
+Computation Time for 1000000 key transformations: 0.059143 seconds\\
 Hashrate: 19178011 keys per second
 }
-\\
+\\\\
 On the same device (12th Gen Intel(R) Core(TM) i7-12700H, DDR5 RAM). The ChaCha20 benchmark tests yield the following results:\\
 \texttt{Time taken to encrypt 1000000 32-byte messages: 0.160442 seconds\\
 Encryption rate: 6232781 keys per second}\\
@@ -995,7 +1010,9 @@ This version of the transformation prioritizes speed. This is preferred to the p
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{endian\_8\_to\_32\_arr} \label{dynamic_permutation}
+This endiannes conversion is designed to convert a little-endian reinterpret casted pointer into the big-endian version so that both little-endian and big-endian systems are compatible.
+
+\subsection{endian\_8\_to\_32\_arr} \label{endian}
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The endian\_8\_to\_32\_arr() in the transformation function}
@@ -1042,6 +1059,7 @@ Encryption operation is the same as decryption
 \end{algorithmic}
 \end{algorithm}
 
+\printbibliography
 
 \end{document}
 
