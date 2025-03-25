@@ -18,3 +18,8 @@ FullTimePad.log
 FullTimePad.aux
 FullTimePad.out
 FullTimePad.toc
+./FullTimePad.bbl
+./FullTimePad.bcf
+./FullTimePad.blg
+./FullTimePad-blx.bib
+./FullTimePad.run.xml
