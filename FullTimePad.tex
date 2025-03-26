@@ -1,4 +1,7 @@
-\documentclass[fleqn, a4paper,12pt]{article}
+% \documentclass[fleqn, a4paper,12pt]{article}
+
+\documentclass[12pt, fleqn, letterpaper]{article}
+% \documentclass[12pt, letterpaper]{article}
 
 \usepackage{graphicx}
 \usepackage{geometry}
@@ -71,8 +74,10 @@
 
 
 \begin{abstract}
-		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encryption Scheme is secure. But there are two security risks: A key cannot be reused, and plaintext length equals key length which is inefficient for long plaintexts. These security risks only exist due to a lack of confusion and diffusion per ciphertext. As stated by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. This paper introduces the \texttt{Full-Time-Pad} symmetric stream cipher which is based on the \texttt{One-Time-Pad} algorithm with solutions to the security risks mentioned above.
-		To achieve diffusion, the key is permutated in its byte form using a constant permutation matrix. Due to the optimizations in modern devices (Vectorization, Cache \& Parallelization), this is really fast. To achieve the confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different bytes of the key. This high-speed (around 3x the speed of ChaCha20) algorithm makes use of modern hardware accelerations unlike older algorithms.
+	Encryption scheme based on one-time pad (OTP) is secure, but there are two security risks: (1) a key cannot be reused and (2) plaintext length equals key length which is inefficient for long plaintexts. As stated by the father of information theory \cite{claude_shannon} in his report \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. However existing encryption scheme is lacking confusion and diffusion per ciphertext. 
+	This paper introduces the \textbf{Full-Fime-Pad (FTP)} symmetric stream cipher which is based on the OTP
+%		\fontsize{12}{18}\selectfont \texttt{One-Time-Pad} Encryption Scheme is secure. But there are two security risks: A key cannot be reused, and plaintext length equals key length which is inefficient for long plaintexts. These security risks only exist due to a lack of confusion and diffusion per ciphertext. As stated by Claude Shannon in the report he published in 1945, A Mathematical Theory of Cryptography \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. This paper introduces the \texttt{Full-Time-Pad} symmetric stream cipher which is based on the \texttt{One-Time-Pad} algorithm with solutions to the security risks mentioned above.
+	To achieve diffusion, the key is permutated in its byte form using a constant permutation matrix. Due to the optimizations in modern devices (Vectorization, Cache \& Parallelization), this is really fast. To achieve the confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}). The permutation guarantees that every time there is a manipulation, each 32-bit number is made up of a different bytes of the key. This high-speed (around 3x the speed of ChaCha20) algorithm makes use of modern hardware accelerations unlike older algorithms. Single Instruction Multiple Data (SIMD) Parallelization has been around since 1962 \cite{sung_mit_2000}, they have been popularized since early 1990s \cite{wiki_simd}. Ever since then, SIMD exists in nearly all modern devices and I propose that encryption algorithms should adapt to this modernization.
 
 \end{abstract}
 
@@ -87,10 +92,6 @@
 \section{Introduction}
 
 In this proposal, we will demonstrate how modern optimizations mixed with simple operations make a fast encryption algorithm. There are many similiar works in the field such as Efficient Permutation Instructions for Fast Software Cryptography 
-
-% TODO: Cite
-% princeton paper: http://palms.princeton.edu/PALMSopen/lee01efficient.pdf [1]
-% Lee, R., Shi, Z., & Yang, X. (n.d.). Princeton. Efficient Permutation Instructions for Fast Software Cryptography. http://palms.ee.princeton.edu/PALMSopen/lee01efficient.pdf
 
 \subsection {Pre-requisite Terminology}
  
