@@ -111,11 +111,6 @@ In the Efficient Permutation Instructions for Fast Software Cryptography \cite{p
 		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
 \end{tabular}
 
-
-
-\subsection{Applications}
-
-
 \subsection{Key Generation}
 
 The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Elliptic Cryptography Diffie Hellman (ECDH) protocol with Hash-based Key Derivation Function (HKDF).
@@ -124,7 +119,7 @@ The 32-byte key should be generated using a cryptographically secure method, inc
 
 \subsubsection{Galois Field Addition}
 
-In a prime galois field, where two variables ($x,y$) are added, $x,y \in \mathbb{F_p}$ where $\mathbb/{F_p}$ denotes the finite field with a prime field size. There are finite number of elements in $F_p$ which means that $x,y < p$. 
+In a prime galois field, where two variables ($x,y$) are added, $x,y \in \mathbb{F}_p$ where $\mathbb{F}_p$ denotes the finite field with a prime field size. There are finite number of elements in $F_p$ which means that $x,y < p$. 
 
 The expression:\\
 $x + y = z$\\
@@ -237,11 +232,11 @@ $\therefore $ \texttt{Using a galois field doesn't negatively impact number of c
 
 \subsubsection {Birthday Problem} \label{birthday_problem}
 
-The birthday problem is a paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
+The birthday problem is a veridical paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
 \\
 The answer is an unexpected 23 people.
 \\
-In the context of this encryption algorithm, it might be a concern, as number of key reused (with transformation) increase, the chances of finding the key increase:
+In the context of this encryption algorithm, this means that brute-forcing using random inputs is more likely than your intuition predicts especially since a galois field is used (less possible combinations):
 \\
 \\
 
@@ -326,7 +321,7 @@ $x_1 = \sqrt{b}$ (due to square approximation) \\
 \\ error tolarance:
 $e = 1 \times 10^{-200}$ \\
 for $b=4294967291^8$,  we get $k_1 = 400651867432320527534628274526034254879$ for the root. \\
-And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ for the root \\
+And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ for the root. \\
 So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
 Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of galois fields security wise.
 \\
@@ -618,7 +613,7 @@ Results of collision rates are approximately equal given lower accuracy ($\pm n$
     \end{subfigure}
 \end{figure}
 
-These graphs demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -version\_number}. The consistent non-volatile increase in the numbers are a good thing.
+These graphs demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. The consistent non-volatile increase in the numbers are a good thing.
 
 \begin{figure}[H]
     \includegraphics[width=0.9\linewidth]{delta sha256 - fulltimepad 2.0.pdf}
