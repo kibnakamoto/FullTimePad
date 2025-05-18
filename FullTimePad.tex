@@ -187,14 +187,14 @@ In One-Time-Pad, key isn't reusable. Here is the proof:
 \end{aligned}
 \]
 
-Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
+Since the key is reused, the 2 ciphertexts XORed factor out the key since $k \oplus k = 0$
 Using cryptoanalysis, the 2 plaintexts can be found. 
 \\
 For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
 \\
 But there is another concern,
 \\
-What if the plaintext and ciphertext are known, then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
+What if the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
 &k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
@@ -213,7 +213,7 @@ $\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confu
 
 \subsection {NIST SP 800-22 - Statistical Test Suite - Official NIST Randomness Test}
 
-using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been testing using a fixed key (0-31) and plaintext (0-31). Their values had a very obvious pattern, every time, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input provides a very good avalanche effect, and therefore has a proper avalanche effect.
+using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been testing using a fixed key (0-31) and plaintext (0-31). Only one key was used. Per each 256-bits until the one millionth bit, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input (key/encryption index) provides a very good avalanche effect, and therefore has a proper avalanche effect.
 
 \subsection{Brute-Force}
 
@@ -236,13 +236,13 @@ The birthday problem is a veridical paradox. It goes as follows: how many people
 \\
 The answer is an unexpected 23 people.
 \\
-In the context of this encryption algorithm, this means that brute-forcing using random inputs is more likely than your intuition predicts especially since a galois field is used (less possible combinations):
+In the context of this encryption algorithm, this means that brute-forcing using random inputs is more likely than your intuition predicts especially since a galois field is used (smaller number of total combinations):
 \\
 \\
 
-\texttt{let } $V_c$ \texttt{be the number of combinations per key without order and repetitions} \\
+\texttt{let } $V_c$ \texttt{be the number of combinations per key with order and no repetitions} \\
 \texttt{let } $k$ \texttt{be the number of keys needed for hash(key) to have a 50\% chance to equal another hash(key)} \\
-\texttt{let } $V_t$ \texttt{be the number of combinations per key with order and repetitions} \\
+\texttt{let } $V_t$ \texttt{be the number of combinations per key with order and with repetitions} \\
 
 \[
 \begin{aligned}
@@ -413,12 +413,20 @@ Using more number crunching: I found the following recursive formula that finds 
 where $x = \ell-1$ \quad and x should be incremented until correct answer is reached for $\ell \geq 6$ and $n_{\ell-1}$ is previous number of combinations.
 This formula doesn't translate to cases where the 2-variable equation doesn't have 17 combinations.
 
-Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following equation that satisfies all cases:
+Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following formula that satisfies all cases:
 
 \[
 \\ \prod_{i=0}^{\ell-1} \frac{(x+i)}{1+i}
 \]
 \\
+
+This led me to develop this equation. The equation contains a costly operation (factorials) so it is computationally slower, but for approximation for really large numbers (sum of billions of variables), this could be better as it might be hard/unnecessary to calculate the exact answer when $\ell$ or $c$ is unrealistically large:
+
+\[
+\\ \frac{(\ell+c)!}{c!\ell!}
+\]
+\\
+
 where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
 
 Using this equation for the context of this encryption algorithm:
