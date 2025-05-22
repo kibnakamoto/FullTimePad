@@ -1,5 +1,4 @@
 import math
-import numpy as np
 from decimal import Decimal, getcontext
 
 getcontext().prec = 200
