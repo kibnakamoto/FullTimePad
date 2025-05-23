@@ -420,16 +420,35 @@ Simply put this equation couldn't be used accurately, it can only be an approxim
 \]
 \\
 
-This led me to develop this equation. The equation contains a costly operation (factorials) so it is computationally slower, but for approximation for really large numbers (sum of billions of variables), this could be better as it might be hard/unnecessary to calculate the exact answer when $\ell$ or $c$ is unrealistically large:
+where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
+
+This led me to develop this equation. The equation contains a costly operation (factorials) so it is computationally slower, but for approximation for really large numbers (e.g. sum of billions of variables), this could be better as it might be hard/unnecessary to calculate the exact answer using the formula when $\ell$ or $c$ is unrealistically large:
 
 \[
 \\ \frac{(\ell+c)!}{c!\ell!}
 \]
 \\
 
-where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
+Using the Ramanujan Approximation:
 
-Using this equation for the context of this encryption algorithm:
+\[
+\\ n! \approx \sqrt{\pi}\left(\frac{n}{e}\right)^n\sqrt[6]{8n^3 + 4n^2 + n + \frac{1}{30}}
+\]
+
+We can derive an approximation equation for really large calculations:
+
+\begin{align*} % use star for no numbering
+\text{let   } t &= \frac{(\ell+c)!}{c!\ell!}
+\\ t &\approx \frac{\cancel{\sqrt{\pi}}\left(\frac{c+\ell}{e}\right)^{c+\ell}\sqrt[6]{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}}{\cancel{\sqrt{\pi}}(\frac{c}{e})^c\sqrt[6]{8c^3 + 4c^2 + c + \frac{1}{30}})\sqrt{\pi}(\frac{\ell}{e})^\ell\sqrt[6]{8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}})}
+\\ t &\approx \pi^{-\frac{1}{2}}(c+\ell)^{c+\ell}e^{-c-\ell}c^{-c}e^c\ell^{-\ell}e^\ell\sqrt[6]{\frac{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}{\left(8c^3 + 4c^2 + c + \frac{1}{30}\right)\left(8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}\right)}}
+\\ t &= \frac{(c+\ell)^{c+\ell}}{\sqrt{\pi}c^{c}\ell^{\ell}}\sqrt[6]{\frac{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}{\left(8c^3 + 4c^2 + c + \frac{1}{30}\right)\left(8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}\right)}}
+\end{align*}
+\\
+
+The equation $t$ defined above can be used to find the approximate number of combinations in an addition expression with $\ell$ number of variables with a sum of $c$.
+\\
+
+Using the formula for the context of this encryption algorithm:
 
 maximum 32-bit number:
 \[
