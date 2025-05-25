@@ -12,6 +12,7 @@ graphy = []
 # data generated with this algorithm for (r)andom (s)ha256 (rs list), commented for speed
 # for fulltimepad, the data is generated with the same ideology
 # this algorithm compares how much collision occurs when input data that is modified by 1-bit (testing the avalanche effect). It counts the number of times it's in a certian range of the previous answer, and each z iteration, the range grows by +1. It's to test if a single bit modification keeps hash in a certain range. modify the numbers accordingly to find patterns if possible (Already done. No such patterns in FTP).
+# The fulltimepad implementation is done in significant_perm_byte.cpp differential_cryptoanalysis_random_key segment. The values are checked and tested for vulnerabilities but none found.
 #for z in range(256):
 #    average = 0
 #    for x in range(1):
