@@ -94,7 +94,7 @@ plt.figure(figsize=(8, 5))
 
 # currently commented ou since it's unwanted
 # plt.plot(graphx, delta1, color="orange", label="v10", marker='o', linestyle='-')  # 'o' for points, '-' for line
-plt.plot(graphx, delta2, color="blue", label="Δ (Change in Collision Rate)",  marker='o', linestyle='-')  # 'o' for points, '-' for line
+plt.plot(graphx, delta2, color="blue", label="Δ (Change in Collision Rate)", markersize=2, marker='.', linestyle='-')  # 'o' for points, '-' for line
 
 plt.fill_between(graphx, lower_bound, upper_bound, color='gray', alpha=0.3, label=f"{confidence}% Confidence Interval")
 plt.xlabel("Innaccuracy (n)")
