@@ -250,10 +250,10 @@ In the context of this encryption algorithm, this means that brute-forcing using
 \begin{aligned}
 &V_c = \frac{b!}{(b-k)!} = \frac{4294967291^8!}{(4294967291^8-k)!} \\
 &V_t = b^k = 4294967291^{8^k} \\
-&P(A) = \frac{V_c}{V_t} \\
-&P(A) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
-&P(B) = 1- P(A) = 50\%\\
-&P(A) = 1 - 50\%\\
+&f_A(b, k) = \frac{V_c}{V_t} \\
+&f_A(b, k) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
+&f_B(b, k) = 1- f_A(b, k) = 50\%\\
+&f_A(b, k) = 1 - 50\%\\
 &1 - 50\% = \frac{\frac{b!}{(b-k)!}}{b^k} \\
 &\frac{1}{2}b^k =  \frac{b!}{(b-k)!} \hspace{7.2cm} \texttt{ since }50\% = \frac{1}{2} \\
 &\log_b\frac{1}{2}b^k = \log_b\frac{b!}{(b-k)!} \\
@@ -321,15 +321,13 @@ To verify that this equation is accurate. I compared it to the accurate approxim
 \\ a(b) = 1/2 + \sqrt(1/4 + 2\ln 2 b)
 \]
 
-% TODO: fix up the following explenations up to line 355
-
-And an independent solution ($f(b, k)_{\Gamma}$) to verify the solutions, $P(A)$ function defined above solved with $\Gamma$ functions for factorials.
+And an independent solution ($f_{\Gamma}(b, k)$) to verify the solutions, $f_B(b, k)$ function defined above solved with $\Gamma$ functions for factorials.
 \\
 To compare functions $a$ and $g$: 
 \begin{enumerate}[label=\textbf{\arabic*.}]
 \item Provide both functions with input for parameter b that increments by an arbitrary integer ($n$) for a 100 iterations.
 \item Graph their values and the differences in k.
-\item Find k using another approved method. E.g. solving the birthday problem with $f(b, k)_{\Gamma}$.
+\item Find k using another approved method. E.g. solving the birthday problem with $f_{\Gamma}(b, k)$.
 \end{enumerate}
 
 (\textbf{1.-2.}): Increment $b$ by n=1,000,000,000 for 100 iterations and graph $(b, k)$ for $g, a$:
@@ -349,7 +347,7 @@ $|f(b_i, k_{g(b_i, k)})_{\Gamma} - 0.50|$  or $|f(b_i, a(b))_{\Gamma} - 0.50|$ w
 Whichever function ($g$ or $a$) gets values closer to 0 is the most accurate function. The tests results show
 that $g$ is more accurate around 16\% (varying between ~10-30\%) of the time as $\Delta \rightarrow 0$, and
 $b \rightarrow \infty$. The small flaw with this is that since function $g$ is the most accurate solution,
-even $f(b, k)_{\Gamma}$ function isn't going to show the exact accuracy. So the accuracy of $g$ can only be
+even $f_{\Gamma}(b, k)$ function isn't going to show the exact accuracy. So the accuracy of $g$ can only be
 determined accurately relative to a obviously less accurate function like function a.
 \\ The results:
 \\
@@ -357,7 +355,7 @@ determined accurately relative to a obviously less accurate function like functi
 \texttt{g is closer/equal to zero than a: 100} \\
 \texttt{a is closer/equal to zero than g: 84} \\
 
-The accuracy of $a$ is off mainly because the $\Delta \rightarrow \frac{\ln 2}{3}$ as $b \rightarrow \infty$. This is a strange phenomenon that is proven to be not related to function $g$ since $f(b, k)_{\Gamma}$ and $g(b, k)$ give nearly the same results. $a$ on the other hand is always off by around $\frac{\ln 2}{3}$. This is due to how $a$ is derived. This means that $a$ can be accurate 100\% of the time as long as $a$ is redefined with an added subtraction of $\frac{\ln 2}{3}$. Updated $a$ is only off by a negligible amount for most contexts.
+The accuracy of $a$ is off mainly because the $\Delta \rightarrow \frac{\ln 2}{3}$ as $b \rightarrow \infty$. This is a strange phenomenon that is proven to be not related to function $g$ since $f_{\Gamma}(b, k)$ and $g(b, k)$ give nearly the same results. $a$ on the other hand is always off by around $\frac{\ln 2}{3}$. This is due to how $a$ is derived. This means that $a$ can be accurate 100\% of the time as long as $a$ is redefined with an added subtraction of $\frac{\ln 2}{3}$. Updated $a$ is only off by a negligible amount for most contexts.
 
 The code for this test is in \textbf{test/sec.py}.
 
