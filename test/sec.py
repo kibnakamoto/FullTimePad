@@ -1,5 +1,5 @@
 # for the birthday problem, test which function is the most accurate and improve function(s) if possible
-# to test accuracy, I'm only checking how close it is to the answer using gamma functions for factorials (f_exact function). It's important to note that ramanujan approximation is more accurate then gamma functions so function g is the most accurate solution.
+# to test accuracy, I'm only checking how close it is to the answer using gamma functions for factorials (f_gamma function). It's important to note that ramanujan approximation is more accurate then gamma functions so function g is the most accurate solution.
 
 import math
 from decimal import Decimal, getcontext
@@ -71,7 +71,7 @@ def f(b, k):
     return Decimal(fact)/b**k
 
 # exact equation for non-int inputs
-def f_exact(b, k):
+def f_gamma(b, k):
     # use gamma function from mpmath library for non-int factorials
     return gamma(b+1)/gamma(b-k+1)/b**k - 0.5
 
@@ -117,9 +117,9 @@ def iter_g(b, i):
 #k = secant(g, b, x0, x1, e, N)#+(Decimal(2).ln()/3) # get k
 #
 ## find exact birthday problem solution
-#k_fg = f_exact(float(b), float(k))
+#k_fg = f_gamma(float(b), float(k))
 #print("\nf(b, k):", end='')
-#k_f = secant(f_exact, mp.mpf(str(b)), mp.mpf(str(x0)), mp.mpf(str(x1)), mp.mpf(str(e)), N)#+(Decimal(2).ln()/3) # get k
+#k_f = secant(f_gamma, mp.mpf(str(b)), mp.mpf(str(x0)), mp.mpf(str(x1)), mp.mpf(str(e)), N)#+(Decimal(2).ln()/3) # get k
 #print("accuracy from 0.5: ", k_fg)
 #print("exact solution:    ", k_f)
 #print("g(b,k) off by:     ", k_f-mp.mpf(str(k)))
@@ -128,7 +128,7 @@ def iter_g(b, i):
 
 # pass a,g function's values through f to see how close it is to 0.50, closer they are, higher the accuracy
 def gather_accuracy(g_called, gathered_x, gathered_y, i): # input k list
-    return f_exact(mp.mpf(str(gathered_x[i])), mp.mpf(str(gathered_y[i]))), g_called, i # g_called is only to show if its the g function
+    return f_gamma(mp.mpf(str(gathered_x[i])), mp.mpf(str(gathered_y[i]))), g_called, i # g_called is only to show if its the g function
 
 # gather data with a(b)
 # faster function so it's only a single task
@@ -193,7 +193,7 @@ def g_is_more_accurate():
         return False, g_to_0_counter, a_to_0_counter # a is more accurate
     # g accuracy in percentage: g_to_0_counter/gather*100
 
-# gather accuracies of functions g,a using function f_exact (function g is the most accurate
+# gather accuracies of functions g,a using function f_gamma (function g is the most accurate
 # but using an isolated solution to compare functions g,a is good enough)
 def gather_ga_accuracies_f(gathered_a_x, gathered_a_y):
     getcontext().prec = 3000 # set decimal digit count to 3000
@@ -280,7 +280,7 @@ print(f"g is more accurate: {g_is_accurate} \ng is closer/equal to zero than a: 
 # This means that function a is faster and more convinient to use (no secant method needed). The ln(2)/3 comes
 # from the derivation of the a(b) function. I know that a(b) isn't more accurate is due to the fact that 
 # ramanujan approximation is the most accurate solution and both results passed through gamma function solution
-# defined in f_exact function and function g gives a resulting collision chances closer to 0.50 than function a.
-# The small flaw with this is that since function g is the most accurate solution, even f_exact function isn't
+# defined in f_gamma function and function g gives a resulting collision chances closer to 0.50 than function a.
+# The small flaw with this is that since function g is the most accurate solution, even f_gamma function isn't
 # going to show the exact accuracy. So the accuracy can only be determined accurately relative to a obviously
 # less accurate function like function a.
