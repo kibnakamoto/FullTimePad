@@ -315,19 +315,19 @@ In the context of this encryption algorithm, this means that brute-forcing using
 %\end{aligned}
 %\]
 
-To verify that this equation is accurate. I compared it to the accurate approximation equation for the birthday problem \cite{wiki_birthday}.
+To verify the accuracy of this equation, we compared it to a proven accurate approximation equation \cite{wiki_birthday}.
 
 \[
-\\ a(b) = 1/2 + \sqrt(1/4 + 2\ln 2 b)
+\\ a(b) = \frac{1}{2} + \sqrt{\frac{1}{4} + 2\ln 2 b}
 \]
 
-And an independent solution ($f_{\Gamma}(b, k)$) to verify the solutions, $f_B(b, k)$ function defined above solved with $\Gamma$ functions for factorials.
+And an accurate independent verification solution $f_{\Gamma}(b, k)$ to solve the $f_B$ function defined above with $\Gamma$ functions since $b,k \notin \mathbb{Z}$ for exact solution.
 \\
 To compare functions $a$ and $g$: 
 \begin{enumerate}[label=\textbf{\arabic*.}]
-\item Provide both functions with input for parameter b that increments by an arbitrary integer ($n$) for a 100 iterations.
-\item Graph their values and the differences in k.
-\item Find k using another approved method. E.g. solving the birthday problem with $f_{\Gamma}(b, k)$.
+\item Provide both functions with inputs for parameter $b$ that increments by an arbitrary integer ($n$) for a 100 iterations.
+\item Graph their values and the differences in $k$.
+\item Find k using another approved method. E.g. solving the birthday problem with $f_{\Gamma}$.
 \end{enumerate}
 
 (\textbf{1.-2.}): Increment $b$ by n=1,000,000,000 for 100 iterations and graph $(b, k)$ for $g, a$:
@@ -337,15 +337,15 @@ To compare functions $a$ and $g$:
     \makebox[\textwidth]{\includegraphics[width=1.3\linewidth]{sec.pdf}}
 \end{figure}
 
-Graph $\Delta$ shows that the difference in $k$ for $g$, $a$ ($\Delta$) gets smaller as $b \rightarrow \infty$. Since $g$ uses the ramanujan approximation, it's the most accurate solution to the problem involving factorials. All together, this suggests that $g$ is more accurate for smaller values for $b$ and that accuracy for $a$ approaches the accuracy of $g$ as $b \rightarrow \infty$.
+Graph $\Delta$ shows that the difference in $k$ for $g$, $a$ get smaller as $b \rightarrow \infty$. Since $g$ uses the ramanujan approximation, it's the most accurate solution to the problem involving factorials. All together, this suggests that $g$ is more accurate for smaller values for $b$ and that accuracy for $a$ approaches the accuracy of $g$ as $b \rightarrow \infty$.
 
 (\textbf{3.}): The accuracy tests for $g$,$a$ measured with $f_{\Gamma}$:
 \\
-To find accuracy. For each iteration ($i$), first check if $k_{g(b_i, k)}$ and $a(b_i)$ result in the same
-integer as $k$ is technically a discrete integer and if they're not equal find which is closer to 0:
-$|f(b_i, k_{g(b_i, k)})_{\Gamma} - 0.50|$  or $|f(b_i, a(b))_{\Gamma} - 0.50|$ where $b_i = b + i \times n$.
-Whichever function ($g$ or $a$) gets values closer to 0 is the most accurate function. The tests results show
-that $g$ is more accurate around 16\% (varying between ~10-30\%) of the time as $\Delta \rightarrow 0$, and
+For each iteration ($i$), first check if $k_{g(b_i, k)}$ and $a(b_i)$ result in the same
+ floor($k$) since $k$ is technically a discrete integer and if they're not equal, find which of the expressions are closer to 0:
+$|f_{\Gamma}(b_i, k_{g(b_i, k)}) - 0.50|$  or $|f_{\Gamma}(b_i, a(b)) - 0.50|$ where $b_i = b + i \times n$.
+used in the function, is the most accurate function. The tests results show that $g$ is more accurate around
+16\% (varying between ~10-30\%) of the time as $\Delta \rightarrow 0$, and
 $b \rightarrow \infty$. The small flaw with this is that since function $g$ is the most accurate solution,
 even $f_{\Gamma}(b, k)$ function isn't going to show the exact accuracy. So the accuracy of $g$ can only be
 determined accurately relative to a obviously less accurate function like function a.
@@ -446,13 +446,13 @@ The number of ways a multi-variable equation can be represented as a 2 variable 
 \\ \sum_{i=1}^{\ell-1} i
 \]
 
-Using some number crunching and logic, I found that there is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
+Using some number crunching and logic, we found that there is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
 
 \[
 		\\ n_\ell \approx \propto \frac{\displaystyle \sum_{i=1}^{\ell-1}}{\displaystyle \sum_{i=1}^{\ell-2}} \times k \hspace{1cm} \texttt{where k is a multiplier:} k \in \mathbb{N} 
 \]
 
-Using more number crunching: I found the following recursive formula that finds the number of combinations that satisfies x+y+\dots = 16:
+Using more number crunching: We found the following recursive formula that finds the number of combinations that satisfies x+y+\dots = 16:
 
 \[
 		\\ n_\ell = (n_{\ell-1} \frac{\displaystyle \sum_{i=1}^{x}}{\displaystyle \sum_{i=1}^{x-1}} +17) \times 3 - 17 \times 3( (x+1) \mod 2 )
@@ -460,7 +460,7 @@ Using more number crunching: I found the following recursive formula that finds 
 where $x = \ell-1$ \quad and x should be incremented until correct answer is reached for $\ell \geq 6$ and $n_{\ell-1}$ is previous number of combinations.
 This formula doesn't translate to cases where the 2-variable equation doesn't have 17 combinations.
 
-Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, I derived the following formula that satisfies all cases:
+Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, we derived the following formula that satisfies all cases:
 
 \[
 \\ \prod_{i=0}^{\ell-1} \frac{(x+i)}{1+i}
@@ -690,10 +690,10 @@ $\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
 
 \subsubsection{Different Permutation Matrices}
 
-Tried permutation matrices that followed logic or randomness. But they didn't offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.\\
+We tried permutation matrices that followed logic or randomness. But they didn't always offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.\\
 Using Bent functions to generate a non-uniform permutation matrix is also possible.
 
-In terms of efficiency, the permutation matrix should be a uniform permutation matrix. The current matrix is non-uniform, which might provide better diffusion (more random), it also creates the issue of efficiency. So in terms of computation speed, reducing the number of times the memory is accessed is required. To achieve this, I will implement an updated version with uniform matrix and perform benchmark tests, based on results of both avalanche effect and cryptoanalysis testing, I will keep/undo the tests.
+In terms of efficiency, the permutation matrix should be a uniform permutation matrix. The current matrix is non-uniform, which might provide better diffusion (more random), it also creates the issue of efficiency. So in terms of computation speed, reducing the number of times the memory is accessed is required. To achieve this, we will implement an updated version with uniform matrix and perform benchmark tests, based on results of both avalanche effect and cryptoanalysis testing, we will keep/undo the tests.
 
 \subsubsection{Number of Rounds}
 
@@ -772,7 +772,7 @@ Half of the key should be modified per iteration because classical cryptographic
 therefore it's the goal. this was determined experimentally; testing collision resistance of each byte upon modifying the transformation algorithm. \\
 \\
 
-I would represent the transformation algorithm with a game of cards. Imagine that 8 cards are randomly picked in a pile of $2^{256}$ cards, each card is cut up into 4 equal pieces, the cut up pieces are shuffled using a permutation algorithm while also replaced with other cut up values from the pile of cards and simultaniously, some pieces are cut up to 2 pieces with magnitude of a prime number (e.g. 5mm, other pieces being 32-5mm if card is 32mm). If this process repeated for 16 iterations, could you recover the original cards? Probably not.
+We can represent the transformation algorithm with a game of cards. Imagine that 8 cards are randomly picked in a pile of $2^{256}$ cards, each card is cut up into 4 equal pieces, the cut up pieces are shuffled using a permutation algorithm while also replaced with other cut up values from the pile of cards and simultaniously, some pieces are cut up to 2 pieces with magnitude of a prime number (e.g. 5mm, other pieces being 32-5mm if card is 32mm). If this process repeated for 16 iterations, could you recover the original cards? Probably not.
 
 \subsection{Dynamic Matrix Permutation}
 
@@ -884,7 +884,7 @@ Some of the values are xored because xor operator offers 256 combinations per by
 
 \section{Performance}
 
-In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, I would recommend using slower algorithms to reduce brute-forcing possibilities.
+In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, we would recommend using slower algorithms to reduce brute-forcing possibilities.
 \\
 Benchmark tests show the following results: 
 \\
@@ -910,7 +910,7 @@ This means that \texttt{Full-Time-Pad} transformation version 2.0 is more than 3
 \\
 One must also consider that my algorithm could be redesigned to generate 64-byte blocks faster than ChaCha20 as longer keystream doesn't mean a linear increase in time. This is a potential upgrade in future version of this algorithm.
 \\
-Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor implementation. Implementation could be improved, yet I don't think speed would be affected too significantly.
+Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor implementation. Implementation could be improved, yet we don't think speed would be affected too significantly.
 
 \section {Cipher}
 
