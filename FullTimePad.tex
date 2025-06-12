@@ -1105,12 +1105,12 @@ If using an atomic number isn't possible (e.g. threads cannot communicate effici
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{Unique nonces for Multi-threading without thread communication}
 \begin{algorithmic}[1]  % The [1] enables line numbering
-\State \textbf{Input:} thread count ($t$), thread ID ($n$), last encryption index used on this thread ($m$)
+\State \textbf{Input:} thread count ($t$), thread ID ($n$), last encryption index used on this thread ($m$), $m > 0$
 \State let $\texttt{encryption\_index} \gets n + m + 1$
 \State let $P$ be a constant global set of $t$ prime numbers
 \State let $p \in P, p \neq P_n$
 \While { $\gcd(\texttt{encryption\_index}, p) = 1$ }
-    \State $\texttt{encryption\_index} += n$
+    \State $\texttt{encryption\_index} += P_n$
 \EndWhile
 \State 
 \State \textbf{Output:} Nonce (\texttt{encryption\_index})
