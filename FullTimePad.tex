@@ -1081,7 +1081,43 @@ This endiannes conversion is designed to convert a little-endian reinterpret cas
 
 \subsection {Key Reuse}
 
-In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per encryption in order to keep the transformed key unique. The encryption index is infused in the encryption algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last 2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the plaintext is long (not just incremented per message but per 32-byte segment of every message sent.)
+In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per
+encryption in order to keep the transformed key unique. The encryption index is infused in the encryption
+algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last
+2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide
+more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each
+time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the
+plaintext is long (not just incremented per message but per 32-byte segment of every message sent.)
+
+\subsubsection {Multi-Threading}
+
+When multiple threads are encrypting using the same key and the encryption index is incremented per encryption,
+the encryption index needs to be an atomic variable. A substitute is to use a random encryption index,
+but this could lead to collisions since root $k$ for $g(2^{64}, k) = 5,056,937,540$ where $g$ is a solution
+to the birthday problem. This means that there is
+a 50\% chance of collision when 5 billion 64-bit nonces are used, since a new nonce is needed per 32-byte message,
+161,822,001,280 bytes of data would need to be encrypted for a succesful brute-force to be 50\% likely. In practice,
+using random nonces increase chances of collisions
+by a lot. So the safest practice would be to increment the encryption index and keep it as an atomic variable
+for multi-threading. 
+If using an atomic number isn't possible (e.g. threads cannot communicate efficiently), then use the following algorithm:
+
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{Unique nonces for Multi-threading without thread communication}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} thread count ($t$), thread ID ($n$), last encryption index used on this thread ($m$)
+\State let $\texttt{encryption\_index} \gets n + m + 1$
+\State let $P$ be a constant global set of $t$ prime numbers
+\State let $p \in P, p \neq P_n$
+\While { $\gcd(\texttt{encryption\_index}, p) = 1$ }
+    \State $\texttt{encryption\_index} += n$
+\EndWhile
+\State 
+\State \textbf{Output:} Nonce (\texttt{encryption\_index})
+\end{algorithmic}
+\end{algorithm}
+
+This algorithm is only valid if number of threads used is not growing. Otherwise, every time a new thread is created, this algorithm needs to be reset with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
 
 \subsection {Long Plaintexts}
 
