@@ -1100,24 +1100,41 @@ a 50\% chance of collision when 5 billion 64-bit nonces are used, since a new no
 using random nonces increase chances of collisions
 by a lot. So the safest practice would be to increment the encryption index and keep it as an atomic variable
 for multi-threading. 
-If using an atomic number isn't possible (e.g. threads cannot communicate efficiently), then use the following algorithm:
+If using an atomic number isn't possible (e.g. threads cannot communicate efficiently), then use one the following methods, the first one is simpler and faster:
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{Unique nonces for Multi-threading without thread communication}
+\label{thread_nonce}
 \begin{algorithmic}[1]  % The [1] enables line numbering
-\State \textbf{Input:} thread count ($t$), thread ID ($n$), last encryption index used on this thread ($m$), $m > 0$
-\State let $\texttt{encryption\_index} \gets n + m + 1$
-\State let $P$ be a constant global set of $t$ prime numbers
-\State let $p \in P, p \neq P_n$
-\While { $\gcd(\texttt{encryption\_index}, p) = 1$ }
-    \State $\texttt{encryption\_index} += P_n$
-\EndWhile
-\State 
+\State \textbf{Input:} thread count ($t$), thread ID ($n$)
+\If {first \texttt{encryption\_index}}
+    \State $\texttt{encryption\_index} = n$
+\Else
+    \State Add $t$ to \texttt{encryption\_index}
+\EndIf
 \State \textbf{Output:} Nonce (\texttt{encryption\_index})
 \end{algorithmic}
 \end{algorithm}
 
-This algorithm is only valid if number of threads used is not growing. Otherwise, every time a new thread is created, this algorithm needs to be reset with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
+\begin{algorithm}[H] % H is to make the algorithm stay HERE
+\caption{Unique nonces for Multi-threading without thread communication}
+\label{nonce_unique}
+\begin{algorithmic}[1]  % The [1] enables line numbering
+\State \textbf{Input:} thread count ($t$), thread ID ($n$), last encryption index used on this thread ($m$), $m > 0$, ordered set of $t$ prime numbers ($P$)
+\State let $\texttt{encryption\_index} \gets n + m + 1$
+\State let $p \in P, p \neq P_n$
+\While { $\gcd(\texttt{encryption\_index}, p) > 1$ }
+    \State $\texttt{encryption\_index} += P_n$
+\EndWhile
+\State \textbf{Output:} Nonce (\texttt{encryption\_index})
+\end{algorithmic}
+\end{algorithm}
+
+This algorithm is only valid if number of threads used is not growing. Otherwise, every time a new thread is created, this algorithm needs to be recalled with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
+
+Algorithm-\hspace{0.1em}\protect\ref{nonce_unique} proves itself redundant since \texttt{encryption\_index} always ends up being a power of $P_n$
+(e.g. for $P_n=3, \texttt{encryption\_index} = 3, 9, 27, 81$).
+Exponential growth doesn't work for long plaintexts. $\therefore $ Use Algorithm-\hspace{0.1em}\protect\ref{thread_nonce} for generating incremental nonces without thread communication.
 
 \subsection {Long Plaintexts}
 
