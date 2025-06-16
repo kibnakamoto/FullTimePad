@@ -1094,7 +1094,7 @@ plaintext is long (not just incremented per message but per 32-byte segment of e
 When multiple threads are encrypting using the same key and the encryption index is incremented per encryption,
 the encryption index needs to be an atomic variable. A substitute is to use a random encryption index,
 but this could lead to collisions since root $k$ for $g(2^{64}, k) = 5,056,937,540$ where $g$ is a solution
-to the birthday problem. This means that there is
+to the birthday problem defined in \autoref{birthday_problem}. This means that there is
 a 50\% chance of collision when 5 billion 64-bit nonces are used, since a new nonce is needed per 32-byte message,
 161,822,001,280 bytes of data would need to be encrypted for a succesful brute-force to be 50\% likely. In practice,
 using random nonces increase chances of collisions
@@ -1130,11 +1130,11 @@ If using an atomic number isn't possible (e.g. threads cannot communicate effici
 \end{algorithmic}
 \end{algorithm}
 
-This algorithm is only valid if number of threads used is not growing. Otherwise, every time a new thread is created, this algorithm needs to be recalled with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
+These algorithm are only valid if number of threads used is not growing. Otherwise, every time a new thread is created, the algorithm needs to be recalled with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
 
 Algorithm-\hspace{0.1em}\protect\ref{nonce_unique} proves itself redundant since \texttt{encryption\_index} always ends up being a power of $P_n$
-(e.g. for $P_n=3, \texttt{encryption\_index} = 3, 9, 27, 81$).
-Exponential growth doesn't work for long plaintexts. $\therefore $ Use Algorithm-\hspace{0.1em}\protect\ref{thread_nonce} for generating incremental nonces without thread communication.
+(e.g. for $P_n=3, \texttt{encryption\_index} = 3, 9, 27, 81\dots$).
+But exponential growth doesn't work for long plaintexts. $\therefore $ Use \textbf{Algorithm \hspace{0.1em}\protect\ref{thread_nonce}} for generating incremental nonces without thread communication.
 
 \subsection {Long Plaintexts}
 
