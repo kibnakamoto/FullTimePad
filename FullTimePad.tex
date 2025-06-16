@@ -513,9 +513,7 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 \subsection{Joux's Attack: Multicollisions in Iterated Hash Functions}
 
-% TODO: cite:  https://www.iacr.org/archive/crypto2004/31520306/multicollisions.pdf
-
-This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
+This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack \cite{joux_attack} isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
 
 \subsection{Related Key Attack}
 
