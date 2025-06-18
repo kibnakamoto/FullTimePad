@@ -48,8 +48,6 @@
 
 }
 
-% TODO: hamming distance is inverse of chances of collision (bytes that are same)
-
 \author{Taha Canturk\\\texttt{kibnakanoto@protonmail.com}}
 \date{2024-05-20}
 
@@ -686,7 +684,7 @@ in FTP, the avalanche effect is strong and ARX already proved itself functional 
 
 \subsection{Collision-Resistance}
 
-Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as the numbers in sha256. and don't have any particular patterns as proven in \texttt{test/significant\_perm\_byte.cpp}. This test file shows the collision rate as any byte of the 32-byte key is modified by 1-bit.
+Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as the numbers in sha256. and don't have any particular patterns as proven in \texttt{test/significant\_perm\_byte.cpp}. This test file shows the collision rate as any byte of the 32-byte key is modified by 1-bit. In other words, the collision rate is inverse hamming distance across the keys.
 \\\\
 $\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
  \\ where \texttt{\#collisions} is the number of bytes where $\texttt{previous key}_i$ and $\texttt{modified key}_i$ are equal
