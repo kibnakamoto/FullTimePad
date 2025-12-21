@@ -69,7 +69,7 @@
 
 
 \begin{abstract}
-	Essential properties in ciphers include computational efficiency, security, and economical feasibility. Encryption scheme based on one-time-pad (OTP) is secure, but there are two security risks: (1) a key cannot be reused and (2) plaintext length equals the key length which is costly \& inefficient for long plaintexts. As stated by Claude Shannon, father of information theory \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. However OTP lacks the confusion and diffusion per each ciphertext.
+	Essential properties in ciphers include computational efficiency, security, and economical feasibility. Encryption scheme based on one-time-pad (OTP) is secure, but there are two security risks: (1) a key cannot be reused and (2) plaintext length equals the key length which is costly \& inefficient for long plaintexts. As stated by Claude Shannon, father of information theory \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. However OTP lacks the confusion and diffusion per ciphertext.
 	In this study, we proposed the \textbf{full-time-pad (FTP)}, a symmetric stream cipher that extends OTP by incorporating both diffusion and confusion.
 	% In this study, we proposed the \textbf{full-time-pad (FTP)} which is a symmetric stream cipher that extends OTP by incorporating both diffusion and confusion.
 	To achieve diffusion, symmetric key is permutated in its byte form using a constant permutation matrix. The permutation ensures that every 32-bit number is derived from different bytes of the key.
@@ -113,7 +113,7 @@ In the Efficient Permutation Instructions for Fast Software Cryptography \cite{p
 
 \subsection{Key Generation}
 
-The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Elliptic Cryptography Diffie Hellman (ECDH) protocol with Hash-based Key Derivation Function (HKDF).
+The 32-byte key should be generated using a cryptographically secure method, including but not limited to cryptographic random number generators and Hash-based Key Derivation Functions (HKDF) depending on the context.
 
 \subsection{Prerequisite Mathematics}
 
@@ -160,7 +160,7 @@ V' =
 \]
 
 If we look at $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic\_permutation section (\ref{dynamic_permutation}).
-. The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address. Most efficient way to do this, would be using \texttt{reinterpret\_cast} in C++ or using \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
+The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address. Most efficient way to do this, would be using \texttt{reinterpret\_cast} in C++ or using \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
 
 \[
 V' = 
@@ -188,7 +188,7 @@ In One-Time-Pad, key isn't reusable. Here is the proof:
 \]
 
 Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
-Using cryptoanalysis, the 2 plaintexts can be found. 
+Using cryptoanalysis, the 2 plaintexts can be found as demonstrated by OneTimePad Cracker on Github by Kibnakamoto. 
 \\
 For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
 \\
@@ -246,17 +246,23 @@ In the context of this encryption algorithm, this means that brute-forcing using
 
 \[
 \begin{aligned}
-&V_c = \frac{b!}{(b-k)!} = \frac{4294967291^8!}{(4294967291^8-k)!} \\
+&V_c = \frac{b!}{(b-k)!} \\
 &V_t = b^k = 4294967291^{8^k} \\
+&\texttt{let P(A) be the probability of not shared birthdays}.\\
 &P(A) = \frac{V_c}{V_t} \\
-&P(A) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
-&P(B) = 1- P(A) = 50\%\\
-&P(A) = 1 - 50\%\\
-&1 - 50\% = \frac{\frac{b!}{(b-k)!}}{b^k} \\
-&\frac{1}{2}b^k =  \frac{b!}{(b-k)!} \hspace{7.2cm} \texttt{ since }50\% = \frac{1}{2} \\
+%&P(A) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
+&\texttt{Let $P(B)$ denote the probability of shared birthdays.}\\
+&1-P(B) = P(A) \\
+&\texttt{For $P(B) = 50\%$,} \\
+&\frac{1}{2} = \frac{b!}{b^k(b-k)!}\\
+%&P(B) = 1- P(A) = 50\%\\
+%&P(A) = 1 - 50\%\\
+%&1 - 50\% = \frac{\frac{b!}{(b-k)!}}{b^k} \\
+%&\frac{1}{2}b^k =  \frac{b!}{(b-k)!} \hspace{7.2cm} \texttt{ since }50\% = \frac{1}{2} \\
 &\log_b\frac{1}{2}b^k = \log_b\frac{b!}{(b-k)!} \\
 &\log_b\frac{1}{2} + \log_bb^k = \log_bb! - \log_b(b-k)! \\
-&0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{3.2cm} \texttt{ since }\log_bb^k = k\\
+%&0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{3.2cm} \texttt{ since }\log_bb^k = k\\
+&k + log_bk + log_b(b-k)! = log_bb! - log_b\frac{1}{2} \\
 \end{aligned}
 \]
 % seperate equations to 2 segments otherwise previous page is empty
@@ -267,29 +273,29 @@ In the context of this encryption algorithm, this means that brute-forcing using
 \begin{aligned}
 & \\
 & \texttt{According to Ramanujan's Approximation: } \\
-& \quad \log_bb! \approx \frac{b\ln b - b + \frac{\ln\biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} + \frac{ln\pi}{2}}{\ln b} \\
-& \texttt{And} \\
-& \\
-& \log_b(b-k)! \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
-& \\
-& \texttt{Recall: } \\
-& \quad 0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{2.8cm} \texttt{ isolate } \log_b(b-k)! \\
-& \quad \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} - k \\
-& \\
-& \texttt{Combine both equations for } \log_b(b-k)! \texttt{: } \\
-& \log_bb! - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
-& \\
-& \frac{b\ln b - b + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k)}{\ln b} +  \\ 
-& \hspace{9cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k))) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
+& \quad \log_xx! \approx \frac{x\ln x - x + \frac{\ln\biggl[\frac{1}{\pi^3} + x(1+4x(1+2x)) \biggr]}{6} + \frac{ln\pi}{2}}{\ln x} \\
+%& \texttt{And} \\
+%& \\
+%& \log_b(b-k)! \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
+%& \\
+%& \texttt{Recall: } \\
+%& \quad 0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{2.8cm} \texttt{ isolate } \log_b(b-k)! \\
+%& \quad \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} - k \\
+%& \\
+%& \texttt{Combine both equations for } \log_b(b-k)! \texttt{: } \\
+%& \log_bb! - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k) + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
+%& \\
+%& \frac{b\ln b - b + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} - \log_b\frac{1}{2} - k \approx \frac{(b-k)\ln(b-k) - (b-k)}{\ln b} +  \\ 
+%& \hspace{9cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} +  (b-k)(1+4(b-k)(1+2(b-k))) \biggr]}{6} + \frac{\ln\pi}{2}}{\ln b} \\
 \end{aligned}
 \]
 
 \thispagestyle{empty} % page number is confusing in the equation
 \[
 \begin{aligned}
-		& \frac{b\log b \cancel{-b} + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{ln\pi}{2}} - \ln b \log_b\frac{1}{2} - \ln b k}{\cancel{\ln b}} \approx \frac{(b-k)\ln(b-k) \cancel{-b} + k }{\cancel{\ln b}} +  \\ 
-& \hspace{10.3cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\ln\pi}{2}}}{\cancel{\ln b}} \\
-& \\
+%		& \frac{b\log b \cancel{-b} + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{ln\pi}{2}} - \ln b \log_b\frac{1}{2} - \ln b k}{\cancel{\ln b}} \approx \frac{(b-k)\ln(b-k) \cancel{-b} + k }{\cancel{\ln b}} +  \\ 
+%& \hspace{10.3cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\ln\pi}{2}}}{\cancel{\ln b}} \\
+%& \\
 & \texttt{let } C = b\ln b + \frac{\ln \biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} - \ln b \log_b\frac{1}{2} \approx (b-k)\ln(b-k) + k + \ln b k  \\ 
 & \hspace{10.1cm} + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 & \\
