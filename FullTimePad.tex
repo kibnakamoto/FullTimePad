@@ -48,7 +48,7 @@
 
 }
 
-\author{Taha Canturk\\\texttt{kibnakanoto@protonmail.com}}
+\author{Taha Canturk\\\texttt{tcanturk@uwaterloo.ca}}
 \date{2024-05-20}
 
 
@@ -191,7 +191,6 @@ In One-Time-Pad, key isn't reusable. Here is the proof:
 
 Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
 Using cryptoanalysis, the 2 plaintexts can be found as demonstrated by OneTimePad Cracker on Github by Kibnakamoto. 
-
 \\
 For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
 \\
