@@ -5,7 +5,7 @@
 #include "fulltimepad.h"
 
 // This is an example file
-// TODO: make the optimization from Version 2.0 for  version 1.0, version 1.1 as well.
+// for multi-threading, incrementing the encryption index needs to be done using algorithm 8 from the paper
 
 int main()
 {
