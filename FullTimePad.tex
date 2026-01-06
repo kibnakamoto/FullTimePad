@@ -131,7 +131,7 @@ Implicitly denotes \\
 $x + y = z \pmod 7$\\
 \\
 So all addition operations require modulo p.\\
-In the context of this encryption algorithm, it's used in the tranformation algorithm as one of three operations (\textbf{A}RX). 
+In the context of this encryption algorithm, it's used in the transformation algorithm as one of three operations (\textbf{A}RX). 
 
 \subsubsection{Vector Permutation}
 
@@ -176,7 +176,7 @@ This means that for little endian systems, the permutation matrix also needs to 
 \section{Security}
 \setlength{\mathindent}{3pt} % No indentation for equations
 
-In One-Time-Pad, key isn't reusable. Here is the proof:
+In One-Time-Pad, key isn't reusable. This is demonstrated by the following proof:
 
 \[
 \begin{aligned}
@@ -190,13 +190,13 @@ In One-Time-Pad, key isn't reusable. Here is the proof:
 \]
 
 Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
-Using cryptoanalysis, the 2 plaintexts can be found as demonstrated by OneTimePad Cracker on Github by Kibnakamoto. 
+Using cryptoanalysis, the 2 plaintexts can be found as demonstrated by OneTimePad Cracker on GitHub by Kibnakamoto. 
 \\
 For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
 \\
 But there is another concern,
 \\
-What if the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so don't use k without transformation, since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$. So for each plaintext, key needs to be transformed irreversibly and it also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
+What if the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so don't use k without transformation since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$, for each plaintext, key needs to be transformed irreversibly and also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
 &k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
@@ -215,7 +215,7 @@ $\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confu
 
 \subsection {NIST SP 800-22 - Statistical Test Suite - Official NIST Randomness Test}
 
-using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been testing using a fixed key (0-31) and plaintext (0-31). Only one key was used. Per each 256-bits until the one millionth bit, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input (key/encryption index) provides a very good avalanche effect, and therefore has a proper avalanche effect.
+Using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been tested using a fixed key (0-31) and plaintext (0-31). Only one key was used. Per each 256-bits until the one millionth bit, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input (key/encryption index) demonstrates a strong randomness, and therefore has a proper avalanche effect.
 
 \subsection{Brute-Force}
 
@@ -234,9 +234,9 @@ $\therefore $ \texttt{Using a galois field doesn't negatively impact number of c
 
 \subsubsection {Birthday Problem} \label{birthday_problem}
 
-The birthday problem is a veridical paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
+The birthday problem is a well known veridical paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
 \\
-The answer is an unexpected 23 people.
+The answer is 23 people.
 \\
 In the context of this encryption algorithm, this means that brute-forcing using random inputs is more likely than your intuition predicts especially since a galois field is used (smaller number of total combinations):
 \\
@@ -298,6 +298,7 @@ In the context of this encryption algorithm, this means that brute-forcing using
 %		& \frac{b\log b \cancel{-b} + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{ln\pi}{2}} - \ln b \log_b\frac{1}{2} - \ln b k}{\cancel{\ln b}} \approx \frac{(b-k)\ln(b-k) \cancel{-b} + k }{\cancel{\ln b}} +  \\ 
 %& \hspace{10.3cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\ln\pi}{2}}}{\cancel{\ln b}} \\
 %& \\
+&\texttt{We can simplify the formula to the following format:} \\
 & \texttt{let } C = b\ln b + \frac{\ln \biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} - \ln b \log_b\frac{1}{2} \approx (b-k)\ln(b-k) + k + \ln b k  \\ 
 & \hspace{10.1cm} + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 & \\
@@ -339,6 +340,7 @@ To compare functions $a$ and $g$:
 (\textbf{1.-2.}): Increment $b$ by n=1,000,000,000 for 100 iterations and graph $(b, k)$ for $g, a$:
 
 \begin{figure}[H]
+    \caption{Difference in functions g,a V.S Total Combination}
     \centering
     \makebox[\textwidth]{\includegraphics[width=1.3\linewidth]{sec.pdf}}
 \end{figure}
@@ -364,11 +366,11 @@ determined accurately relative to a obviously less accurate function like functi
 \texttt{g is closer/equal to zero than a: 100} \\
 \texttt{a is closer/equal to zero than g: 84} \\
 
-The accuracy of $a$ is off mainly because the $\Delta \rightarrow \frac{\ln 2}{3}$ as $b \rightarrow \infty$. This is a strange phenomenon that is proven to be not related to function $g$ since $f_{\Gamma}(b, k) \approx g(b, k) \approx a(b) + \frac{\ln 2}{3}$. $a$ is always off by the same value because of how that $a$ is derived. This means that $a$ can be accurate 100\% of the time as long as $a(b) + \frac{\ln 2}{3}$ is used rather than just $a(b)$ so that $a$ returns $k$ that's only off by a negligible amount for most contexts.
+The accuracy of $a$ is off mainly because $\Delta \rightarrow \frac{\ln 2}{3}$ as $b \rightarrow \infty$. This is a strange phenomenon that is proven to be not related to function $g$ since $f_{\Gamma}(b, k) \approx g(b, k) \approx a(b) + \frac{\ln 2}{3}$. $a$ is always off by the same value because of how that $a$ is derived. This means that $a$ can be accurate 100\% of the time as long as $a(b) + \frac{\ln 2}{3}$ is used rather than just $a(b)$ so that $a$ returns $k$ that's only off by a negligible amount for most contexts.
 
 The code for this test is in \textbf{test/sec.py}.
 
-$\therefore$ $g(b, k)$ \texttt{ can be used to evaluate how many keys it would take so that 2 hashes have a 50\% chance of being equal. $g(b, k)$ can be evaluated using the secant algorithm\\ (\textbf{text/secant.py})}
+$\therefore$ $g(b, k)$ \texttt{ can be used to evaluate how many keys it would take so that 2 hashes have a 50\% chance of being equal. $g(b, k)$ can be evaluated using the secant algorithm\\ (\textbf{test/secant.py})}
 
 After running \texttt{test/secant.py}, given the parameters: \\
 Based on approximations in the Wikipedia Article: Birthday Problem, we can approximate $x_0$ and $x_1$ \\
@@ -408,18 +410,18 @@ Number of combinations can be represented by
 \]
 \small so the number of combinations would be between a minimum of 32 combinations ($z_n=0$ for all 32-bytes) up to a maximum of $2^{256}$ combinations ($z_n = 255$ for all 32-bytes) which can be brute forced for small $z_n$. So a simple addition is prone to collision attacks for $x_n+y_n=z_n$, where $x,y$ are unknown. The use of galois field makes $z_n$ even smaller. So even less combinations. Solution is to use operations that cannot be represented differently. e.g.
 \[
-\\\sum_{i=0}^{z_n} x_n + y_n = z_n \Longrightarrow
+\\\sum_{i=0}^{z_n} x_i + y_i \equiv z_n \Longrightarrow
 \sum_{i=0}^{z_n} (z_n-i)+(i) = z_n
 \]
 
-solves for all possible $x, y$ values for each $z_n$. An addition operation can be represented differently to solve for 2 unknowns, while a good mix of ARX operations cannot be reverse engineered. This is also the reason why pre-manipulating the key (using addition) before \texttt{transform()} isn't a good option. Since it provides a very obvious collision attack which makes it invalid even though pre-manipulation will provide a good avalanche effect for every single byte of the key (if 1-bit of any byte is changed, ciphertext changes completely).
+solves for all possible $x, y$ values for each $z_n$. An addition operation can be represented differently to solve for 2 unknowns, while a good mix of ARX operations cannot be reverse engineered. Addition of encryption index + key might lead to vulnerabilities. Also pre-manipulation of key to other values such as a constant would be infeasible because it would provide no further security benefits.
 
-So the final solution is to calculate sum of each 32-bit segment of the key (represented by $k_i$) in order to interlink them to make sure that every byte of the key offers the same avalanche effect:
+Therefore the alternative final secure solution is to calculate sum of each 32-bit segment of the key (represented by $k_i$) in order to interlink them to make sure that every byte of the key offers the same avalanche effect:
 \[
 \\\sum_{i=0}^{7} k_i
 \]
 
-To test if this offers enough collision resistance: think of this problem as an example:
+To stress test if this concept offers enough collision resistance: think of this problem as an example:
 \\
 \textbf{1.} $x+y=16 \texttt{\hspace{2.3cm} offers n=17 combinations}$\\
 \textbf{2.} $x+y+z=16 \texttt{\hspace{1.7cm} offers n=153 combinations (determined experimentally)}$\\
@@ -495,8 +497,8 @@ We can derive an approximation equation for really large calculations:
 
 \begin{align*} % use star for no numbering
 \text{let   } t &= \frac{(\ell+c)!}{c!\ell!}
-\\ t &\approx \frac{\cancel{\sqrt{\pi}}\left(\frac{c+\ell}{e}\right)^{c+\ell}\sqrt[6]{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}}{\cancel{\sqrt{\pi}}(\frac{c}{e})^c\sqrt[6]{8c^3 + 4c^2 + c + \frac{1}{30}})\sqrt{\pi}(\frac{\ell}{e})^\ell\sqrt[6]{8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}})}
-\\ t &\approx \pi^{-\frac{1}{2}}(c+\ell)^{c+\ell}e^{-c-\ell}c^{-c}e^c\ell^{-\ell}e^\ell\sqrt[6]{\frac{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}{\left(8c^3 + 4c^2 + c + \frac{1}{30}\right)\left(8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}\right)}}
+\\ t &\approx \frac{\sqrt{\pi}\left(\frac{c+\ell}{e}\right)^{c+\ell}\sqrt[6]{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}}{\sqrt{\pi}(\frac{c}{e})^c\sqrt[6]{8c^3 + 4c^2 + c + \frac{1}{30}})\sqrt{\pi}(\frac{\ell}{e})^\ell\sqrt[6]{8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}})}
+%\\ t &\approx \pi^{-\frac{1}{2}}(c+\ell)^{c+\ell}e^{-c-\ell}c^{-c}e^c\ell^{-\ell}e^\ell\sqrt[6]{\frac{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}{\left(8c^3 + 4c^2 + c + \frac{1}{30}\right)\left(8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}\right)}}
 \\ t &= \frac{(c+\ell)^{c+\ell}}{\sqrt{\pi}c^{c}\ell^{\ell}}\sqrt[6]{\frac{8(c+\ell)^3 + 4(c+\ell)^2 + (c+\ell) + \frac{1}{30}}{\left(8c^3 + 4c^2 + c + \frac{1}{30}\right)\left(8\ell^3 + 4\ell^2 + \ell + \frac{1}{30}\right)}}
 \end{align*}
 \\
@@ -519,36 +521,180 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 \subsection{Joux's Attack: Multicollisions in Iterated Hash Functions}
 
-This attack requires knowing a collision: \texttt{transform($k_1$) = tranform(k$_2$)}. Given a secure hashing algorithm, this isn't possible. Therefore, the Joux's attack \cite{joux_attack} isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force. That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
+This attack requires an existance of a collision such that \texttt{transform($k_1$) = tranform(k$_2$)}. For any secure one way cryptographic function, the only way to succcessfully exploit the potential vulnerability is brute force. Therefore, the Joux's attack \cite{joux_attack} isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force.
+
+% That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
+
+As proven in sections \ref{birthday_problem} and \ref{collision_attack}, this is infeasible as $k_1$ and $k_2$ cannot be evaluated. Also experimentally proven in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
 
 \subsection{Related Key Attack}
 
-Related key attacks isn't possible considering that it requires that \texttt{transform($k_1$)} is similiar to \texttt{transform($k_2$)} where $k_1$ and $k_2$ have a predictible difference (incremented by encryption index). But this is only under the assumption that the \texttt{transform} function is an irreversible hashing algorithm.
+%Related key attacks isn't possible considering that it requires that \texttt{transform($k_1$)} is similiar to \texttt{transform($k_2$)} where $k_1$ and $k_2$ have a predictible difference (incremented by encryption index). But this is only under the assumption that the \texttt{transform} function is an irreversible hashing algorithm.
+
+Related key attacks require that \texttt{transform($k_1$)} must be similiar to \texttt{transform($k_2$)} where $k_1$ and $k_2$ have a known difference. Evaluation of such possibilities have been disproven in sections \ref{lin} and \ref{diff}
 
 \subsection{Time Based Attacks}
 
-Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again. This is tested in \texttt{test/benchmark} in function \texttt{benchmark\_hash\_time\_attack\_v()}. This test passed. The keys with small numbers have the same speed as keys with large numbers (This was never in doubt), therefore algorithm is proven to be constant time.
+Time based vulnerabilities are exploited by the deduction of numbers present in the algorithm from computation benchmarks. Time based attacks are used to find a side-channel vulnerability (hardware/software) where the attacker approximates the value of the key by timing the calculation speed.
+\\
+Arithmetic operations such as multiplication contains vulnerabilities since multiplication not a constant time operation. But arithmetic such as ARX operations are always constant time which is why the selected confusion/diffusion operations are chosen.
+
+Experimentally, we can evaluate the possibilitiy of time-based vulnerabilities using the following algorithm:
+Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again. 
 \\
 \texttt{----------TESTING SIDE CHANNEL ATTACKS----------\\
 TESTING TRANSFORMATION VERSION 1.0: PASSED (NO SIDE CHANNEL): data is consistent\\
 TESTING TRANSFORMATION VERSION 1.1: PASSED (NO SIDE CHANNEL): data is consistent\\
 TESTING TRANSFORMATION VERSION 2.0: PASSED (NO SIDE CHANNEL): data is consistent}\\
 
-Tested for time-based side-channel attacks by comparing the computation time for different key values, If computation time for smaller key (32 0s) approximately equals to computation time for (32 255s) key, then data is consistent. This test is to see if there was a side-channel vulnerability (hardware/software) where someone approximates the value of the key by timing the calculation speed.
+This algorithm is implemented in \texttt{test/benchmark.cpp} in the function \texttt{benchmark\_hash\_time\_attack\_v()}. This test passed, which was never in doubt. The keys with small numbers have the same speed as keys with large numbers, therefore algorithm is proven to be constant time.
 
-\subsection{Linear Cryptoanalysis}
+Tested for time-based side-channel attacks by comparing the computation time for different key values, If computation time for smaller key (32 0s) approximately equals to computation time for (32 255s) key, then data is consistent.
 
-Linear Cryptoanalysis is used to find linear connections between ciphertext and plaintexts.
+\subsection{Linear Cryptoanalysis} \label{lin}
+
+Linear Cryptoanalysis is used to find linear connections between ciphertexts and plaintexts. Linear differences in algorithms are easily exploitable weakness. Linear operations in this algorithm are byte-permutations, bitwise rotations, and xor which overall bring a strong diffusion. But not sufficient for confusion. So using addition in the ring $\mathbb{Z}_2^{32}$ is necessary to pass linearity tests due to carries. It's important to note that prime galois field addition is considered linear under $\mathbb{F_p}$ and do not bring  non-linearity.
 \\
-Given that running \texttt{test/significant\_perm\_byte -r} provides that all bytes of the key provide approximately the same collision resistance and shows that there is no pattern. This means that modifying a certain byte isn't only affected some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
+Initially, using linear algebra definition of a linear transformation, this algorithm is proven to be non-linear since $\texttt{transform}(c_1k_1 + c_2k_2) \neq c_1\texttt{transform}(k_1) + c_2\texttt{transform}(k_2)$. This doens't mean that they lack correlation with probabilities, so further statistical analysis is required.
 
-Here is data for SHA-256 hashing algortihm, what percentage of bytes can be equal, if this number gets to 100\%, this means that there is a successful collision. i is the number of hashes that are generated to get $n$\% equality.
+In order to find linear patterns with statistical analysis, using well-known proven algorithms is a solid approach.
+
+One linear pattern is how many outputs bits flip per input bit flip. This test is known as the Strict Avalanche Critirion (SAC). SAC test passed with a 50\% chance of bit flip for every output bit for each input bit.
+
+This test can be further analyzed by checking indipendence of output bit flips using the Bit Indipendence Critirion (BIC) test. This test passed successfully and the xor of each 2 output bits follows a non-linear random pattern.
+
+To determine the convergence of bit flip probabilities per iteration, observation of the round by round SAC test is sufficient. The results of test per iteration is shown in figure \ref{flip_prob}.
+
+\begin{figure}[H] \label{flip_prob}
+    \caption{Bit flip probabilities vs. Iteration}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Iteration (i)},
+        ylabel={mean fraction of bits flipped},
+       % ymode=log, 
+        ymin=0,    
+        ymax=60, 
+        xtick distance=1,
+        ytick distance=10,
+        grid=major, 
+        legend style={
+            at={(0.5,-0.15)},
+            anchor=north,
+            legend columns=1,
+            font=\scriptsize,
+            nodes={scale=0.7, transform shape},
+            inner sep=1pt,
+            draw=none
+        },
+        legend pos=south east,
+        yticklabel style={/pgf/number format/fixed},
+    ]
+        % 2.0
+        \addplot[line width=2pt, color=black] coordinates {
+            (1, 0.40) 
+            (2, 3.59)
+            (3, 28.4)
+            (4, 50.2)
+            (5, 50.2)
+            (6, 50.0)
+            (7, 50.1)
+            (8, 50.0)
+            (9, 50.1)
+            (10, 50.0)
+        };
+        \addlegendentry{Full-Time-Pad 2.0}
+    \end{axis}
+    \end{tikzpicture}
+\end{figure}
+
+Final conducted linearity test is the algebraic degree which measures the algebraic degree lower bound per output bit:
+
+\begin{figure}[H] \label{flip_prob}
+    \caption{Bit flip probabilities vs. Iteration}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Iteration (i)},
+        ylabel={mean fraction of bits flipped},
+        ymin=0,    
+        ymax=200, 
+        xmin=0,    
+        xmax=256, 
+        xtick distance=32,
+        ytick distance=20,
+        grid=major, 
+        legend style={
+            at={(0.5,-0.15)},
+            anchor=north,
+            legend columns=1,
+            font=\scriptsize,
+            nodes={scale=0.7, transform shape},
+            inner sep=1pt,
+            draw=none
+        },
+        legend pos=south east,
+        yticklabel style={/pgf/number format/fixed},
+    ]
+        % all values need to be bigger than 50
+        \addplot[line width=2pt, color=red] coordinates {
+            (0,50) (256, 50)
+        };
+        \addlegendentry{Minimum Security Requirement}
+
+        % 2.0
+        \addplot[line width=0.67pt, color=black] coordinates {
+            (0, 131) (1, 120) (2, 128) (3, 124) (4, 120) (5, 131) (6, 135) (7, 130) (8, 120) (9, 133) (10, 142) (11, 129) (12, 122) (13, 122) (14, 123) (15, 130) (16, 137) (17, 123)
+            (18, 117) (19, 130) (20, 137) (21, 126) (22, 117) (23, 125) (24, 126) (25, 123) (26, 126) (27, 124) (28, 117) (29, 121) (30, 130) (31, 146) (32, 122) (33, 127) (34, 134) (35, 132)
+            (36, 130) (37, 120) (38, 119) (39, 129) (40, 144) (41, 131) (42, 128) (43, 125) (44, 124) (45, 134) (46, 118) (47, 129) (48, 128) (49, 130) (50, 128) (51, 127) (52, 121) (53, 132)
+            (54, 146) (55, 133) (56, 136) (57, 117) (58, 119) (59, 134) (60, 136) (61, 127) (62, 120) (63, 126) (64, 131) (65, 122) (66, 129) (67, 121) (68, 129) (69, 135) (70, 129) (71, 130)
+            (72, 132) (73, 119) (74, 132) (75, 145) (76, 143) (77, 125) (78, 143) (79, 130) (80, 125) (81, 132) (82, 135) (83, 121) (84, 123) (85, 128) (86, 134) (87, 121) (88, 132) (89, 121)
+            (90, 121) (91, 119) (92, 149) (93, 124) (94, 129) (95, 139) (96, 140) (97, 129) (98, 142) (99, 140) (100, 118) (101, 121) (102, 129) (103, 128) (104, 120) (105, 108) (106, 138) (107, 134)
+            (108, 141) (109, 127) (110, 120) (111, 122) (112, 119) (113, 132) (114, 118) (115, 124) (116, 133) (117, 133) (118, 124) (119, 116) (120, 121) (121, 132) (122, 125) (123, 136) (124, 118) (125, 131)
+            (126, 121) (127, 121) (128, 109) (129, 132) (130, 132) (131, 128) (132, 114) (133, 125) (134, 118) (135, 116) (136, 129) (137, 131) (138, 121) (139, 125) (140, 137) (141, 123) (142, 141) (143, 127)
+            (144, 120) (145, 128) (146, 111) (147, 136) (148, 128) (149, 136) (150, 117) (151, 138) (152, 127) (153, 132) (154, 127) (155, 132) (156, 128) (157, 126) (158, 147) (159, 134) (160, 133) (161, 130)
+            (162, 141) (163, 131) (164, 137) (165, 133) (166, 133) (167, 122) (168, 125) (169, 124) (170, 144) (171, 128) (172, 137) (173, 120) (174, 139) (175, 123) (176, 135) (177, 137) (178, 123) (179, 121)
+            (180, 129) (181, 130) (182, 126) (183, 112) (184, 134) (185, 128) (186, 130) (187, 122) (188, 121) (189, 136) (190, 128) (191, 120) (192, 134) (193, 121) (194, 139) (195, 141) (196, 127) (197, 119)
+            (198, 126) (199, 132) (200, 123) (201, 117) (202, 126) (203, 141) (204, 125) (205, 131) (206, 135) (207, 138) (208, 128) (209, 122) (210, 140) (211, 124) (212, 132) (213, 113) (214, 114) (215, 126)
+            (216, 133) (217, 127) (218, 124) (219, 118) (220, 123) (221, 123) (222, 135) (223, 125) (224, 117) (225, 126) (226, 147) (227, 114) (228, 132) (229, 115) (230, 136) (231, 132) (232, 127) (233, 110)
+            (234, 131) (235, 142) (236, 125) (237, 123) (238, 118) (239, 120) (240, 122) (241, 117) (242, 121) (243, 137) (244, 117) (245, 113) (246, 126) (247, 132) (248, 156) (249, 125) (250, 136) (251, 136) 
+            (252, 141) (253, 122) (254, 116) (255, 125)
+        };
+        \addlegendentry{FTP 2.0}
+
+        % max degree
+        \addplot[
+            only marks,
+            mark=*,
+            mark size=1pt,
+            color=blue
+        ] coordinates {
+            (248,156)
+        };
+        \addlegendentry{Max Degree Lower Bound}
+    \end{axis}
+    \end{tikzpicture}
+\end{figure}
+
+The tests were conducted for both changes in encryption index and key and they both provide approximetely same numbers.
+
+ Although the linearity tests conducted are industry approved, they don't guarantee linearity and therefore further analysis is required to prove non-linearity.
+ Overall all non-linearity tests passed
+
+\subsection{Differential Cryptoanalysis} \label{diff}
+
+Differential cryptoanalysis is for measuring how input changes the output. The expected pattern should be random and should match results of secure algorithms
+
+Given that running \texttt{test/significant\_perm\_byte -r} proves experimentally that all bytes of the key provide approximately the same collision resistance and that there is no pattern. This means that modifying an arbitrarily selected byte isn't only affecting some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
+
+Comparitive statistical data on collisions show that similiar keys (1-bit difference) contain some equivilant bytes.
+If all bytes of the transformed keys are equal, there is a successful collision. i is the number of hashes that are generated to get $n$\% equality.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|}
 \hline
-\textbf{\%} & \textbf{Full-Time-Pad -(i)} & \textbf{SHA-256 (i)} \\
+\textbf{\%} & \textbf{Full-Time-Pad (i)} & \textbf{SHA-256 (i)} \\
 \hline
 		3.125 & 1 & 2 \\
 \hline
@@ -566,41 +712,92 @@ Here is data for SHA-256 hashing algortihm, what percentage of bytes can be equa
 \caption{collision (\%) VS. number of hashes}
 \end{table}
 
-This data fluctuates a lot and therefore doesn't actually have any visible pattern, The numbers being similiar to SHA-256 would be good news to suggest that the avalanche effect is real and that the math checks out for the birthday problem, it's not possible to find a collision.
+Random noise makes the number of hashes fluctuate a lot and relative to SHA-256, probabilities of collisions are close which suggests that the avalanche effect is real and that the math is valid for the birthday problem, therefore it's not possible to find a collision.
 
-\begin{tikzpicture}
-\begin{axis}[
-    xlabel={Collision (\%)},
-    ylabel={Number of hashes},
-    title={Collision (\%) VS. Number of Hashes for Full-Time-Pad},
-    ymode=log, 
-    ymin=1,    
-    ymax=1e11, 
-    xtick distance=5,
-    ytick distance=1,
-    grid=major, 
-    enlargelimits,
-    legend style={at={(0.5,-0.15)}, anchor=north, legend columns=1},
-    ytick={1, 1e3, 1e6, 1e9, 1e10, 1e11}, 
-    yticklabel style={/pgf/number format/fixed},
-]
-    % Add the plot coordinates
-    \addplot[line width=2pt] coordinates {
-        (3.125, 1)
-        (6.25, 291)
-        (9.375, 1501)
-        (12.5, 267184)
-        (15.625, 5981439)
-        (18.75, 408355721)
-        (21.875, 37820493025)
-    };
-\end{axis}
-\end{tikzpicture}%
+\begin{figure}[H]
+    \caption{Collision (\%) VS. Number of Hashes for Full-Time-Pad}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Collision (\%)},
+        ylabel={Number of hashes},
+        %title={Collision (\%) VS. Number of Hashes for Full-Time-Pad},
+        ymode=log, 
+        ymin=1,    
+        ymax=1e11, 
+        xtick distance=5,
+        ytick distance=1,
+        grid=major, 
+        enlargelimits,
+        legend style={
+            at={(0.5,-0.15)},
+            anchor=north,
+            legend columns=1,
+            font=\scriptsize,
+            nodes={scale=0.7, transform shape},
+            inner sep=1pt,
+            draw=none
+        },
+        legend pos=south east,
+        ytick={1, 1e3, 1e6, 1e9, 1e10, 1e11}, 
+        yticklabel style={/pgf/number format/fixed},
+    ]
+        % Add the plot coordinates
 
+        % 2.0
+        \addplot[line width=2pt, color=black] coordinates {
+            (3.125, 1)
+            (6.25, 291)
+            (9.375, 1501)
+            (12.5, 267184)
+            (15.625, 5981439)
+            (18.75, 408355721)
+            (21.875, 37820493025)
+        };
+        \addlegendentry{Full-Time-Pad 2.0}
 
-\subsection{Differential Cryptoanalysis}
+        % 1.0
+        \addplot[line width=2pt, color=blue] coordinates {
+            (3.125, 6)
+            (6.25, 195)
+            (9.375, 1740)
+            (12.5, 120023)
+            (15.625, 4275726)
+            (18.75, 54464554)
+            (21.875, 877616670)
+        };
+        \addlegendentry{Full-Time-Pad 1.0}
+            
+        % 1.1
+        \addplot[line width=2pt, color=red] coordinates {
+            (3.125, 1)
+            (6.25, 111)
+            (9.375, 7051)
+            (12.5, 95532)
+            (15.625, 2557533)
+            (18.75, 86896444)
+            (21.875, 2405993022)
+        };
+        \addlegendentry{Full-Time-Pad 1.1}
 
-In \texttt{test/significant\_perm\_byte.cpp}, instead of comparing if values are equal, but rather approximately equal with accuracy of $\pm n$. This gave the same results are sha-256. And no specific bytes seemed to have followed a specific pattern. This means that there isn't a differential statistical pattern.
+        % SHA-256
+        \addplot[line width=2pt, color=green] coordinates {
+            (3.125, 2)
+            (6.25, 6)
+            (9.375, 2648)
+            (12.5, 36595)
+            (15.625, 6167198)
+            (18.75, 530210645)
+            %(21.875, )
+        };
+        \addlegendentry{SHA-256}
+    \end{axis}
+    \end{tikzpicture}
+\end{figure}
+
+Visualization of the data shows the trend of \#hashes per increase in collision.
+
+In \texttt{test/significant\_perm\_byte.cpp}, instead of comparing if values are equal, but rather approximately equal with accuracy of $\pm n$. FTP consistently provided similiar results to SHA-256. Also no significant bytes present as proven by changing one particular byte at a time while every other byte remained constant. This means that there isn't a differential statistical pattern.
 
 \begin{table}[H]
 \centering
@@ -624,9 +821,9 @@ In \texttt{test/significant\_perm\_byte.cpp}, instead of comparing if values are
 \caption{Comparision Accuracy VS. Collision Rate}
 \end{table}
 
-Results of collision rates are approximately equal given lower accuracy ($\pm n$). This suggests that there isn't any cryptoanalysis pattern. These numbers are average of 255 tries. Each try also yields similar results which means that there isn't a differential cryptoanalysis exploit regarding accuracy of comparision.
+Results of the collision rates of SHA-256 and FTP are approximately equal given lower accuracy ($\pm n$). This suggests that there aren't any cryptoanalysis exploit. These numbers are average of 255 tries to reduce noise. 
 
-\begin{figure}[H]
+\begin{figure}[H] \label{col_in}
     \caption{Collision Rate (\%) vs. Inaccuracy ($n$)}
     \centering
     \begin{subfigure}{\textwidth}
@@ -668,84 +865,88 @@ Results of collision rates are approximately equal given lower accuracy ($\pm n$
     \end{subfigure}
 \end{figure}
 
-These graphs demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. All 4 algorithms have the same result, thus they overlap.
+Since the results on figure \ref{col_in} of FTP and SHA-256 are equivelant, there are no differential cryptoanalysis exloit vulnerabilities.
+The smoothness of the trend proves continuity, change in collision rate for n and n+1 must be less than 2\%, a single exception every now and then in test trials may be disregarded if not recurring with a pattern.
+The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. All 4 algorithms have the same result, thus they overlap.
+% These graphs demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. All 4 algorithms have the same result, thus they overlap.
 
-\begin{figure}[H]
+\begin{figure}[H] \label{delta_sha_ftp}
+    \caption{$\Delta$ = $|$SHA-256 - FullTimePad 2.0$|$ V.S. Inaccuracy (n)}
     \includegraphics[width=0.9\linewidth]{delta sha256 - fulltimepad 2.0.pdf}
     \centering
 \end{figure}
 
-This graph shows the difference ($\Delta$) between SHA-256 hashing algorithm and the \texttt{FullTimePad 2.0} which logically would be the most at risk version of \texttt{Full-Time-Pad} for security exploits. Since numbers on the y-axis are very small, this means that $\Delta$ is negligible and therefore there isn't a pattern.
+Figure \ref{delta_sha_ftp} shows the difference ($\Delta$) between SHA-256 hashing algorithm and the \texttt{FullTimePad 2.0}. The noise pattern is also similiar for 2 arbitrary sets of secure one-way algorithm statistics which show that graph is entirely noise. Since numbers on the y-axis are very small, $\Delta$ is negligible and therefore there isn't a pattern.
 \\
-The reason SHA-256 was chosen for this comparision is because this algorithm has proven itself to be secure.
+SHA-256 is chosen for comparision solely because it is proven to be secure.
 
 
 \subsection{Reverse Engineering the Transformation}
 
-this is demonstrated in the \texttt{test/reverse.cpp} code. The reversed key and key are very different.
+reversing the transformation is demonstrated in \texttt{test/reverse.cpp}. The reversed key and the original key are very different. Therefore, reverse engineering the algorithm isn't possible.
 
 \subsection{Side-Channel Attacks}
 
-in FTP, the avalanche effect is strong and ARX already proved itself functional in cryptography. If key is potentially found due to a side-channel attack, then all plaintexts can be found. However this isn't a pressing issue as all cryptographic algorithms have this flaw. In contrast, without this flaw, a new key would have to be generated per plaintext like in One-Time-Pad which is inefficient.
+If the key is recovered from a side-channel attack, then all plaintexts can be found. However this isn't a pressing issue as all cryptographic algorithms have this flaw. In contrast, without this flaw, a new key would have to be generated per plaintext as demonstrated in OTP which is inefficient.
 
 \subsection{Collision-Resistance}
 
-Collision resistance has been proven in the birthday problem section and the collision attack section. The collision resistance is on average about as low as the numbers in sha256. and don't have any particular patterns as proven in \texttt{test/significant\_perm\_byte.cpp}. This test file shows the collision rate as any byte of the 32-byte key is modified by 1-bit. In other words, the collision rate is inverse hamming distance across the keys.
+Collision resistance data has been shown to be similiar to SHA-256 on section \ref{diff}. The series of tests conducted in \texttt{test/significant\_perm\_byte.cpp} show the continuity and lack of patterns on the rate of collision as 1-bit of input is modified per trial. The tests cover both random and uniform inputs to find patterns. It's important to note that the tests have been verified to be accurate by providing instances where failure is expected. Therefore, successful results from collision tests prove the strength of avalanche effect present in the transformation algorithm of FTP 1.0, 1.1, 2.0.
+
+collision rate, as any byte of the 32-byte key is modified by 1-bit.
 \\\\
 $\texttt{collision\_rate} = \frac{\texttt{\#collisions}}{\texttt{32}}$\\
  \\ where \texttt{\#collisions} is the number of bytes where $\texttt{previous key}_i$ and $\texttt{modified key}_i$ are equal
 
 \subsubsection{Different Permutation Matrices}
 
-We tried permutation matrices that followed logic or randomness. But they didn't always offer the proper diffusion and collision resistance required to make a secure algrorithm. The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.\\
-Using Bent functions to generate a non-uniform permutation matrix is also possible.
-
-In terms of efficiency, the permutation matrix should be a uniform permutation matrix. The current matrix is non-uniform, which might provide better diffusion (more random), it also creates the issue of efficiency. So in terms of computation speed, reducing the number of times the memory is accessed is required. To achieve this, we will implement an updated version with uniform matrix and perform benchmark tests, based on results of both avalanche effect and cryptoanalysis testing, we will keep/undo the tests.
+Permutation matrices that are either randomly or logically derived do not generate a big difference in collision resistance. However, any type of linear permutation leaves linear trails behind and must be taken care of in other operations present in the transformation algorithm.
+% The permutation matrix needs to be perfect so that the chances of collision (tested in \texttt{test/significant\_perm\_byte.cpp}) for every byte of the key should be around the same.\\
 
 \subsubsection{Number of Rounds}
 
-Number of rounds for Version 1.0 \& 1.1 is determined by the number of rows in the permutation matrix. As using a permutation twice will cancel out.
+Number of rounds for FTP 1.0 \& 1.1 is determined by the number of rows in the permutation matrix. As using a permutation twice will cancel out. For FTP 2.0, the number of rounds are minimized through testing results.
 
-\subsubsection{Constant - $F_p$ - Prime Galois Field Size}
-
-every addition operation is done in a prime galois field as every $k_i \in \mathbb{F_p}$ where $k_i$ is the i'th index of the 32-bit segmented key $p = \texttt{0xfffffffb}$. p is the largest unsigned 32-bit prime number. It was evaluated using Fermat's Little Theorem:\\
-\\
-\begin{algorithm}[H] % H is to make the algorithm stay HERE
-\caption{Find the largest 32-bit prime number pseudo-code}
-\begin{algorithmic}[1]  % The [1] enables line numbering
-\State \textbf{Output:} Biggest unsigned 32-bit prime number ($p$)
-\State \textbf{Begin}
-\State $p = 0$
-\For{$i = \texttt{0xffffffff}$ to $0$}
-	\If {$2^{i-1} \mod i = 1$}
-		\State $p = i$
-		\State break
-	\EndIf
-\EndFor
-\State \textbf{Return} $p$
-\end{algorithmic}
-\end{algorithm}
+%\subsubsection{Constant - $F_p$ - Prime Galois Field Size}
+%
+%every addition operation is done in a prime galois field as every $k_i \in \mathbb{F_p}$ where $k_i$ is the i'th index of the 32-bit segmented key $p = \texttt{0xfffffffb}$. p is the largest unsigned 32-bit prime number. It was evaluated using Fermat's Little Theorem:\\
+%\\
+%\begin{algorithm}[H] % H is to make the algorithm stay HERE
+%\caption{Find the largest 32-bit prime number pseudo-code}
+%\begin{algorithmic}[1]  % The [1] enables line numbering
+%\State \textbf{Output:} Biggest unsigned 32-bit prime number ($p$)
+%\State \textbf{Begin}
+%\State $p = 0$
+%\For{$i = \texttt{0xffffffff}$ to $0$}
+%	\If {$2^{i-1} \mod i = 1$}
+%		\State $p = i$
+%		\State break
+%	\EndIf
+%\EndFor
+%\State \textbf{Return} $p$
+%\end{algorithmic}
+%\end{algorithm}
 
 \subsubsection{Constant - $r$ - Dynamic Rotation Constant} \label{rotation_constant}
 
-Cicadas only surface once every 17 years. Assuming that their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
+Cicadas only surface once every 17 years. Assuming their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
 let x be the time interval for when the cicadas surface \\
 let y be the time interval for when the predetors surface \\
-We can conclude:\\
+We can deduce:\\
 $GCD(x,y) = 1$, then they meet up every $x \times y$ years. \\
 Whereas if $GCD(x,y) \neq 1$, then they meet up every $x$ years (assuming $x > y$). \\
 \\
 Bitwise rotation operation should also be done with either a prime number or a number where $GCD(x,y) = 1$ to maximize the collision resistance.\\
 
-If not, then for example: \\
+Here is a counterexample as proof \\
 let $w$ be 32-bit number\\
 let $q = 8$ be rotation count\\
 rotation can be represented by: $w = w \lll q$\\
 If this rotation was repeated for 4 iterations, then the rotations would cancel out and rotated $w$ ($w'$) and $w$ would be equal. Make sure that $GCD(q, 32) = 1$. \\
 
-If there's only one rotation number, the likelihood of finding a pattern increases. Imagine a card dealer shuffling cards with two stacks, ensuring that one card from each stack is placed on top of the other in a consistent pattern. In this case, you could easily "unshuffle" the cards by simply separating them into two stacks, putting one card on one side and one card on the other. Using a single rotation like this is too simple, but if the cards were shuffled using a more complex method, the process becomes harder to reverse. Even though each method is reversible on its own, combining them makes it significantly more difficult to undo. The use of bitwise rotations on 32-bit segments combined with byte-level permutations creates excellent diffusion. The only potential improvement would be to ensure that all bytes are interlinked solely through the bitwise rotations and permutations, rather than relying on the sum, as seen in the current transformation algorithm.
+If there's only one rotation number, the likelihood of finding a pattern increases. Using a single rotation number is not sufficient, but if the bits were shuffled using a more complex method, the process becomes harder to reverse. Even though each method is reversible on its own, combining them makes it significantly more difficult to undo. The use of bitwise rotations on 32-bit segments combined with byte-level permutations creates excellent diffusion.
 
-Rotation numbers that are selected are represented by r:
+Rotation numbers that were selected is represented by r:
 
 \[
 r = 
@@ -754,38 +955,39 @@ r =
 \end{pmatrix}
 \]
 
-There are 5 numbers for r, this is because $16 \mod 5 \neq 0$, after 16 iterations in the transformation algorithm, all values of k aren't rotated the same number of times.
+There are 5 numbers in r, this is because $16 \mod 5 \neq 0$, after 16 iterations in the transformation algorithm, all values of k aren't rotated the same number of times.
 
-If you were to rotate 32-bit unsigned integer (x)
+if a 32-bit unsigned integer (x) is rotated by r
 \[
 \sum_{i=0}^4 r_i = 89
 \]
 \\
-number of times, the net rotation would be 89 (a prime number). $x \ggg 89$ would produce a net rotation of $x \ggg 25$, since $89 \mod 32=25$. Knowing that $GCD(25, 32) = 1$, the minimum number of times where the expression $x \ggg 89$ is repeated till rotated $x$ equals $x$ is $89 \times 32 = 2848$. This means that only after $2848$ iterations would rotated x equal x. Whereas if there was a singular number for $r$, the number of rotations for rotated $x$ to equal $x$ would be $r \times 32$ (e.g. $r=23, 23 \times 32 = 736$). \\
+The total rotation is 89 (prime). $x \ggg 89$ would produce a net rotation of $x \ggg 25$, since $89 \mod 32=25$. Knowing that $GCD(25, 32) = 1$, the minimum number of times where the expression $x \ggg 89$ is repeated until $x \ggg 89 = x$ is $32$ times since $GCD(25 \times 32, 32) = 32$. Considering that there are other operations than bit shifts, the total bit rotation (89) reflects the transformation of bits better than the net rotation (25).
+%This means that only after $2848$ iterations would rotated x equal x. Whereas if there was a singular number for $r$, the number of rotations for rotated $x$ to equal $x$ would be $r \times 32$ (e.g. $r=23, 23 \times 32 = 736$). \\
 
-$\therefore$ there needs to be multiple numbers for r.
+$\therefore$ r must contain multiple numbers.
 \\
-It is designed so that $|r_i - r_{i-1}|$ results in a different magnitude each time so that the net rotation is a bigger number (more rotation means better diffusion/confusion).
+FTP is designed so that $|r_i - r_{i-1}|$ results in a different magnitude for all elements of r so that diffusion from bitwise rotations are maximized.
 \\
-For the deravation, the numbers started with prime numbers, all prime numbers from 0-32, but most were eliminated due to similiar values for  $|r_i - r_{i-1}|$ results (e.g. $23-5=18$, $|5-17|=12$ aren't too close). A good net rotation would be prime and without similiarities to net rotations. In the transformation algorithm, There are bitwise right rotate ($\ggg$) and bitwise left rotate ($\lll$), this is done to properly mix the results.
+Derivation of r is as follows: make a set (r) of all prime numbers from 0-32, remove elements based on similiarity of results of $|r_i - r_{i-1}|$ (e.g. $23-5=18$, $|5-17|=12$). A good net rotation would be prime. FTP consists of both bitwise right rotate ($\ggg$) and bitwise left rotate ($\lll$), in order to properly mix the results.
 
 \section{Hashing}
 
-The 'hashing' algorithm is used for manipulating the key each time with proper confusion and avalanche effect. The main reason why the key can be reused is due to the algorithm's strong avalanche effect as well as the lack of statistical patterns with collision rates as proven in the unit tests, \texttt{test/significant\_perm\_byte.cpp} which shows if some bytes have more or less collision reasistance.
+The 'hashing' algorithm is used for manipulating the key per plaintext with proper confusion and avalanche effect. The main reason why the key can be reused is due to the algorithm's strong avalanche effect as well as the lack of statistical patterns.
 \\
-To maximize the effects of confusion using the current logic, 4 out of 8 values k (32-bit segmented key) should be modified per iteration (half of key). So each byte of the key is transformed a total of 8 times ($\frac{16 \texttt{iterations}}{8 \div 4}$). since $16 \mod 4 = 0$, all bytes are transformed the same number of times which would also tarnish the possibility of a statistical exploit that could target less transformed bytes of the key.
+To maximize the effects of confusion in FTP, half of the key is modified per iteration. Every byte of the key is transformed a total of 8 times ($\frac{16 \texttt{iterations}}{8 \div 4}$). FTP 1.0 \& 1.1 consists of 16 iterations and since $16 \mod 2 = 0$, all bytes are transformed the same number of times which would lower the possibility of a statistical exploit that could target less transformed bytes of the key.
 \\
-Half of the key should be modified per iteration because classical cryptographic algorithms (non-quantum) rely on computational complexity for their security. So more transformation the better. But the most minimum work to get a secure transformed key is enough, \\
-therefore it's the goal. this was determined experimentally; testing collision resistance of each byte upon modifying the transformation algorithm. \\
+Half of the key should be modified per iteration because classical cryptographic algorithms (non-quantum) rely on computational complexity for their security. So more transformations the better. Although the minimum work to get a secure transformed key is enough, \\
+it's often preferred to have extra insurance rounds for further security at the expense of computation speed.
 \\
 
-We can represent the transformation algorithm with a game of cards. Imagine that 8 cards are randomly picked in a pile of $2^{256}$ cards, each card is cut up into 4 equal pieces, the cut up pieces are shuffled using a permutation algorithm while also replaced with other cut up values from the pile of cards and simultaniously, some pieces are cut up to 2 pieces with magnitude of a prime number (e.g. 5mm, other pieces being 32-5mm if card is 32mm). If this process repeated for 16 iterations, could you recover the original cards? Probably not.
+%We can represent the transformation algorithm with a game of cards. Imagine that 8 cards are randomly picked in a pile of $2^{256}$ cards, each card is cut up into 4 equal pieces, the cut up pieces are shuffled using a permutation algorithm while also replaced with other cut up values from the pile of cards and simultaniously, some pieces are cut up to 2 pieces with magnitude of a prime number (e.g. 5mm, other pieces being 32-5mm if card is 32mm). If this process repeated for 16 iterations, could you recover the original cards? Probably not.
 
 \subsection{Dynamic Matrix Permutation}
 
-Considering the use of \texttt{reinterpret\_cast} for representing the bytearray (key) as 32-bit segments (for confusion operations), the endiannes of the computer will affect the matrix. the matrix given in this documentation is the big endian version as the algorithm is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. This is in the C++ implementation of \texttt{Full-Time-Pad} and the python Deravation program mentioned below.
+Considering the use of \texttt{reinterpret\_cast} in C++ and unions in C for representing the bytearray (key) as 32-bit segments (for confusion operations), the endiannes of the device will require a different matrix. the matrix given in this documentation is the big endian version as FTP is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. Both matrices can be found in the C++ implementation of \texttt{Full-Time-Pad} and the python deravation program \texttt{test/perm.py}.
 \\
-This generates a non-uniform permutation matrix. Which is a "key" concept in uniform randomization of the transposition of bytes.
+This generates a powerful permutation matrix.
 
 \subsubsection{Deravation}
 
@@ -819,10 +1021,8 @@ This generates a non-uniform permutation matrix. Which is a "key" concept in uni
 \State \textbf{Return} $V$
 \end{algorithmic}
 \end{algorithm}
-
-Python code is in the test/perm.py
  
-\subsubsection{Dynamic Permutation Matrix Values} % include Discovery
+\subsubsection{Dynamic Permutation Matrix Values} \label{matrix} % include Discovery
 
 \renewcommand{\arraystretch}{1} % Decrease vertical space between rows 
 
@@ -871,27 +1071,27 @@ For the modular addition, a constant array of 8 values is used (\texttt{A}):
 
 \texttt{A} is derived as follows:
 \\
-Start with the message: "\textbf{cipher}" (6 digit message with 6 uneiqe characters)
+Start with the message: "\textbf{cipher}" (6 digit message with 6 unique characters)
 \\
 Take every ascii encoding of each character of the message and calculate to the 32nd power and take the first 32-bits:
 \\
 Example:\\
 "c": 99 in ascii encoding\\
-In python: hex($99^{32}$)[:10] = \texttt{0x119f904f}
+the first 32-bits of $99^{32}$ = \texttt{0x119f904f}
 \\
-The word \textbf{cipher} and $\textbf{A}_i$ is arbitrary. In other words, it's "nothing up my sleeve numbers". This is an initial array. In the transformation algorithm, every $\textbf{A}_i$ is modified twice (in 16 iterations). This provides the confusion. The reason why the first 2 values are the 64-bit encryption index is because this was the most efficient way to diffuse in the encryption index.
+The word \textbf{cipher} and $\textbf{A}_i$ is arbitrary. In other words, they're "nothing up my sleeve numbers". This is an initial array. In the transformation algorithm, every $\textbf{A}_i$ is modified twice (in 16 iterations). This provides some confusion. The reason why the first 2 values are the 64-bit encryption index is because this was the most efficient way to diffuse in the encryption index.
 
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 
-"Using the values determined for $r$ (as discussed in Section \ref{rotation_constant}), rotate one value to the right, another to the left, and then the third to the right again. The reasoning behind alternating the rotation directions goes back to the card analogy. Imagine two stacks of cards. One on the left and the other on the right. To shuffle them efficiently, a logical approach would be to alternately take a card from the left stack and place a card from the right stack on top. For a "randomized" shuffle, the best strategy would be to take $n$th card from alternating sides, where $n$ is a prime number, to minimize collisions."
+"Using the values determined for $r$ in Section \ref{rotation_constant}, rotate each value one at a time for diffusing bits non-uniformly and linearly. FTP 1.0 consists of 2 bitwise right rotates (BRR) \& 1 bitwise left rotate (BLR) offering a total rotation count of 48. FTP 1.1 consists of 1 BRR and 1 BLR with a total rotation count of 32. FTP 2.0 consists of 1 BRR and 1 BLR wit ha total rotation count of 20. Using both BLR and BRR isn't counter productive since it's not applied simultaniously. It is potentially redundant to use both but the idea was to use more operations to add more complexity.
 
 \subsubsection{X - XOR} % pseudo-code and Explanation
 
-Some of the values are xored because xor operator offers 256 combinations per byte unlike unsigned addition which mostly offers less (section \ref{collision_attack}). This will bring more possabilites which in return limits brute-forcing attacks. It is avoided when there is a good possibility of xoring the same 2 values ($x \oplus x$), this is why the sum of $k_i$ is used rather then xor.
+XOR operator offers linear manipulation for merging values. Using alongside addition since adding both linear and non-linear operations offers stronger confusion.
 
 \section{Performance}
 
-In terms of performance, the transformation version 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the permutation. Version 2.0 of the transformation algorithm could use further optimizations in later versions of the \texttt{Full-Time-Pad} cipher which is the fastest yet secure version of the algorithm. Not all versions value speed, some are purely focused on security. Sometimes when dealing with things like passwords, we would recommend using slower algorithms to reduce brute-forcing possibilities.
+In terms of performance, FTP 1.0 is quite slow compared to ChaCha20 and AES. The main reason for the poor performance is the 16 rounds of permutation. Not all versions of FTPvalue speed, FTP 1.0 purely focuses on security. When dealing with high security dependent objectives such as password sharing, using slower algorithms with more insurance rounds is preferred since it's safer from severe \& powerful attacks.
 \\
 Benchmark tests show the following results: 
 \\
@@ -913,11 +1113,9 @@ On the same device (12th Gen Intel(R) Core(TM) i7-12700H, DDR5 RAM). The ChaCha2
 \texttt{Time taken to encrypt 1000000 32-byte messages: 0.160442 seconds\\
 Encryption rate: 6232781 keys per second}\\
 \\
-This means that \texttt{Full-Time-Pad} transformation version 2.0 is more than 3 times faster than ChaCha20. However, ChaCha20 has 64-byte keystreams while my algorithm has 32-byte. So Mine is 3x faster for encrypting unieqe plaintexts under 32 bytes (For long plaintexts, 1.5x). These tests are under the assumption that there are full optimizations possible (modern hardware).
-\\
-One must also consider that my algorithm could be redesigned to generate 64-byte blocks faster than ChaCha20 as longer keystream doesn't mean a linear increase in time. This is a potential upgrade in future version of this algorithm.
-\\
-Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor implementation. Implementation could be improved, yet we don't think speed would be affected too significantly.
+FTP 2.0 is 3 times faster than ChaCha20. However, ChaCha20 has 64-byte keystreams while FTP has 32-bytes. FTP 2.0 is 3x faster for encrypting unique plaintexts under 32 bytes (For long plaintexts, 1.5x). These tests are under the assumption that optimizations are equivelantly effective and heavily used. Although benchmark tests with Salsa12 and FTP 2.0 are similiar for a 64-byte output, this algorithm could be updated to provide a 64-byte output without adding 2 times the computation time So comparing benchmark tests relative to the ratio of output size is misleading. More so because it is designed to be a 32-byte output. Accurate comparision requires more work.\\
+Since implementation of FTP 1.0 \& 1.1 aren't optimized fully, the benchmark tests are misleading.\\
+On future devices, SIMD instructions could be expected to improve and provide different benchmarks disproportionally so comparision is innacurate.
 
 \section {Cipher}
 
@@ -930,7 +1128,7 @@ Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor im
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
-\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
 \For{$i=0$ to $16$}
 	\State $\mathrm{index} \gets i \ll 2$
 	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
@@ -941,18 +1139,17 @@ Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor im
 	\State $\mathrm{imod9} \gets (i+1) \mod 8$
 	\State $\mathrm{rmod} \gets i \mod 5$ \\
 
-	\COMMENT{No unwanted overflow, so convert to uint64\_t}
-	\State $k_\mathrm{i1mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}  \pmod p $
+	\State $k_\mathrm{i1mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}$
 
-	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
 
 	\State $A_\mathrm{imod9} \gets A_{imod9} \oplus \text{sum}$
 
-	\State $k_\mathrm{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod} \pmod p$
-	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus \mathrm{(uint64\_t)} k_\mathrm{i2mod} + k_\mathrm{i1mod} \ggg r_{(i+1) \mod 5} \pmod p$
+	\State $k_\mathrm{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod}$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus \mathrm{(uint64\_t)} k_\mathrm{i2mod} + k_\mathrm{i1mod} \ggg r_{(i+1) \mod 5}$
 
-	\State $k_\mathrm{i3mod} \gets \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod} \pmod p$
-	\State $k_\mathrm{i4mod} \gets  \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod} \pmod p$ \\
+	\State $k_\mathrm{i3mod} \gets \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod}$
+	\State $k_\mathrm{i4mod} \gets  \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod}$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
@@ -964,7 +1161,7 @@ Also, for Versions 1.0 \& 1.1, The poor performance is mainly due to the poor im
 
 \subsection{Transformation - Version 1.1 - Prioritize Speed \& Complexity}
 
-This version of the transformation offers more speed less complexity. This is preferred to the previous option since the other has more unnecessary operations that add complexity but isn't really needed, the previous option is better suited for when speed doesn't matter as much as security, or when slower algorithms are appreciated.
+This version of the transformation offers more speed less complexity. This is preferred to the previous option since version 1.0 contains potentially redundent/extra operations, FTP 1.0 is better suited for when speed doesn't matter as much as security, or when slower algorithms are appreciated.
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
@@ -973,7 +1170,7 @@ This version of the transformation offers more speed less complexity. This is pr
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
-\State $\mathrm{uint32\_t *k} \gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State $\mathrm{k} \gets$ endian\_8\_to\_32\_arr(\texttt{key})
 \For{$i=0$ to $16$}
 	\State $\mathrm{index} \gets i \ll 2$
 	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
@@ -984,18 +1181,17 @@ This version of the transformation offers more speed less complexity. This is pr
 	\State $\mathrm{imod9} \gets (i+1) \mod 8$
 	\State $\mathrm{rmod} \gets i \mod 5$ \\
 
-	\COMMENT{No unwanted overflow, so convert to uint64\_t}
-	\State $k_\mathrm{i1mod} \gets \text{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}  \pmod p $
+	\State $k_\mathrm{i1mod} \gets k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}$
 
-	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j \pmod p $
+	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
 
 	\State $A_\mathrm{imod9} \gets A_\mathrm{imod9} \oplus \mathrm{sum}$
 
-	\State $k_\mathrm{i2mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod} \pmod p$
-	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod} \pmod p$
+	\State $k_\mathrm{i2mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod}$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod}$
 
-	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod} \pmod p$
-	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod} \pmod p$ \\
+	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod}$
+	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod}$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
@@ -1007,7 +1203,7 @@ This version of the transformation offers more speed less complexity. This is pr
 
 \subsection{Transformation - Version 2.0 - Prioritize Speed}
 
-This version of the transformation prioritizes speed. This is preferred to the previous option if complexity doesn't matter as much. This is still secure, but not as secure as Version 1.0. This version is the updated Version 1.1, the main difference is removing the galois field as this still provides a good confusion and making the algorithm have only 10 rotations (Determined experimentally).
+This version of the transformation prioritizes speed. FTP 2.0 is preferred to FTP 1.1 for cases where complexity isn't the primary focus. This is still considered secure, but lacks the extra complexity found in FTP 1.0. FTP is designed to offer less rounds, and less bytes modified per round, but heavier manipulation per round.
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
@@ -1016,7 +1212,7 @@ This version of the transformation prioritizes speed. This is preferred to the p
 \State \textbf{Output:} Transformed 32-byte bytearray key ($k$)
 \State \textbf{Begin}
 \COMMENT{$\texttt{keysize} = 32$, length of input key is 32-bytes}
-\State uint32\_t *k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
+\State k $\gets$ endian\_8\_to\_32\_arr(\texttt{key})
 \For{$i=0$ to $10$}
 	\State $\mathrm{index} \gets i \ll 2$
 	\State $\mathrm{i1mod} \gets \mathrm{index} \mod 8$
@@ -1064,7 +1260,7 @@ This version of the transformation prioritizes speed. This is preferred to the p
 \end{algorithmic}
 \end{algorithm}
 
-This endiannes conversion is designed to convert a little-endian reinterpret casted pointer into the big-endian version so that both little-endian and big-endian systems are compatible.
+dynamic permutation fucntion permutes the bytearray key using the permutation matrix found in section \ref{matrix}.
 
 \subsection{endian\_8\_to\_32\_arr} \label{endian}
 
@@ -1083,28 +1279,19 @@ This endiannes conversion is designed to convert a little-endian reinterpret cas
 \end{algorithmic}
 \end{algorithm}
 
+This endiannes conversion is designed to convert a little-endian reinterpret casted pointer into the big-endian version so that both little-endian and big-endian systems are compatible.
+
 \subsection {Key Reuse}
 
-In order to reuse the key, there is an encryption index which is a 64-bit nonce that is incremented per
-encryption in order to keep the transformed key unique. The encryption index is infused in the encryption
-algorithm in an efficient manner, the first 2 values is the encryption index. It's the first 2, not the last
-2 because indexing in the transformation algorithm uses the first 2 indexes of \textbf{A} so this would provide
-more iterations to diffuse in the encryption index. The encryption index could also be randomly generated each
-time. If it's incremented it's necessary to make sure that the same encryption index is incremented when the
-plaintext is long (not just incremented per message but per 32-byte segment of every message sent.)
+A 64-bit nonce labeled an encryption index is used for key reusability. The difference between a nonce and encryption index is that an encryption index cannot be random. if a random nonce was used instead, this could lead to collisions since root $k$ for $g(2^{64}, k) = 5,056,937,540$ where $g$ is the solution to the birthday problem defined in section \ref{birthday_problem}. This means that there is
+a 50\% chance of collision when 5 billion 64-bit nonces are used.
+161,822,001,280 bytes of data would need to be encrypted for a succesful brute-force to be 50\% likely. In practice, using random nonces would increase chances of collisions
+significantly. Safest practice is to increment the encryption index.
+\\The first 2 values of A is the encryption index. Encryption index must be located in the first half of A to provide more iterations to diffuse in the encryption index.
 
 \subsubsection {Multi-Threading}
 
-When multiple threads are encrypting using the same key and the encryption index is incremented per encryption,
-the encryption index needs to be an atomic variable. A substitute is to use a random encryption index,
-but this could lead to collisions since root $k$ for $g(2^{64}, k) = 5,056,937,540$ where $g$ is a solution
-to the birthday problem defined in \autoref{birthday_problem}. This means that there is
-a 50\% chance of collision when 5 billion 64-bit nonces are used, since a new nonce is needed per 32-byte message,
-161,822,001,280 bytes of data would need to be encrypted for a succesful brute-force to be 50\% likely. In practice,
-using random nonces increase chances of collisions
-by a lot. So the safest practice would be to increment the encryption index and keep it as an atomic variable
-for multi-threading. 
-If using an atomic number isn't possible (e.g. threads cannot communicate efficiently), then use one the following methods, the first one is simpler and faster:
+When multiple threads are encrypting using the same key, the encryption index needs to be an atomic variable. If using an atomic number isn't possible (e.g. threads cannot communicate efficiently), then use one the following methods:
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{Unique nonces for Multi-threading without thread communication}
@@ -1136,13 +1323,12 @@ If using an atomic number isn't possible (e.g. threads cannot communicate effici
 
 These algorithm are only valid if number of threads used is not growing. Otherwise, every time a new thread is created, the algorithm needs to be recalled with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
 
-Algorithm-\hspace{0.1em}\protect\ref{nonce_unique} proves itself redundant since \texttt{encryption\_index} always ends up being a power of $P_n$
-(e.g. for $P_n=3, \texttt{encryption\_index} = 3, 9, 27, 81\dots$).
-But exponential growth doesn't work for long plaintexts. $\therefore $ Use \textbf{Algorithm \hspace{0.1em}\protect\ref{thread_nonce}} for generating incremental nonces without thread communication.
+Algorithm-\hspace{0.1em}\protect\ref{nonce_unique} is inefficient and slow so it should be avoided in practice.
+$\therefore $ Use \textbf{Algorithm \hspace{0.1em}\protect\ref{thread_nonce}} for generating incremental nonces without thread communication.
 
 \subsection {Long Plaintexts}
 
-When there are long plaintexts used, the encryption index should be incremented by 1 the same way as key reuse. It might be logical to randomly generate the encryption index per plaintext so that you don't have to keep track of incrementing the encryption index for all plaintexts but rather per plaintext. This isn't an issue in the algorithm itself but rather a side-channel exploit if you don't update encryption index. My implementation of the algorithm doesn't impose this problem as long as you don't use the same key for 2 \texttt{FullTimePad} Objects.
+When encrypting long plaintexts, using encryption modes such as Galois Counter Mode (GCM) is always the best option but it is also secure to increment the encryption index per 32-byte plaintext block.
 
 \subsection {Encryption/Decryption operation}
 
@@ -1154,7 +1340,7 @@ Encryption operation is the same as decryption
 \State \textbf{Input:} plaintext ($p$), length ($\ell$), 32-byte original key ($k$), encryption index/nonce (\texttt{encryption\_index})
 \State \textbf{Output:} ciphertext ($c$)
 \For {each 32-byte segment of plaintext}
-	\COMMENT{create a copy of unmodified $k$, and transform it using an incrementing unieqe \texttt{encryption\_index}}
+	\COMMENT{create a copy of unmodified $k$, and transform it using an incrementing unique \texttt{encryption\_index}}
 	\COMMENT{Then, encrypt using plaintext xor transformed key = ciphertext}
 	\State copy = copy($k$)
 	\State $c \gets c \,||\, p \oplus \mathrm{transformation(copy, } \texttt{  encryption\_index})$
@@ -1165,6 +1351,11 @@ Encryption operation is the same as decryption
 \State \textbf{Return} $c$
 \end{algorithmic}
 \end{algorithm}
+
+\section {Conclusion}
+
+The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, bruteforce, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. All the tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to improved as well as the implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competetive benchmarking tests that compete with industry standard algorithms.
+
 
 \printbibliography
 

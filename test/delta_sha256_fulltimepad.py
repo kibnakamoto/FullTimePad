@@ -89,7 +89,7 @@ for i in range(len(delta3)):
     upper_bound.append(ci[1])
 
 
-plt.figure(figsize=(8, 5))
+plt.figure(figsize=(10, 5))
 # plt.plot(graphx, delta3, marker='.', markersize=2, linestyle='-', label="v11", color="red")
 
 # currently commented ou since it's unwanted
@@ -99,9 +99,10 @@ plt.plot(graphx, delta2, color="blue", label="Δ (Change in Collision Rate)", ma
 plt.fill_between(graphx, lower_bound, upper_bound, color='gray', alpha=0.3, label=f"{confidence}% Confidence Interval")
 plt.xlabel("Innaccuracy (n)")
 plt.ylabel("Δ (Change in Collision Rates)")
-plt.title("∆ = |SHA-256 − FullTimePad 2.0| vs. Inaccuracy (n)")
+#plt.title("∆ = |SHA-256 − FullTimePad 2.0| vs. Inaccuracy (n)")
 plt.grid(True)
 plt.legend()
+plt.subplots_adjust(top=0.99)
 plt.savefig("../delta sha256 - fulltimepad 2.0.pdf", format="pdf")
 plt.show()
 

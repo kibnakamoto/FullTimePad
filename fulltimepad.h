@@ -89,10 +89,6 @@ class FullTimePad
 			};
 
 	private: 
-			
-			// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
-			static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
-		
 			/*
 			// indexes represented as constant when rotated V right by n
 			static const constexpr uint8_t n_V[][32] = {

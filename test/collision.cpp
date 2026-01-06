@@ -33,6 +33,15 @@ void signal_handler(int sig) {
 	doprint = true;
 }
 
+// generate a random 32-byte key (not cryptographically secure but will be enough for testing)
+void gen_rand_key(uint8_t *key)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<uint8_t> dist(0, 0xff);
+	for(uint8_t i=0;i<32;i++) key[i] = dist(gen);
+}
+
 // test how many bytes of transformed(k1) = transformed(k2). the highest number should be kept.
 void test_collision(uint8_t *k1, uint8_t *k2, double &highest_collision)
 {
@@ -48,13 +57,89 @@ void test_collision(uint8_t *k1, uint8_t *k2, double &highest_collision)
 	}
 }
 
-// generate a random 32-byte key (not cryptographically secure but will be enough for testing)
-void gen_rand_key(uint8_t *key)
+// check if the #iterations converge for a given ratio of collision 
+template<FullTimePad::Version version>
+void check_convergence(const double ratio=0.03125)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<uint8_t> dist(0, 0xff);
-	for(uint8_t i=0;i<32;i++) key[i] = dist(gen);
+	uint8_t *k1 = new uint8_t[32];
+	uint8_t *k2 = new uint8_t[32];
+    uint64_t it=0;
+    double avg = 0;
+    double prev_avg = 0;
+    double curr_ratio = 0;
+    uint32_t when = 10; // when for this many iterations the avg stays the same, then its converged
+    uint32_t at = 0; // counter for when
+    uint64_t equal=1; // counter when curr_ratio = ratio
+    while(true) {
+	    // generate 2 random keys
+	    gen_rand_key(k1);
+	    gen_rand_key(k2);
+
+		// generate transformed(key)
+		FullTimePad fulltimepad1 = FullTimePad(k1);
+		FullTimePad fulltimepad2 = FullTimePad(k2);
+		fulltimepad1.hash<version>(k1, 0); // since keys are unieqe each time, encryption index can stay the same
+		fulltimepad2.hash<version>(k2, 0);
+
+        // get collision rate, but not the maximum
+        curr_ratio = 0;
+	    for(uint8_t i=0;i<FullTimePad::keysize;i++) {
+	    	if(k1[i] == k2[i]) {
+	    		curr_ratio++;
+	    	}
+	    }
+	    curr_ratio/=32; // get the rate
+
+        if(curr_ratio == ratio) {
+            prev_avg = avg;
+            avg+=(it-avg)/equal;
+            avg/=2; // every time it's found get the average
+           // std::cout << "\nprev_avg : avg -- " << (uint64_t)(prev_avg*3) << "  :  " << (uint64_t)(avg*3);
+            if((uint64_t)(prev_avg*3) == (uint64_t)(avg*3)) { // 2 sig figs, which is really low accuracy but shows that no convergence is possible
+                at++;
+            } else {
+                at = 0;
+            }
+            if(at == when) {
+                std::cout << std::endl;
+                std::cout << "Converged at ratio " << ratio << " after " << it <<  " iterations with avg iteration of " << avg << " times";
+                std::cout << std::endl;
+                delete[] k1;
+                delete[] k2;
+                return;
+            }
+            it = 0; // start over
+            equal++;
+        }
+        it++;
+   }
+}
+
+// test if the FTP transformed keys converge to a number
+// irrelevant to collisions. just testing for convergance
+template<FullTimePad::Version version>
+void test_convergence_incr()
+{
+	uint8_t *k = new uint8_t[32]{};
+	double *sums = new double[32]{};
+    uint64_t it=1;
+    while(it <= 1000000) {
+		// generate transformed(key)
+		FullTimePad fulltimepad1 = FullTimePad(k);
+		fulltimepad1.hash<version>(k, it); // since keys are unieqe each time, encryption index can stay the same
+        for(int i=0;i<32;i++) {
+            sums[i] += (k[i] - sums[i])/it;
+        }
+
+        it++;
+   }
+    std::cout << std::endl;
+    for(int i=0;i<32;i++) {
+        std::cout << std::dec << (uint16_t)sums[i] << " ";
+    }
+    std::cout << std::endl;
+    delete[] k;
+    delete[] sums;
 }
 
 // brute-force the key by generating 2 random keys
@@ -214,6 +299,11 @@ int main(int argc, char *argv[])
 {
 	// catch signal interrupt
 	signal(SIGINT, signal_handler);
+
+    // check convergences: no convergence
+    //check_convergence<FullTimePad::Version20>();
+    //test_convergence_incr<FullTimePad::Version20>();
+    //return 0;
 
 	// parse user input to determine how the brute-force should be performed (random or incremented)
 	if(argc > 1 && strcmp(argv[1], "-r") == 0) {

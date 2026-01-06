@@ -109,9 +109,6 @@ class FullTimePadTest
 				0x85096c2e,
 			};
 			
-			// for modular addition in a Prime Galois Field, field size p, largest 32-bit unsigned prime number
-			static const constexpr uint32_t fp = 4294967291; // 0xfffffffb
-		
 			// rotation index r
 			static const constexpr uint8_t r[] = {
 				23, 5, 17, 31, 13
@@ -176,18 +173,18 @@ class FullTimePadTest
 					uint8_t imod9 = (i+1) % 8;
 	
 					uint8_t rmod = i % 5; // 5 rotation values
-					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8]) % fp) + rotr(k[i1mod], r[rmod])  ) % fp;
+					k[i1mod] = ( ( ((uint64_t)k[i1mod] + A[imod8])) + rotr(k[i1mod], r[rmod])  );
 	
-					uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]) % fp;
+					uint32_t sum = ((uint64_t)k[0] + k[1] + k[2] + k[3] + k[4] + k[5] + k[6] + k[7]);
 
 					A[imod9] ^= sum;
 	
-					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9]) % fp) + rotl(k[i2mod], r[rmod])  ) % fp; // uint64_t to make sure there is no unwanted overflow
+					k[i2mod] = ( ( ((uint64_t)k[i2mod] + A[imod9])) + rotl(k[i2mod], r[rmod])  ); // uint64_t to make sure there is no unwanted overflow
 					
-					A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5])) % fp;
+					A[imod8] ^= ((uint64_t)k[i2mod] + rotr(k[i1mod], r[(i+1)%5]));
 	
-					k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) ) % fp;
-					k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) ) % fp;
+					k[i3mod] =( (uint64_t)(A[imod8] ^ k[i3mod]) + (A[imod9] ^ k[i4mod]) );
+					k[i4mod] =( (uint64_t)(A[imod8] ^ k[i4mod]) + (A[imod9] ^ k[i3mod]) );
 		
 					// permutate the bytearray key
 					dynamic_permutation(key, p, i, best_n_V);
