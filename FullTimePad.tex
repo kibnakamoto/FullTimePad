@@ -1,5 +1,7 @@
 % \documentclass[fleqn, a4paper,12pt]{article}
 
+% TODO: add testing to abstract,
+
 \documentclass[12pt, fleqn, letterpaper]{article}
 % \documentclass[12pt, letterpaper]{article}
 
@@ -90,8 +92,8 @@
 
 \section{Introduction}
 
-Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 use them, they don't maximize their effects. According to my benchmarking tests on FTP, most cache misses happen on the first permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. This high-speed algorithm (3x faster than ChaCha20) makes use of modern hardware accelerations. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, they have been popularized since early 1990s \cite{wiki_simd}. Ever since then, SIMD exists in nearly all modern devices and we present that encryption algorithms should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and simd optimizations.
-In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However hardware bit-level permutation optimizations aren't offered by personal devices yet so they cannot be used.
+Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 utilize it, their benefits aren't maximized. According to benchmarking tests on FTP, most cache misses are in the first round of permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. FTP is three times faster than ChaCha20 because it is built for of modern hardware. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, yet have been popularized since early 1990s \cite{wiki_simd}. SIMD exists in nearly all modern devices and we present that cryptography should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and simd optimizations.
+In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should be avoided.
 
 \subsection {Pre-requisite Terminology}
  
