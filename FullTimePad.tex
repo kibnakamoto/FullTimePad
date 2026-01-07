@@ -92,8 +92,8 @@
 
 \section{Introduction}
 
-Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 utilize it, their benefits aren't maximized. According to benchmarking tests on FTP, most cache misses are in the first round of permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. FTP is three times faster than ChaCha20 because it is built for of modern hardware. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, yet have been popularized since early 1990s \cite{wiki_simd}. SIMD exists in nearly all modern devices and we present that cryptography should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and simd optimizations.
-In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should be avoided.
+Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 utilize it, their benefits aren't maximized. According to benchmark tests on FTP, most cache misses happen in the first round of permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. FTP is three times faster than ChaCha20 because it is built for modern hardware. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, yet they have been popularized since the early 1990s \cite{wiki_simd}. SIMD exists in nearly all modern devices and we present that cryptography should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and SIMD optimizations.
+In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should only be considered for future algorithms.
 
 \subsection {Pre-requisite Terminology}
  
@@ -110,7 +110,6 @@ In the Efficient Permutation Instructions for Fast Software Cryptography \cite{p
 		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
 		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
 		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
-		\textbf{Galois Field}     & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Finite field where there are only limited number of numbers. Only prime galois fields ($F_p$) are used where size of the field is denoted by prime number p \\
 		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
 		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
 \end{tabular}
@@ -121,31 +120,31 @@ The 32-byte key should be generated using a cryptographically secure method, inc
 
 \subsection{Prerequisite Mathematics}
 
-\subsubsection{Galois Field Addition}
+\subsubsection{Addition in the ring $\mathbb{Z}_{2^{32}}$}
 
-In a prime galois field, where two variables ($x,y$) are added, $x,y \in \mathbb{F}_p$ where $\mathbb{F}_p$ denotes the finite field with a prime field size. There are finite number of elements in $F_p$ which means that $x,y < p$. 
+In an integer ring, where two variables ($x,y$) are added, $x,y \in \mathbb{Z}_{2^{32}}$ where $\mathbb{Z}_{2^{32}}$ denotes the ring with size $2^{32}$.
 
 The expression:\\
 $x + y = z$\\
-$x,y,z \in \mathbb{F}_7$\\
+$x,y,z \in \mathbb{Z}_{2^{32}}$\\
 
 Implicitly denotes \\
-$x + y = z \pmod 7$\\
+$x + y = z \pmod {2^{32}}$\\
 \\
-So all addition operations require modulo p.\\
-In the context of this encryption algorithm, it's used in the transformation algorithm as one of three operations (\textbf{A}RX). 
+So all addition operations require modulo $2^{32}$.\\
+In the context of this encryption algorithm, it's used in the transformation algorithm as one of four operations (\textbf{A}RX). 
 
 \subsubsection{Vector Permutation}
 
 Permutating a vector refers to transposing the elements in a vector. It is a reversible operation.
-For example, if for the vector: $V$ \\
+For example, let $V$ be the vector to transpose: \\
 \[
 V = 
 \begin{pmatrix}
 	0 & 1 & 2 & 3
 \end{pmatrix}
 \]
-and the permutation vector $P$: \\
+let $P$ be the permutation vector: \\
 
 \[
 P = 
@@ -154,7 +153,7 @@ P =
 \end{pmatrix}
 \]
 
-then the resulting matrix would be 
+then the resulting permutated vector would be 
 
 \[
 V' = 
@@ -163,8 +162,8 @@ V' =
 \end{pmatrix}
 \]
 
-If we look at $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic\_permutation section (\ref{dynamic_permutation}).
-The permutation in this algorithm is used for the bytearray \texttt{key} and the 32-bit segmented \texttt{k}. In order to confuse (ARX) and diffuse (permutate), \texttt{k} and \texttt{key} needs to point to the same memory address. Most efficient way to do this, would be using \texttt{reinterpret\_cast} in C++ or using \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
+Observe $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic permutation section (\ref{dynamic_permutation}).
+The permutation in this algorithm is used for the bytearray \texttt{key} which offers diffusion for the 32-bit segmented \texttt{k}. In order to confuse and diffuse, \texttt{k} and \texttt{key} must point to the same memory address. Most efficient method to accomplish this is to use \texttt{reinterpret\_cast} in C++ or \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
 
 \[
 V' = 
@@ -173,12 +172,10 @@ V' =
 \end{pmatrix}
 \]
 
-This means that for little endian systems, the permutation matrix also needs to change. The little-endian permutation matrix deravation is given in the \texttt{test/perm.py}.
-
 \section{Security}
 \setlength{\mathindent}{3pt} % No indentation for equations
 
-In One-Time-Pad, key isn't reusable. This is demonstrated by the following proof:
+In OTP, key cannot be reused. This is demonstrated by the following:
 
 \[
 \begin{aligned}
@@ -194,11 +191,11 @@ In One-Time-Pad, key isn't reusable. This is demonstrated by the following proof
 Since the key is reused, the 2 ciphertext's XORed factor out the key since $k \oplus k = 0$
 Using cryptoanalysis, the 2 plaintexts can be found as demonstrated by OneTimePad Cracker on GitHub by Kibnakamoto. 
 \\
-For $c_1 \oplus c_2 = m_1 \oplus m_2$ to not hold true, for each encryption, the key needs to be different. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
+To imply that $c_1 \oplus c_2 \neq m_1 \oplus m_2$ implicitly requires that the key is updated per encryption. If $k$ is transformed each time so that it has an avalanche effect. Even with no confusion, it would still be secure since $k' \oplus k \neq  0$ where $k'$ is transformed key. 
 \\
 But there is another concern,
 \\
-What if the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so don't use k without transformation since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$, for each plaintext, key needs to be transformed irreversibly and also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
+If the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so avoid using k without transformation since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$, for each plaintext, key needs to be transformed irreversibly and also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
 &k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
@@ -213,45 +210,32 @@ What if the plaintext and ciphertext are known (known plaintext attack), then it
 \\
 
 
-$\therefore$ the \texttt{Full-Time-Pad} Cipher requires both diffusion and confusion
+$\therefore$ \texttt{FTP} requires both diffusion and confusion
 
 \subsection {NIST SP 800-22 - Statistical Test Suite - Official NIST Randomness Test}
 
-Using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been tested using a fixed key (0-31) and plaintext (0-31). Only one key was used. Per each 256-bits until the one millionth bit, the encryption index was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all 16-tests. This means that the slightest change in input (key/encryption index) demonstrates a strong randomness, and therefore has a proper avalanche effect.
+Using the python tool from \href{https://github.com/stevenang/randomness\_testsuite}{https://github.com/stevenang/randomness\_testsuite}, all 3 versions of the transformation algorithm have been tested using a patterned key ($\texttt{key}_i=i, i=0,1,2,\dots,31$). Tests were conducted for both small changes in key and encryption index. For each 256-bit segment until the one millionth bit, the input was incremented once per encryption. All 3 versions of the transformation function resulted in full-randomness for all of the 16-tests. This proves that the slightest change in input (key/encryption index) demonstrates a strong randomness, and therefore has a proper avalanche effect.
 
 \subsection{Brute-Force}
 
-Due to the use of a galois field. The total number of combinations per 256-bit key isn't $a=2^{256}$, but rather $b=4294967291^8$ where $p=4294967291$ for arithmetic in $F_p$ and there are 8 32-bit numbers in a 256-bit key.
-
-\[
-\begin{aligned}
-&a = 115792089237316195423570985008687907853269984665640564039457584007913129639936_{10} \\
-&b = 115792088158918333131516597762172392628570465465856793992332884130307292657121_{10} \\
-&\texttt{let  } \Delta = a-b \\
-&\Delta = 1078397862292054387246515515224699519199783770047124699877605836982815_{10} \\
-\end{aligned}
-\]
-So the difference $\Delta$ is a somewhat large integer. The number of combinations with a galois field is lower than without a galois field ($b < a$). This isn't a big concern as their difference measured exponentially is only around $2^{\log_2\Delta} \approx 2^{229}$ which means that their difference is around $2^{229}$, this is a negligible difference as the difference between $2^{230}$ and $2^{229}$ is also huge. \\
-$\therefore $ \texttt{Using a galois field doesn't negatively impact number of cominations in terms of brute force as the total number of combinations when using a galois field vs not is a negligible amount}
-
 \subsubsection {Birthday Problem} \label{birthday_problem}
 
-The birthday problem is a well known veridical paradox. It goes as follows: how many people are required so that there is more than 50\% chance that at least 2 people have the same birthday.
+The birthday problem is a well known veridical paradox. It goes as follows: how many people are required so that there is a 50\% chance that at least 2 people have the same birthday.
 \\
 The answer is 23 people.
 \\
-In the context of this encryption algorithm, this means that brute-forcing using random inputs is more likely than your intuition predicts especially since a galois field is used (smaller number of total combinations):
+In the context of this encryption algorithm, this suggests that brute-forcing using random inputs is unintuitively easy which implies the need for a mathematical proof:
 \\
 \\
-
-\texttt{let } $V_c$ \texttt{be the number of combinations per key with order and no repetitions} \\
 \texttt{let } $k$ \texttt{be the number of keys needed for hash(key) to have a 50\% chance to equal another hash(key)} \\
-\texttt{let } $V_t$ \texttt{be the number of combinations per key with order and with repetitions} \\
+\texttt{let } $b$ \texttt{be the number of combinations per key} \\
+\texttt{let } $V_c$ \texttt{be the total number of combinations for k keys with order and no repetitions} \\
+\texttt{let } $V_t$ \texttt{be the total number of combinations for k keys with order and with repetitions} \\
 
 \[
 \begin{aligned}
 &V_c = \frac{b!}{(b-k)!} \\
-&V_t = b^k = 4294967291^{8^k} \\
+&V_t = b^k = 2^{256^k} \\
 &\texttt{let P(A) be the probability of not shared birthdays}.\\
 &P(A) = \frac{V_c}{V_t} \\
 %&P(A) = \frac{\frac{b!}{(b-k)!}}{b^k} \\
@@ -300,7 +284,7 @@ In the context of this encryption algorithm, this means that brute-forcing using
 %		& \frac{b\log b \cancel{-b} + \frac{\ln\biggl[\frac{1}{\pi^3} +  b(1+4b(1+2b)) \biggr]}{6} + \cancel{\frac{ln\pi}{2}} - \ln b \log_b\frac{1}{2} - \ln b k}{\cancel{\ln b}} \approx \frac{(b-k)\ln(b-k) \cancel{-b} + k }{\cancel{\ln b}} +  \\ 
 %& \hspace{10.3cm} + \frac{\frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} + \cancel{\frac{\ln\pi}{2}}}{\cancel{\ln b}} \\
 %& \\
-&\texttt{We can simplify the formula to the following format:} \\
+&\texttt{We can simplify the formula to the following:} \\
 & \texttt{let } C = b\ln b + \frac{\ln \biggl[\frac{1}{\pi^3} + b(1+4b(1+2b)) \biggr]}{6} - \ln b \log_b\frac{1}{2} \approx (b-k)\ln(b-k) + k + \ln b k  \\ 
 & \hspace{10.1cm} + \frac{\ln \biggl[\frac{1}{\pi^3} + (b-k)(1+4(b-k)(1+2(b-k)))\biggr]}{6} \\
 & \\
@@ -380,19 +364,15 @@ $x_0 = \frac{1}{2}+\sqrt{\frac{1}{4}+2 \times ln(2) \times b}$ (due to Approxima
 $x_1 = \sqrt{b}$ (due to square approximation) \\
 \\ error tolarance:
 $e = 1 \times 10^{-200}$ \\
-for $b=4294967291^8$,  we get $k_1 = 400651867432320527534628274526034254879$ for the root. \\
-And for $b = 2^{256}$, we get $k_2 = 400651869298001176472314306405665023048$ for the root. \\
-So then $\Delta k = k_2 - k_1 = 1865680648937686031879630768169 \approx 2^{101}$
-Since the difference between $k_1$ and $k_2$ is negligible ($2^{101}$ isn't big considering the magnitude of $b$). We can conclude  that using a galois field doesn't increase risk of birthday attacks which justifies the use of galois fields security wise.
 \\
-Assuming you can compute 1 trillion keys per second, it would still take $10^{27}$ seconds ($\frac{k_1}{\textrm{1 trillion} \mathrm{\frac{keys}{s}}})$ to try all keys so that there is a 50\% chance of collision which is impossible.
+Assuming a computation speed of 1 trillion keys per second, it would still take $10^{27}$ seconds ($\frac{k_1}{\textrm{1 trillion} \mathrm{\frac{keys}{s}}})$ to try all keys so that there is a 50\% chance of collision. Therefore brute-forcing the key is not possible.
 
 \subsubsection {Collision Attack} \label{collision_attack}
 
-Most denial of service attacks related to encryption algorithms are based on brute-force methods. To see if this algorithm has a potential collision attack: \\
+Most Denial of Service (DOS) attacks related to encryption algorithms are based on brute-force methods. Following is the proof that there are no potential collision attack vulnerabilities in the form: \\
 $\texttt{transform(} key_1 \texttt{)} = \texttt{transform(} key_2 \texttt{)}$ \\
 \\
-For example: $x + y = 16$ \\
+Addition can be observed as an encryption algorithm. For example: $x + y = 16$ \\
 
 $ x,y \in \mathbb{Z}, 0 \leq x,y < 256$ \\
 there are 17-combinations for x to satisfy this expression, and simultaniously, there are 17 combinations for y to satisfy the expression, so there is a total of $17$ combinations.
@@ -410,13 +390,13 @@ Number of combinations can be represented by
 \[
 \\		\prod_{n=0}^{32-1}(z_n+1)
 \]
-\small so the number of combinations would be between a minimum of 32 combinations ($z_n=0$ for all 32-bytes) up to a maximum of $2^{256}$ combinations ($z_n = 255$ for all 32-bytes) which can be brute forced for small $z_n$. So a simple addition is prone to collision attacks for $x_n+y_n=z_n$, where $x,y$ are unknown. The use of galois field makes $z_n$ even smaller. So even less combinations. Solution is to use operations that cannot be represented differently. e.g.
+\small so the number of combinations would be between a minimum of 32 combinations ($z_n=0$ for all 32-bytes) up to a maximum of $2^{256}$ combinations ($z_n = 255$ for all 32-bytes) which can be brute forced for small $z_n$. So a simple addition is prone to collision attacks for $x_n+y_n=z_n$, where $x,y$ are unknown.
 \[
 \\\sum_{i=0}^{z_n} x_i + y_i \equiv z_n \Longrightarrow
 \sum_{i=0}^{z_n} (z_n-i)+(i) = z_n
 \]
 
-solves for all possible $x, y$ values for each $z_n$. An addition operation can be represented differently to solve for 2 unknowns, while a good mix of ARX operations cannot be reverse engineered. Addition of encryption index + key might lead to vulnerabilities. Also pre-manipulation of key to other values such as a constant would be infeasible because it would provide no further security benefits.
+Solves for all possible $x, y$ values for each $z_n$. An addition operation can be represented differently to solve for 2 unknowns, while a good mix of ARX operations cannot be reverse engineered. Addition of encryption index + key might lead to vulnerabilities. Also pre-manipulation of key to other values such as a constant would be infeasible because it would provide no further security benefits.
 
 Therefore the alternative final secure solution is to calculate sum of each 32-bit segment of the key (represented by $k_i$) in order to interlink them to make sure that every byte of the key offers the same avalanche effect:
 \[
@@ -482,7 +462,7 @@ Simply put this equation couldn't be used accurately, it can only be an approxim
 
 where x is the number of combinations for 2 variable equations. e.g. for $a+b = 16, x = 16+1 = 17$.
 
-This led me to develop this equation. The equation contains a costly operation (factorials) so it is computationally slower, but for approximation for really large numbers (e.g. sum of billions of variables), this could be better as it might be hard/unnecessary to calculate the exact answer using the formula when $\ell$ or $c$ is unrealistically large:
+Which leads to the following equation. The equation contains a costly operation (factorials) so it is computationally slower, but for approximation of really large numbers (e.g. sum of billions of variables), this is preferred as it is hard/unnecessary to calculate the exact answer using the formula when $\ell$ or $c$ is unrealistically large:
 
 \[
 \\ \frac{(\ell+c)!}{c!\ell!}
@@ -495,7 +475,7 @@ Using the Ramanujan Approximation:
 \\ n! \approx \sqrt{\pi}\left(\frac{n}{e}\right)^n\sqrt[6]{8n^3 + 4n^2 + n + \frac{1}{30}}
 \]
 
-We can derive an approximation equation for really large calculations:
+The following approximation equation can be derived for really large calculations:
 
 \begin{align*} % use star for no numbering
 \text{let   } t &= \frac{(\ell+c)!}{c!\ell!}
@@ -523,7 +503,7 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 \subsection{Joux's Attack: Multicollisions in Iterated Hash Functions}
 
-This attack requires an existance of a collision such that \texttt{transform($k_1$) = tranform(k$_2$)}. For any secure one way cryptographic function, the only way to succcessfully exploit the potential vulnerability is brute force. Therefore, the Joux's attack \cite{joux_attack} isn't possible. The only way to evaulate $k_1$ and $k_2$ would be using brute-force.
+This attack requires an existance of a collision such that \texttt{transform($k_1$) = tranform(k$_2$)}. For any secure one way cryptographic function, the only way to succcessfully exploit the potential vulnerability is brute force. Therefore, the Joux's attack \cite{joux_attack} isn't possible.
 
 % That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
 
@@ -555,7 +535,7 @@ Tested for time-based side-channel attacks by comparing the computation time for
 
 \subsection{Linear Cryptoanalysis} \label{lin}
 
-Linear Cryptoanalysis is used to find linear connections between ciphertexts and plaintexts. Linear differences in algorithms are easily exploitable weakness. Linear operations in this algorithm are byte-permutations, bitwise rotations, and xor which overall bring a strong diffusion. But not sufficient for confusion. So using addition in the ring $\mathbb{Z}_2^{32}$ is necessary to pass linearity tests due to carries. It's important to note that prime galois field addition is considered linear under $\mathbb{F_p}$ and do not bring  non-linearity.
+Linear Cryptoanalysis is used to find linear connections between ciphertexts and plaintexts. Linear differences in algorithms are easily exploitable weakness. Linear operations in this algorithm are byte-permutations, bitwise rotations, and xor which overall bring a strong diffusion. But not sufficient for confusion. So using addition in the ring $\mathbb{Z}_{2^{32}}$ is necessary to pass linearity tests due to carries. It's important to note that prime galois field addition is considered linear under $\mathbb{F_p}$ and do not bring  non-linearity.
 \\
 Initially, using linear algebra definition of a linear transformation, this algorithm is proven to be non-linear since $\texttt{transform}(c_1k_1 + c_2k_2) \neq c_1\texttt{transform}(k_1) + c_2\texttt{transform}(k_2)$. This doens't mean that they lack correlation with probabilities, so further statistical analysis is required.
 
@@ -563,12 +543,11 @@ In order to find linear patterns with statistical analysis, using well-known pro
 
 One linear pattern is how many outputs bits flip per input bit flip. This test is known as the Strict Avalanche Critirion (SAC). SAC test passed with a 50\% chance of bit flip for every output bit for each input bit.
 
-This test can be further analyzed by checking indipendence of output bit flips using the Bit Indipendence Critirion (BIC) test. This test passed successfully and the xor of each 2 output bits follows a non-linear random pattern.
+SAC can be further analyzed by checking indipendence of output bit flips using the Bit Indipendence Critirion (BIC) test. This test passed successfully and the xor of each 2 output bits follows a non-linear random pattern.
 
-To determine the convergence of bit flip probabilities per iteration, observation of the round by round SAC test is sufficient. The results of test per iteration is shown in figure \ref{flip_prob}.
-
-\begin{figure}[H] \label{flip_prob}
+\begin{figure}[H]
     \caption{Bit flip probabilities vs. Iteration}
+    \label{flip_prob_it}
     \centering
     \begin{tikzpicture}
     \begin{axis}[
@@ -610,9 +589,9 @@ To determine the convergence of bit flip probabilities per iteration, observatio
     \end{tikzpicture}
 \end{figure}
 
-Final conducted linearity test is the algebraic degree which measures the algebraic degree lower bound per output bit:
+To determine the convergence of bit flip probabilities per iteration, observation of the round by round SAC test is sufficient. The results of test per iteration is shown in figure \ref{flip_prob_it}.
 
-\begin{figure}[H] \label{flip_prob}
+\begin{figure}[H]
     \caption{Bit flip probabilities vs. Iteration}
     \centering
     \begin{tikzpicture}
@@ -678,6 +657,7 @@ Final conducted linearity test is the algebraic degree which measures the algebr
     \end{tikzpicture}
 \end{figure}
 
+Final conducted linearity test is the algebraic degree which measures the algebraic degree lower bound per output bit:
 The tests were conducted for both changes in encryption index and key and they both provide approximetely same numbers.
 
  Although the linearity tests conducted are industry approved, they don't guarantee linearity and therefore further analysis is required to prove non-linearity.
@@ -1247,7 +1227,7 @@ This version of the transformation prioritizes speed. FTP 2.0 is preferred to FT
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{dynamic\_permutation} \label{dynamic_permutation}
+\subsection{dynamic permutation} \label{dynamic_permutation}
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The dynamic\_permutation() in the transformation function}
@@ -1323,7 +1303,7 @@ When multiple threads are encrypting using the same key, the encryption index ne
 \end{algorithmic}
 \end{algorithm}
 
-These algorithm are only valid if number of threads used is not growing. Otherwise, every time a new thread is created, the algorithm needs to be recalled with a new $t$. If thread count might need to grow, just set thread count to maximum possible number when you initially use this algorithm.
+These algorithm are only valid if number of threads used is not growing. Otherwise, every time a new thread is created, the algorithm needs to be recalled with a new $t$. If thread count is not constant, set thread count to maximum possible number before executing the algorithm.
 
 Algorithm-\hspace{0.1em}\protect\ref{nonce_unique} is inefficient and slow so it should be avoided in practice.
 $\therefore $ Use \textbf{Algorithm \hspace{0.1em}\protect\ref{thread_nonce}} for generating incremental nonces without thread communication.
@@ -1356,7 +1336,7 @@ Encryption operation is the same as decryption
 
 \section {Conclusion}
 
-The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, bruteforce, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. All the tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to improved as well as the implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competetive benchmarking tests that compete with industry standard algorithms.
+The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, bruteforce, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. Although all tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to be updated using improved implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competetive benchmarking tests that compete with industry standard algorithms.
 
 
 \printbibliography
