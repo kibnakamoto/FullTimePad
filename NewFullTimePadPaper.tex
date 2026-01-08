@@ -9,7 +9,8 @@
 \usepackage{microtype}
 
 % ---------- Math ----------
-\usepackage{amsmath,amssymb,amsthm}
+\usepackage[fleqn]{amsmath}
+\usepackage{amssymb,amsthm}
 \usepackage{mathtools}
 \usepackage{bm}
 
@@ -80,7 +81,13 @@
 }
 
 % ---------- Title & authors ----------
-\title{Title of the Cryptography Manuscript}
+\title {
+	\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
+	\ \\
+	\ \\
+	\Large \textbf{Improved One-Time-Pad Encryption Scheme}
+
+}
 
 \author{
 Taha Canturk \\
@@ -93,6 +100,14 @@ University of Waterloo \\
 
 \begin{document}
 \maketitle
+
+%\begin{center}
+%		\ \\
+%		\ \\
+%		\ \\
+%		\ \\
+%		\small License to copy this document is granted provided it is identified as "Full-Time-Pad", in all material mentioning or referencing it.
+%\end{center}
 
 \begin{abstract}
 	Essential properties in ciphers include computational efficiency, security, and economical feasibility. Encryption scheme based on one-time-pad (OTP) is secure, but there are two security risks: (1) a key cannot be reused and (2) plaintext length equals the key length which is costly \& inefficient for long plaintexts. As stated by Claude Shannon, father of information theory \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. However OTP lacks the confusion and diffusion per ciphertext.
@@ -193,7 +208,7 @@ V' =
 \]
 
 \section{Security}
-%\setlength{\mathindent}{3pt} % No indentation for equations
+\setlength{\mathindent}{3pt} % No indentation for equations
 
 In OTP, key cannot be reused. This is demonstrated by the following:
 
