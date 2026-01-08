@@ -801,8 +801,9 @@ In \texttt{test/significant\_perm\_byte.cpp}, instead of comparing if values are
 
 Results of the collision rates of SHA-256 and FTP are approximately equal given lower accuracy ($\pm n$). This suggests that there aren't any cryptoanalysis exploit. These numbers are average of 255 tries to reduce noise. 
 
-\begin{figure}[H] \label{col_in}
+\begin{figure}[H]
     \caption{Collision Rate (\%) vs. Inaccuracy ($n$)}
+    \label{col_in}
     \centering
     \begin{subfigure}{\textwidth}
         \centering
@@ -848,8 +849,9 @@ The smoothness of the trend proves continuity, change in collision rate for n an
 The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. All 4 algorithms have the same result, thus they overlap.
 % These graphs demonstrates how lower accuracy of comparison results in higher collision rate (For both SHA-256 and Full-Time-Pad). The points for this graph is evaluated by running \texttt{test/significant\_perm\_byte -d -<version number>}. All 4 algorithms have the same result, thus they overlap.
 
-\begin{figure}[H] \label{delta_sha_ftp}
+\begin{figure}[H]
     \caption{$\Delta$ = $|$SHA-256 - FullTimePad 2.0$|$ V.S. Inaccuracy (n)}
+    \label{delta_sha_ftp}
     \includegraphics[width=0.9\linewidth]{delta sha256 - fulltimepad 2.0.pdf}
     \centering
 \end{figure}
@@ -861,7 +863,7 @@ SHA-256 is chosen for comparision solely because it is proven to be secure.
 
 \subsection{Reverse Engineering the Transformation}
 
-reversing the transformation is demonstrated in \texttt{test/reverse.cpp}. The reversed key and the original key are very different. Therefore, reverse engineering the algorithm isn't possible.
+Reversing the transformation is demonstrated in \texttt{test/reverse.cpp}. The reversed key and the original key are very different. Therefore, reverse engineering the algorithm isn't possible.
 
 \subsection{Side-Channel Attacks}
 
