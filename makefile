@@ -41,7 +41,7 @@ pdf_update_biber:
 	pdflatex --shell-escape FullTimePad.tex
 	biber FullTimePad
 	pdflatex --shell-escape FullTimePad.tex
-	#pdflatex --shell-escape FullTimePad.tex
+	pdflatex --shell-escape FullTimePad.tex
 	evince FullTimePad.pdf
 
 clean_pdf:
