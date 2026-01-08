@@ -128,26 +128,7 @@ University of Waterloo \\
 \section{Introduction}
 
 Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 utilize it, their benefits aren't maximized. According to benchmark tests on FTP, most cache misses happen in the first round of permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. FTP is three times faster than ChaCha20 because it is built for modern hardware. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, yet they have been popularized since the early 1990s \cite{wiki_simd}. SIMD exists in nearly all modern devices and we present that cryptography should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and SIMD optimizations.
-In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should only be considered for future algorithms.
-
-\subsection {Pre-requisite Terminology}
- 
-\renewcommand{\arraystretch}{2} % Increases vertical space between rows 
-
-\begin{tabular}{l p{12cm}}  % left-aligned 2 columns
-		\textbf{Key}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 32-byte random array that's transformed, then hashed before XORed with the plaintext to encrypt \\
-		\textbf{Symmetric}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
-		\textbf{Stream}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without separating it into blocks \\
-		\textbf{Plaintext}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plain data before encryption \\
-		\textbf{Ciphertext}       & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encrypted plaintext \\
-		\textbf{Cipher}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
-		\textbf{Diffusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plaintext/key is spread out in the ciphertext \\
-		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
-		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
-		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
-		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
-		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
-\end{tabular}
+In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should only be considered for future algorithms. The basic terminology used in this study is given in Appendix \ref{sec:term}.
 
 \subsection{Key Generation}
 
@@ -175,26 +156,32 @@ Permuting a vector refers to transposing the elements in a vector. It is a rever
 For example, let $V$ be the vector to transpose: \\
 \[
 V = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	0 & 1 & 2 & 3
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 let $P$ be the permutation vector: \\
 
 \[
 P = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 then the resulting permuted vector would be 
 
 \[
 V' = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 Observe $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic permutation section (\ref{dynamic_permutation}).
@@ -202,9 +189,11 @@ The permutation in this algorithm is used for the bytearray \texttt{key} which o
 
 \[
 V' = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0 & 7 & 6 & 5 & 4 & 11 & 10 & 9 & 8 & 15 & 14 & 13 & 12 & 19 & 18 & 17 & 16 & 23 & 22 & 21 & 20 & 27 & 26 & 25 & 24 & 31 & 30 & 29 & 28
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 \section{Security}
@@ -233,8 +222,8 @@ But there is another concern,
 If the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so avoid using k without transformation since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$, for each plaintext, key needs to be transformed irreversibly and also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
-&k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
-&k'_2 = hash(k+2) \\
+&k'_1 = \mathrm{hash}(k+1) \texttt{ where hash() is an irreversible transformation} \\
+&k'_2 = \mathrm{hash}(k+2) \\
 &c_1 \oplus c_2 = (m_1 \oplus k'_1) \oplus (m_2 \oplus k'_2) \\
 &c_1 \oplus c_2 \neq m_1 \oplus m_2 \\
 &m_1 \oplus c_1 = k'_1 \\
@@ -285,7 +274,7 @@ In the context of this encryption algorithm, this suggests that brute-forcing us
 &\log_b\frac{1}{2}b^k = \log_b\frac{b!}{(b-k)!} \\
 &\log_b\frac{1}{2} + \log_bb^k = \log_bb! - \log_b(b-k)! \\
 %&0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{3.2cm} \texttt{ since }\log_bb^k = k\\
-&k + log_bk + log_b(b-k)! = log_bb! - log_b\frac{1}{2} \\
+&k + \log_bk + \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} \\
 \end{aligned}
 \]
 % seperate equations to 2 segments otherwise previous page is empty
@@ -363,7 +352,7 @@ To compare functions $a$ and $g$:
 \begin{figure}[H]
     \caption{Difference in functions g,a V.S Total Combination}
     \centering
-    \makebox[\textwidth]{\includegraphics[width=1.3\linewidth]{sec.pdf}}
+    \makebox[\textwidth]{\includegraphics[width=1.1\linewidth]{sec.pdf}}
 \end{figure}
 
 Graph $\Delta$ shows that the difference in $k$ for $g$, $a$ get smaller as $b \rightarrow \infty$.
@@ -968,9 +957,11 @@ Rotation numbers that were selected is represented by r:
 
 \[
 r = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 		23 & 5 & 17 & 31 & 13
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 There are 5 numbers in r, this is because $16 \mod 5 \neq 0$, after 16 iterations in the transformation algorithm, all values of k aren't rotated the same number of times.
@@ -1373,6 +1364,28 @@ Encryption operation is the same as decryption
 \section {Conclusion}
 
 The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, brute force, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. Although all tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to be updated using improved implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competitive benchmarking tests that compete with industry standard algorithms.
+
+\appendix
+
+\section {Pre-requisite Terminology} \label{sec:term}
+ 
+\renewcommand{\arraystretch}{2} % Increases vertical space between rows 
+
+\begin{tabular}{l p{12cm}}  % left-aligned 2 columns
+		\textbf{Key}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 32-byte random array that's transformed, then hashed before XORed with the plaintext to encrypt \\
+		\textbf{Symmetric}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
+		\textbf{Stream}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without separating it into blocks \\
+		\textbf{Plaintext}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plain data before encryption \\
+		\textbf{Ciphertext}       & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encrypted plaintext \\
+		\textbf{Cipher}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
+		\textbf{Diffusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plaintext/key is spread out in the ciphertext \\
+		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
+		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
+		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
+		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
+		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
+\end{tabular}
+
 
 \bibliographystyle{plainnat}
 \bibliography{references}
