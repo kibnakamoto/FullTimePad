@@ -1,7 +1,5 @@
 % \documentclass[fleqn, a4paper,12pt]{article}
 
-% TODO: add testing to abstract,
-
 \documentclass[12pt, fleqn, letterpaper]{article}
 % \documentclass[12pt, letterpaper]{article}
 
@@ -51,7 +49,7 @@
 }
 
 \author{Taha Canturk\\\texttt{tcanturk@uwaterloo.ca}}
-\date{2024-05-20}
+\date{2026-01-07}
 
 
 \begin{document}
@@ -61,7 +59,6 @@
 \pagenumbering{roman}
 
 \begin{center}
-		\Large \texttt{Version 1.0}
 		\ \\
 		\ \\
 		\ \\
@@ -1120,17 +1117,17 @@ On future devices, SIMD instructions could be expected to improve and provide di
 	\State $\mathrm{imod9} \gets (i+1) \mod 8$
 	\State $\mathrm{rmod} \gets i \mod 5$ \\
 
-	\State $k_\mathrm{i1mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}$
+	\State $k_\mathrm{i1mod} \gets k_\mathrm{i1mod} + A_\mathrm{imod8} + k_\mathrm{i1mod} \ggg r_\mathrm{rmod}$
 
 	\State $ \mathrm{sum} \gets \displaystyle \sum_{j=0}^8 k_j$
 
 	\State $A_\mathrm{imod9} \gets A_{imod9} \oplus \text{sum}$
 
-	\State $k_\mathrm{i2mod} \gets \text{(uint64\_t)} k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod}$
-	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus \mathrm{(uint64\_t)} k_\mathrm{i2mod} + k_\mathrm{i1mod} \ggg r_{(i+1) \mod 5}$
+	\State $k_\mathrm{i2mod} \gets k_{i2mod} + A_{imod9} + k_{i2mod} \lll r_{rmod}$
+	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod} + k_\mathrm{i1mod} \ggg r_{(i+1) \mod 5}$
 
-	\State $k_\mathrm{i3mod} \gets \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod}$
-	\State $k_\mathrm{i4mod} \gets  \mathrm{(uint64\_t)} A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod}$ \\
+	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod}$
+	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod}$ \\
 
 	\COMMENT{Permutate the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
@@ -1168,7 +1165,7 @@ This version of the transformation offers more speed less complexity. This is pr
 
 	\State $A_\mathrm{imod9} \gets A_\mathrm{imod9} \oplus \mathrm{sum}$
 
-	\State $k_\mathrm{i2mod} \gets \mathrm{(uint64\_t)} k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod}$
+	\State $k_\mathrm{i2mod} \gets k_\mathrm{i2mod} + A_\mathrm{imod9} + k_\mathrm{i2mod} \lll r_\mathrm{rmod}$
 	\State $A_\mathrm{imod8} \gets A_\mathrm{imod8} \oplus k_\mathrm{i2mod}$
 
 	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod}$
