@@ -1,83 +1,90 @@
 # Full-Time-Pad (FTP)
 
-**An experimental symmetric stream cipher implemented in C++20.**
+**A C++20 experiment in symmetric-key stream generation, byte-level permutations, and ARX-style state transformations.**
 
-Full-Time-Pad is a project where I explored how to build a small symmetric encryption primitive. The implementation combines byte level permutations with ARX operations sufficient diffusion and confusion to pass NIST randomness tests.
+Full-Time-Pad began as an attempt to design my own encryption primitive and understand the trade-offs that appear when a cryptographic construction moves from a mathematical description to real C++ code. The repository contains several generations of the transformation, a working implementation, and technical papers documenting the design experiments and analysis.
 
-This repository contains the C++ implementation as well as the paper behind the design.
+One of the most interesting parts of the project is the gap between the paper's general construction and the final implementation. The paper describes the underlying permutation and-word transformation approach. The optimized C++ implementation specializes that idea into a different execution schedule, with the most recent version structured around a smaller number of permutation passes and explicitly maintained 32-bit state.
 
-## What I worked on
+## Implementation highlights
 
-- **Implemented the transformation in C++.** The core code operates on a 256-bit (32-byte) key and uses 32-bit words for ARX operations.
-- **Explored permutation based diffusion.** Constant byte permutation tables rearrange key material between transformation steps. The implementation includes endian aware permutation tables and compile time selection of the native byte order.
-- **Built multiple algorithm versions.** The `FullTimePad::Version` enum exposes versions 1.0, 1.1, and 2.0, making it possible to compare alternative transformation designs within the same codebase and make the minimal sufficient version to pass select cryptoanalysis tests.
-- **Investigated behaviour experimentally.** The accompanying code and write-up explore round-trip correctness, output changes across successive indices, collision-style measurements, and performance comparisons.
+- **Low-level 256-bit state handling.** The transformation works on a 32-byte key state, reinterpreted as eight 32-bit words for arithmetic and bitwise operations. The implementation explicitly accounts for host endianness and provides corresponding compile time permutation tables.
+- **A custom permutation/word-mixing construction.** Byte LUT tables move bytes between positions in the state, while word level computation combines overflowing  addition, XOR, and left/right bit rotations. The version 2.0 path also uses multiplication in its state-update schedule.
+- **Multiple transformation schedules in one codebase.** `FullTimePad::Version` exposes versions 1.0, 1.1, and 2.0. Compile time template selection keeps version-specific code paths distinct and makes the alternatives straightforward to compare without maintaining separate implementations.
+- **An implementation substantially different from the paper's presentation.**  The software doesn't translate the paper's original loop. It uses a optimized schedule benefiting from minimizing memory read/write communication and unrolled loop as well as parallel byte swapping.
+- **Performance-focused iteration.** The implementation was optimized to achieve an **11x speedup over pseudo-code equivelant implementation**. The main goal was to reduce cost of transformation by not only by mathematical operations, but also by how the state is represented, how often data are rearranged and used, and how the compiler can optimize the update schedule. The exact speedup depends on the device used and its optimizations, most optimizations used in the fulltimepad.cpp implemntation is implicit but explicitly hinted at the compiler (e.g. 4 lines of permutations back to back is for parallel computation only because the compiler is smart).
+- **Not all software tests are preserved** Most tests utilizing SIMD instruction sets explicitly are discarded due to the originally private nature of the research paper.
 
-## How it works
+## How the transformation is used
 
-At a high level, the design combines two kinds of operations:
+The implementation derives a 32-byte output from a 32-byte input key and a 64-bit encryption index. That output is then XORed with the input data. For data longer than 32 bytes, the implementation generates successive blocks using incrementing index values (Maximum data per encryption key is 512 Exbibytes).
 
-1. **Permutation:** bytes are rearranged according to predefined tables to mix byte positions across 32-bit words.
-2. **ARX transformation:** 32-bit values are manipulated using addition, bitwise rotations, and XOR.
+At the transformation level, the design has two interacting parts:
 
-The transform takes input bytes, a 256-bit key, and a 64-bit encryption index. The index is intended to vary the transformation between uses. The implementation has several versions of the core transformation so their behaviour and performance can be explored without maintaining separate codebases.
+1. **Byte-position permutation.** A predefined table specifies how the 32 bytes are rearranged. Separate table layouts account for little-endian and big-endian hosts, and the active layout is selected at compile time.
+2. **Word level state updates.** The same 32-byte state is viewed as eight 32-bit words. The transformation updates those words using arithmetic, rotations, and XOR, mixing the index and fixed constants into the evolving state. Essentially benefiting from reinterpret\_cast/unions in C/C++ for cryptographic benefits.
 
-This is a high level description of the implementation, not a security argument. The design has not undergone the kind of independent cryptanalysis required before a cipher should be trusted with real data.
+The encryption index is part of the transformation input only for the purpose of encrypting multiple blocks of data using the same key. A caller must manage it correctly and avoid reusing an index in contexts where distinct keystream output is required. The example program exercises successive indices and checks that applying the same transformation again recovers the original input. Otherwise, the same vulnerability in One-Time-Pad key reuse persists here. Refer to OneTimePad repository for more information on the cryptoanalysis behind it.
+
+## Performance
+
+The implementation reached an **11x speedup compared with psuedo-code equivelant implementation** during development.
+
+The repository's papers also discuss comparisons with established primitives. Those historical results should be read with their stated assumptions in mind: output sizes, implementation maturity, and benchmark methodology can materially affect the result. The 11x figure refers to optimization within this project, not a general claim of superiority over ChaCha20, AES, or other production ciphers.
+
+## Build and run
 
 ### Requirements
 
 - g++
 - GNU Make
 
-Build the project from the repository root:
+Build from the repository root:
 
 ```
 make
 ```
 
-Run the example program:
+Run the example:
 
 ```
 ./fulltimepad
 ```
-
-The Makefile enables common compiler warnings and uses optimization flags for the normal build. To build with debug symbols instead:
 
 ```
 make clean
 make debug
 ```
 
-To remove the generated executable and object files:
+Remove the executable and object files:
 
 ```
 make clean
 ```
 
-The example program in `main.cpp` uses a fixed test key and sample input, checks that the transformed output can be transformed back to the original input, and prints outputs for successive encryption indices.
+The example in `main.cpp` uses a fixed test key and a 32-byte input. It applies version 2.0 at successive encryption indices, prints the generated outputs, and checks that applying the same indexed transformation again restores the original input.
 
-## Repository contents
+## Repository layout
 
-| File | Purpose |
+| File | Description |
 | --- | --- |
-| `fulltimepad.h` | Main class declaration, version selection, permutation tables, and transform interface |
-| `fulltimepad.cpp` | Core implementation of the transformations |
-| `main.cpp` | Example program for exercising the implementation |
-| `makefile` | Build, debug, and documentation targets |
-| `FullTimePad.tex` | Old LaTeX source for the technical paper |
-| `FullTimePad.pdf` | Old Compiled technical paper |
-| `NewFullTimePadPaper.tex` / `NewFullTimePadPaper.pdf` | Newest technical paper |
+| `fulltimepad.h` | Public class interface, version enum, state and permutation declarations, and transformation API |
+| `fulltimepad.cpp` | Transformation implementations, endian-aware byte/word handling, permutation logic, and version-specific schedules |
+| `main.cpp` | Example driver for round-trip checks and successive-index output |
+| `makefile` | Optimized and debug build targets, plus paper-related targets |
+| `FullTimePad.tex` / `FullTimePad.pdf` | Earlier technical paper and compiled version |
+| `NewFullTimePadPaper.tex` / `NewFullTimePadPaper.pdf` | Latest paper I wrote |
 
-## Security status and limitations
+## Design notes and security status
 
-**Do not use Full-Time-Pad to protect real data.** This is a custom, experimental cipher and has not received sufficient independent cryptanalysis or review to establish that it is secure. Passing round-trip tests, producing outputs that look random, or performing well in a benchmark does not demonstrate resistance to known or future attacks.
+This is a custom cryptographic construction intended for experimentation and implementation study. It is **not suitable for protecting real data (probably not)**. The code and accompanying experiments explore output behaviour, statistical tests, and performance, but these do not establish cryptographic security. Statistical randomness tests in particular cannot rule out exploitability.
 
-In particular:
+The implementation should be considered alongside several important limitations:
 
-- The implementation and its design should be treated as experimental.
-- The encryption index must be managed correctly by any caller; reusing values may undermine the intended separation between transformations.
-- The repository is not a complete, production-ready encryption system with an authenticated-encryption interface, key-management workflow, or protocol design.
-- Performance comparisons depend on the exact version, compiler, build flags, hardware, input sizes, and benchmark methodology. Results should be reproduced under controlled conditions before drawing conclusions.
+- The construction has not received the level of independent cryptanalysis and review expected of a trusted cipher.
+- The caller is responsible for correct encryption-index management; index reuse can undermine the intended separation between generated keystream blocks.
+- This repository is not a complete authenticated-encryption system. It does not provide an established AEAD interface, an application-level nonce protocol, or a production key-management workflow.
+- The paper describes the design rationale and earlier construction in more detail, but it is not a line-by-line specification of every optimization in the C++ version. For exact behaviour, the implementation is authoritative.
 
 ## Why I built it
 
@@ -85,4 +92,4 @@ I wanted my own encryption algorithm.
 
 ## License
 
-The source files identify the project as licensed under the **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**. See the license terms that apply to this repository before redistributing or modifying the code.
+The source files identify the project as licensed under **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**. Consult the repository's license terms before redistributing or modifying the code.
