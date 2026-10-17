@@ -1,31 +1,72 @@
-% \documentclass[fleqn, a4paper,12pt]{article}
+% Compile with: pdflatex
+\documentclass[11pt]{article}
 
+% ---------- Page & typography ----------
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
 
-%%%%%%%%%%%%%%% THIS IS DEPRECATED AS OF JAN 7 2026. USE NEWFULLTIMEPAD.TEX
+% ---------- Math ----------
+\usepackage[fleqn]{amsmath}
+\usepackage{amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
 
-\documentclass[12pt, fleqn, letterpaper]{article}
-% \documentclass[12pt, letterpaper]{article}
-
-%\usepackage{float}  % in the preamble
+% ---------- Figures & tables ----------
 \usepackage{graphicx}
-\usepackage{geometry}
-\usepackage{listings}
-\usepackage[hidelinks]{hyperref}
-\usepackage[svgnames, table]{xcolor}
-\usepackage{algorithm} % pseudo code
-\usepackage{mathtools} % equations
-\usepackage{amssymb} % equations
-\usepackage{algpseudocode}  % Correctly load this for pseudocode
-\usepackage{tikz} % drawing trailing lines in pseudo code
-\usepackage[makeroom]{cancel}
-\usepackage{float} % so that algorithms stay in correct section
-\usepackage{pgfplots} % plot graph
-\usepackage{subcaption} % for putting graphs side-by-side
-\usepackage{pdfpages} % include pdf graph
-\usepackage[backend=biber, sorting=ynt]{biblatex} % Use biblatex with biber backend
-\usepackage{enumitem}
+\usepackage{xcolor}         % Needed if using colors
+\usepackage{booktabs}
+\usepackage{subcaption}     % For side-by-side figures
+\usepackage{pdfpages}       % To include pdfs
+\usepackage{pgfplots}       % Plotting
 
+% ---------- Algorithms ----------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}           % For drawing trailing lines
+\usepackage[makeroom]{cancel} % Optional: cancel in equations
+\usepackage{float}          % Keep figures/algorithms in place
+
+% ---------- Lists ----------
+\usepackage{enumitem}       % Optional
+
+% ---------- Hyperlinks ----------
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% ---------- Citations ----------
+% Pick one, do NOT load both:
+\usepackage[backend=biber, sorting=ynt]{biblatex} % if using biblatex
 \addbibresource{./references.bib}
+%\usepackage[numbers,sort&compress]{natbib}         % if using natbib
+
+% ---------- Theorem environments ----------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{construction}[theorem]{Construction}
+\newtheorem{game}[theorem]{Game}
+\newtheorem{experiment}[theorem]{Experiment}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% ---------- Cryptography macros ----------
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\poly}{\mathrm{poly}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\Adv}{\mathrm{Adv}}
+\newcommand{\Prb}{\mathbb{P}}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\getsr}{\xleftarrow{\$}}
 
 \setlength{\arraycolsep}{2pt} % Adjust the horizontal spacing between elements
 
@@ -40,48 +81,43 @@
   bottom=1in   % Bottom margin
 }
 
+% ---------- Title & authors ----------
 \title {
-	\Huge \textbf{Empirical Analysis of a SIMD-Optimized ARX Permutation Construction} \\
+	\Huge \textbf{Full-Time-Pad\\Symmetric Stream Cipher} \\
 	\ \\
 	\ \\
-	\ \\
-	\ \\
-	\ \\
-	\Large \textbf{Based on Optimization Structured Algorithm}
+	\Large \textbf{Built on One-Time-Pad Encryption Scheme}
 
 }
 
-\author{Taha Canturk\\\texttt{tcanturk@uwaterloo.ca}}
-\date{2026-01-07}
+\author{
+Taha Canturk \\
+Department of Electrical and Computer Engineering \\
+University of Waterloo \\
+\texttt{tcanturk@uwaterloo.ca}
+}
 
+\date{} % leave empty for arXiv
 
 \begin{document}
 \maketitle
-\thispagestyle{empty}
 
-\pagenumbering{roman}
-
-\begin{center}
-		\ \\
-		\ \\
-		\ \\
-		\ \\
-		\small License to copy this document is granted provided it is identified as "Full-Time-Pad", in all material mentioning or referencing it.
-\end{center}
-
-\newpage
-
+%\begin{center}
+%		\ \\
+%		\ \\
+%		\ \\
+%		\ \\
+%		\small License to copy this document is granted provided it is identified as "Full-Time-Pad", in all material mentioning or referencing it.
+%\end{center}
 
 \begin{abstract}
 	Essential properties in ciphers include computational efficiency, security, and economical feasibility. Encryption scheme based on one-time-pad (OTP) is secure, but there are two security risks: (1) a key cannot be reused and (2) plaintext length equals the key length which is costly \& inefficient for long plaintexts. As stated by Claude Shannon, father of information theory \cite{shannon1945}, a secure cryptographic algorithm requires both confusion and diffusion. However OTP lacks the confusion and diffusion per ciphertext.
 	In this study, we proposed the \textbf{full-time-pad (FTP)}, a symmetric stream cipher that extends OTP by incorporating both diffusion and confusion.
 	% In this study, we proposed the \textbf{full-time-pad (FTP)} which is a symmetric stream cipher that extends OTP by incorporating both diffusion and confusion.
-	To achieve diffusion, symmetric key is permutated in its byte form using a constant permutation matrix. The permutation ensures that every 32-bit number is derived from different bytes of the key.
+	To achieve diffusion, symmetric key is permuted in its byte form using a constant permutation matrix. The permutation ensures that every 32-bit number is derived from different bytes of the key.
 	Using modern hardware optimizations (Vectorization, Cache and Parallelization, this operation is computationally efficient.
 	To achieve confusion, the key is manipulated in 32-bit segments using Modular \textbf{A}ddition, Bitwise \textbf{R}otations, and \textbf{X}or (\textbf{ARX}).
-
 \end{abstract}
-
 \newpage
 
 \tableofcontents
@@ -93,26 +129,7 @@
 \section{Introduction}
 
 Fast \& efficient encryption algorithms are a desired concept for both large and small amounts of data. Single Instruction Multiple Data (SIMD) instructions in modern devices are a golden opportunity for hardware optimized cryptographic algorithms. Even though newer algorithms like Blake-3 utilize it, their benefits aren't maximized. According to benchmark tests on FTP, most cache misses happen in the first round of permutation, next permutations are consistently faster which is why using multiple permutations are a worthwhile approach. FTP is three times faster than ChaCha20 because it is built for modern hardware. SIMD Parallelization has been around since 1962 \cite{sung_mit_2000}, yet they have been popularized since the early 1990s \cite{wiki_simd}. SIMD exists in nearly all modern devices and we present that cryptography should adapt to this modernization. One of the main reasons why multiple rounds of permutations aren't considered in previous works is because diffusion relied on transposing bytes located in RAM while FTP relies on cache and SIMD optimizations.
-In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should only be considered for future algorithms.
-
-\subsection {Pre-requisite Terminology}
- 
-\renewcommand{\arraystretch}{2} % Increases vertical space between rows 
-
-\begin{tabular}{l p{12cm}}  % left-aligned 2 columns
-		\textbf{Key}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 32-byte random array that's transformed, then hashed before XORed with the plaintext to encrypt \\
-		\textbf{Symmetric}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
-		\textbf{Stream}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without seperating it into blocks \\
-		\textbf{Plaintext}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plain data before encryption \\
-		\textbf{Ciphertext}       & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encrypted plaintext \\
-		\textbf{Cipher}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
-		\textbf{Diffusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plaintext/key is spread out in the ciphertext \\
-		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
-		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
-		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
-		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
-		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
-\end{tabular}
+In the Efficient Permutation Instructions for Fast Software Cryptography \cite{palms_princeton_2001} publication from Princeton University, bit-level permutation optimization are introduced. Such algorithms would significantly reduce the number of rounds needed for a cryptographic algorithm such as ChaCha20 which includes 20 rounds of transformations yet FTP only requires 10 rounds. This is because of the byte-level permutation mixed with simple ARX operations. However, hardware bit-level permutation optimizations aren't offered in personal devices as of now, and should only be considered for future algorithms. The basic terminology used in this study is given in Appendix \ref{sec:term}.
 
 \subsection{Key Generation}
 
@@ -136,40 +153,48 @@ In the context of this encryption algorithm, it's used in the transformation alg
 
 \subsubsection{Vector Permutation}
 
-Permutating a vector refers to transposing the elements in a vector. It is a reversible operation.
+Permuting a vector refers to transposing the elements in a vector. It is a reversible operation.
 For example, let $V$ be the vector to transpose: \\
 \[
 V = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	0 & 1 & 2 & 3
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 let $P$ be the permutation vector: \\
 
 \[
 P = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
-then the resulting permutated vector would be 
+then the resulting permuted vector would be 
 
 \[
 V' = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 Observe $V_0$ (\textbf{0}),  according to $P_0$, it should be replaced with the 3rd value in $P$. so then $V'_0 = 3$. This doesn't mean that $V'_3 = 0$. This algorithm is demonstrated in dynamic permutation section (\ref{dynamic_permutation}).
-The permutation in this algorithm is used for the bytearray \texttt{key} which offers diffusion for the 32-bit segmented \texttt{k}. In order to confuse and diffuse, \texttt{k} and \texttt{key} must point to the same memory address. Most efficient method to accomplish this is to use \texttt{reinterpret\_cast} in C++ or \texttt{unions} in C. Since these are low level approaches, endiannes of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
+The permutation in this algorithm is used for the bytearray \texttt{key} which offers diffusion for the 32-bit segmented \texttt{k}. In order to confuse and diffuse, \texttt{k} and \texttt{key} must point to the same memory address. Most efficient method to accomplish this is to use \texttt{reinterpret\_cast} in C++ or \texttt{unions} in C. Since these are low level approaches, endianness of the system will affect the byte order. In a little-endian system, the data requires the following permutation before the transformation iterations:
 
 \[
 V' = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 	3 & 2 & 1 & 0 & 7 & 6 & 5 & 4 & 11 & 10 & 9 & 8 & 15 & 14 & 13 & 12 & 19 & 18 & 17 & 16 & 23 & 22 & 21 & 20 & 27 & 26 & 25 & 24 & 31 & 30 & 29 & 28
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 \section{Security}
@@ -198,8 +223,8 @@ But there is another concern,
 If the plaintext and ciphertext are known (known plaintext attack), then it is possible to find $k$ so avoid using k without transformation since $\texttt{plaintext} \oplus \texttt{ciphertext} = \texttt{key}$, for each plaintext, key needs to be transformed irreversibly and also requires confusion since if $k'$ is found, $k$ is still unknown but if $k$ is found, then all instances of $k'_n$ are known, which means that: 
 \[
 \begin{aligned}
-&k'_1 = hash(k+1) \texttt{ where hash() is an irreversible transformation} \\
-&k'_2 = hash(k+2) \\
+&k'_1 = \mathrm{hash}(k+1) \texttt{ where hash() is an irreversible transformation} \\
+&k'_2 = \mathrm{hash}(k+2) \\
 &c_1 \oplus c_2 = (m_1 \oplus k'_1) \oplus (m_2 \oplus k'_2) \\
 &c_1 \oplus c_2 \neq m_1 \oplus m_2 \\
 &m_1 \oplus c_1 = k'_1 \\
@@ -250,7 +275,7 @@ In the context of this encryption algorithm, this suggests that brute-forcing us
 &\log_b\frac{1}{2}b^k = \log_b\frac{b!}{(b-k)!} \\
 &\log_b\frac{1}{2} + \log_bb^k = \log_bb! - \log_b(b-k)! \\
 %&0 = \log_bb! - \log_b(b-k)! - \log_b\frac{1}{2} - k \hspace{3.2cm} \texttt{ since }\log_bb^k = k\\
-&k + log_bk + log_b(b-k)! = log_bb! - log_b\frac{1}{2} \\
+&k + \log_bk + \log_b(b-k)! = \log_bb! - \log_b\frac{1}{2} \\
 \end{aligned}
 \]
 % seperate equations to 2 segments otherwise previous page is empty
@@ -308,7 +333,7 @@ In the context of this encryption algorithm, this suggests that brute-forcing us
 %\end{aligned}
 %\]
 
-To verify the accuracy of this equation, we compared it to a proven accurate approximation equation \cite{wiki_birthday}.
+To verify the accuracy of this equation, it  can be compared to a known approximation solution \cite{wiki_birthday}.
 
 \[
 \\ a(b) = \frac{1}{2} + \sqrt{\frac{1}{4} + 2\ln 2 b}
@@ -328,7 +353,7 @@ To compare functions $a$ and $g$:
 \begin{figure}[H]
     \caption{Difference in functions g,a V.S Total Combination}
     \centering
-    \makebox[\textwidth]{\includegraphics[width=1.3\linewidth]{sec.pdf}}
+    \makebox[\textwidth]{\includegraphics[width=1.1\linewidth]{sec.pdf}}
 \end{figure}
 
 Graph $\Delta$ shows that the difference in $k$ for $g$, $a$ get smaller as $b \rightarrow \infty$.
@@ -359,7 +384,7 @@ The code for this test is in \textbf{test/sec.py}.
 $\therefore$ $g(b, k)$ \texttt{ can be used to evaluate how many keys it would take so that 2 hashes have a 50\% chance of being equal. $g(b, k)$ can be evaluated using the secant algorithm\\ (\textbf{test/secant.py})}
 
 After running \texttt{test/secant.py}, given the parameters: \\
-Based on approximations in the Wikipedia Article: Birthday Problem, we can approximate $x_0$ and $x_1$ \\
+Based on approximations in the Wikipedia Article: Birthday Problem, approximate $x_0$ and $x_1$ \\
 $x_0 = \frac{1}{2}+\sqrt{\frac{1}{4}+2 \times ln(2) \times b}$ (due to Approximation of number of people) \\
 $x_1 = \sqrt{b}$ (due to square approximation) \\
 \\ error tolarance:
@@ -412,7 +437,7 @@ $x,y,z,v \in \mathbb{Z}, 0 \leq x,y,z,v < 256$\\
 
 So there has to be an equation or algorithm to summarize the relationship between number of variables ($\ell$) and the sum of the addition operation ($16$);
 
-Knowing that equation \textbf{1.} is the simplest equation and it offers 17 combinations. Then if the rest of the equations are represented in 2-variable fashion. we can find number of combinations $n$:
+Knowing that equation \textbf{1.} is the simplest equation and it offers 17 combinations. Then if the rest of the equations are represented in 2-variable fashion. number of combinations $n$ can be derived:
 
 For equation \textbf{2.}: There are 3 ways to represent as 2-variable equation
 \begin{center}
@@ -439,7 +464,7 @@ The number of ways a multi-variable equation can be represented as a 2 variable 
 \\ \sum_{i=1}^{\ell-1} i
 \]
 
-Using some number crunching and logic, we found that there is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
+There is a direct corrolation between the number of combinations and the ratio between the current number of ways to represent as 2-variable equation over the previous number of ways to represent as a 2-variable equation:
 
 \[
 		\\ n_\ell \approx \propto \frac{\displaystyle \sum_{i=1}^{\ell-1}}{\displaystyle \sum_{i=1}^{\ell-2}} \times k \hspace{1cm} \texttt{where k is a multiplier:} k \in \mathbb{N} 
@@ -453,7 +478,7 @@ Using more number crunching: We found the following recursive formula that finds
 where $x = \ell-1$ \quad and x should be incremented until correct answer is reached for $\ell \geq 6$ and $n_{\ell-1}$ is previous number of combinations.
 This formula doesn't translate to cases where the 2-variable equation doesn't have 17 combinations.
 
-Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, we derived the following formula that satisfies all cases:
+Simply put this equation couldn't be used accurately, it can only be an approximation. But upon further number crunching, the following formula was derived that satisfies all cases:
 
 \[
 \\ \prod_{i=0}^{\ell-1} \frac{(x+i)}{1+i}
@@ -503,7 +528,7 @@ Which isn't possible to brute force provided key is random and not chosen to be 
 
 \subsection{Joux's Attack: Multicollisions in Iterated Hash Functions}
 
-This attack requires an existance of a collision such that \texttt{transform($k_1$) = tranform(k$_2$)}. For any secure one way cryptographic function, the only way to succcessfully exploit the potential vulnerability is brute force. Therefore, the Joux's attack \cite{joux_attack} isn't possible.
+This attack requires an existence of a collision such that \texttt{transform($k_1$) = transform(k$_2$)}. For any secure one way cryptographic function, the only way to successfully exploit the potential vulnerability is brute force. Therefore, the Joux's attack \cite{joux_attack} isn't possible.
 
 % That is mathematically proven in sections \ref{birthday_problem} and \ref{collision_attack}. This is also proven experimentally in \texttt{test/collision.cpp}. The values in \texttt{test/collision\_report} show that over lots of iterations, getting the same hash is still impossible.
 
@@ -521,7 +546,7 @@ Time based vulnerabilities are exploited by the deduction of numbers present in 
 \\
 Arithmetic operations such as multiplication contains vulnerabilities since multiplication not a constant time operation. But arithmetic such as ARX operations are always constant time which is why the selected confusion/diffusion operations are chosen.
 
-Experimentally, we can evaluate the possibilitiy of time-based vulnerabilities using the following algorithm:
+Experimentally, possibility of time-based vulnerabilities can be evaluated using the following algorithm:
 Start from 32 zeros for a key, then incremented each byte by 1 until there are 32 255s and test again. 
 \\
 \texttt{----------TESTING SIDE CHANNEL ATTACKS----------\\
@@ -537,13 +562,13 @@ Tested for time-based side-channel attacks by comparing the computation time for
 
 Linear Cryptoanalysis is used to find linear connections between ciphertexts and plaintexts. Linear differences in algorithms are easily exploitable weakness. Linear operations in this algorithm are byte-permutations, bitwise rotations, and xor which overall bring a strong diffusion. But not sufficient for confusion. So using addition in the ring $\mathbb{Z}_{2^{32}}$ is necessary to pass linearity tests due to carries. It's important to note that prime galois field addition is considered linear under $\mathbb{F_p}$ and do not bring  non-linearity.
 \\
-Initially, using linear algebra definition of a linear transformation, this algorithm is proven to be non-linear since $\texttt{transform}(c_1k_1 + c_2k_2) \neq c_1\texttt{transform}(k_1) + c_2\texttt{transform}(k_2)$. This doens't mean that they lack correlation with probabilities, so further statistical analysis is required.
+Initially, using linear algebra definition of a linear transformation, this algorithm is proven to be non-linear since $\texttt{transform}(c_1k_1 + c_2k_2) \neq c_1\texttt{transform}(k_1) + c_2\texttt{transform}(k_2)$. This doesn't mean that they lack correlation with probabilities, so further statistical analysis is required.
 
 In order to find linear patterns with statistical analysis, using well-known proven algorithms is a solid approach.
 
-One linear pattern is how many outputs bits flip per input bit flip. This test is known as the Strict Avalanche Critirion (SAC). SAC test passed with a 50\% chance of bit flip for every output bit for each input bit.
+One linear pattern is how many outputs bits flip per input bit flip. This test is known as the Strict Avalanche Criterion (SAC). SAC test passed with a 50\% chance of bit flip for every output bit for each input bit.
 
-SAC can be further analyzed by checking indipendence of output bit flips using the Bit Indipendence Critirion (BIC) test. This test passed successfully and the xor of each 2 output bits follows a non-linear random pattern.
+SAC can be further analyzed by checking independence of output bit flips using the Bit Independence Criterion (BIC) test. This test passed successfully and the xor of each 2 output bits follows a non-linear random pattern.
 
 \begin{figure}[H]
     \caption{Bit flip probabilities vs. Iteration}
@@ -668,7 +693,7 @@ Differential cryptoanalysis is for measuring how input changes the output. The e
 
 Given that running \texttt{test/significant\_perm\_byte -r} proves experimentally that all bytes of the key provide approximately the same collision resistance and that there is no pattern. This means that modifying an arbitrarily selected byte isn't only affecting some bytes but all of them without a pattern, therefore there are no significant bytes. And all bytes of the key affect the result equally. This is mainly due to the use of sum of $k_i$ in the transformation algorithm. 
 
-Comparitive statistical data on collisions show that similiar keys (1-bit difference) contain some equivilant bytes.
+Comparative statistical data on collisions show that similiar keys (1-bit difference) contain some equivalent bytes.
 If all bytes of the transformed keys are equal, there is a successful collision. i is the number of hashes that are generated to get $n$\% equality.
 
 \begin{table}[H]
@@ -912,9 +937,9 @@ Number of rounds for FTP 1.0 \& 1.1 is determined by the number of rows in the p
 
 \subsubsection{Constant - $r$ - Dynamic Rotation Constant} \label{rotation_constant}
 
-Cicadas only surface once every 17 years. Assuming their predetor only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predetor once every 2 years. Then every 18 years they would meet. This would also make it easier for the predetor to synchronize their emergence timing.\\
+Cicadas only surface once every 17 years. Assuming their predator only surfaces once every 2 years, they will only meet each other once every 34 years. Since 17 is a prime number, they will barely ever meet. However, if they surfaced once every 18 years, while their predator once every 2 years. Then every 18 years they would meet. This would also make it easier for the predator to synchronize their emergence timing.\\
 let x be the time interval for when the cicadas surface \\
-let y be the time interval for when the predetors surface \\
+let y be the time interval for when the predators surface \\
 We can deduce:\\
 $GCD(x,y) = 1$, then they meet up every $x \times y$ years. \\
 Whereas if $GCD(x,y) \neq 1$, then they meet up every $x$ years (assuming $x > y$). \\
@@ -933,9 +958,11 @@ Rotation numbers that were selected is represented by r:
 
 \[
 r = 
-\begin{pmatrix}
+\big(
+\begin{matrix}
 		23 & 5 & 17 & 31 & 13
-\end{pmatrix}
+\end{matrix}
+\big)
 \]
 
 There are 5 numbers in r, this is because $16 \mod 5 \neq 0$, after 16 iterations in the transformation algorithm, all values of k aren't rotated the same number of times.
@@ -952,7 +979,7 @@ $\therefore$ r must contain multiple numbers.
 \\
 FTP is designed so that $|r_i - r_{i-1}|$ results in a different magnitude for all elements of r so that diffusion from bitwise rotations are maximized.
 \\
-Derivation of r is as follows: make a set (r) of all prime numbers from 0-32, remove elements based on similiarity of results of $|r_i - r_{i-1}|$ (e.g. $23-5=18$, $|5-17|=12$). A good net rotation would be prime. FTP consists of both bitwise right rotate ($\ggg$) and bitwise left rotate ($\lll$), in order to properly mix the results.
+Derivation of r is as follows: make a set (r) of all prime numbers from 0-32, remove elements based on similarity of results of $|r_i - r_{i-1}|$ (e.g. $23-5=18$, $|5-17|=12$). A good net rotation would be prime. FTP consists of both bitwise right rotate ($\ggg$) and bitwise left rotate ($\lll$), in order to properly mix the results.
 
 \section{Hashing}
 
@@ -968,14 +995,14 @@ it's often preferred to have extra insurance rounds for further security at the 
 
 \subsection{Dynamic Matrix Permutation}
 
-Considering the use of \texttt{reinterpret\_cast} in C++ and unions in C for representing the bytearray (key) as 32-bit segments (for confusion operations), the endiannes of the device will require a different matrix. the matrix given in this documentation is the big endian version as FTP is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. Both matrices can be found in the C++ implementation of \texttt{Full-Time-Pad} and the python deravation program \texttt{test/perm.py}.
+Considering the use of \texttt{reinterpret\_cast} in C++ and unions in C for representing the bytearray (key) as 32-bit segments (for confusion operations), the endianness of the device will require a different matrix. the matrix given in this documentation is the big endian version as FTP is designed to be big-endian. The little endian version requires a new permutation matrix where the byte order every 32-bits is reversed. Both matrices can be found in the C++ implementation of \texttt{Full-Time-Pad} and the python derivation program \texttt{test/perm.py}.
 \\
 This generates a powerful permutation matrix.
 
-\subsubsection{Deravation}
+\subsubsection{Derivation}
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
-\caption{Dynamic Permutation Matrix Deravation Pseudo-code}
+\caption{Dynamic Permutation Matrix Derivation Pseudo-code}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} an array of incrementing numbers (0-31) $A$ 
 \State \textbf{Output:} Most Efficient Permutation Matrix $V$ ($16 \times 32$)
@@ -1066,7 +1093,7 @@ The word \textbf{cipher} and $\textbf{A}_i$ is arbitrary. In other words, they'r
 
 \subsubsection{R - Bitwise Rotation} % pseudo-code and Explanation
 
-"Using the values determined for $r$ in Section \ref{rotation_constant}, rotate each value one at a time for diffusing bits non-uniformly and linearly. FTP 1.0 consists of 2 bitwise right rotates (BRR) \& 1 bitwise left rotate (BLR) offering a total rotation count of 48. FTP 1.1 consists of 1 BRR and 1 BLR with a total rotation count of 32. FTP 2.0 consists of 1 BRR and 1 BLR wit ha total rotation count of 20. Using both BLR and BRR isn't counter productive since it's not applied simultaniously. It is potentially redundant to use both but the idea was to use more operations to add more complexity.
+"Using the values determined for $r$ in Section \ref{rotation_constant}, rotate each value one at a time for diffusing bits non-uniformly and linearly. FTP 1.0 consists of 2 bitwise right rotates (BRR) \& 1 bitwise left rotate (BLR) offering a total rotation count of 48. FTP 1.1 consists of 1 BRR and 1 BLR with a total rotation count of 32. FTP 2.0 consists of 1 BRR and 1 BLR wit ha total rotation count of 20. Using both BLR and BRR isn't counter productive since it's not applied simultaneously. It is potentially redundant to use both but the idea was to use more operations to add more complexity.
 
 \subsubsection{X - XOR} % pseudo-code and Explanation
 
@@ -1096,9 +1123,9 @@ On the same device (12th Gen Intel(R) Core(TM) i7-12700H, DDR5 RAM). The ChaCha2
 \texttt{Time taken to encrypt 1000000 32-byte messages: 0.160442 seconds\\
 Encryption rate: 6232781 keys per second}\\
 \\
-FTP 2.0 is 3 times faster than ChaCha20. However, ChaCha20 has 64-byte keystreams while FTP has 32-bytes. FTP 2.0 is 3x faster for encrypting unique plaintexts under 32 bytes (For long plaintexts, 1.5x). These tests are under the assumption that optimizations are equivelantly effective and heavily used. Although benchmark tests with Salsa12 and FTP 2.0 are similiar for a 64-byte output, this algorithm could be updated to provide a 64-byte output without adding 2 times the computation time So comparing benchmark tests relative to the ratio of output size is misleading. More so because it is designed to be a 32-byte output. Accurate comparision requires more work.\\
+FTP 2.0 is 3 times faster than ChaCha20. However, ChaCha20 has 64-byte keystreams while FTP has 32-bytes. FTP 2.0 is 3x faster for encrypting unique plaintexts under 32 bytes (For long plaintexts, 1.5x). These tests are under the assumption that optimizations are equivalently effective and heavily used. Although benchmark tests with Salsa12 and FTP 2.0 are similiar for a 64-byte output, this algorithm could be updated to provide a 64-byte output without adding 2 times the computation time So comparing benchmark tests relative to the ratio of output size is misleading. More so because it is designed to be a 32-byte output. Accurate comparison requires more work.\\
 Since implementation of FTP 1.0 \& 1.1 aren't optimized fully, the benchmark tests are misleading.\\
-On future devices, SIMD instructions could be expected to improve and provide different benchmarks disproportionally so comparision is innacurate.
+On future devices, SIMD instructions could be expected to improve and provide different benchmarks disproportionally so comparison is inaccurate.
 
 \section {Cipher}
 
@@ -1134,7 +1161,7 @@ On future devices, SIMD instructions could be expected to improve and provide di
 	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod} + A_\mathrm{imod9} \oplus k_\mathrm{i4mod}$
 	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod} + A_\mathrm{imod9} \oplus k_\mathrm{i3mod}$ \\
 
-	\COMMENT{Permutate the bytearray key}
+	\COMMENT{Permute the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
 \State increment \texttt{encryption\_index} by 1 for each plaintext
 \EndFor
@@ -1144,7 +1171,7 @@ On future devices, SIMD instructions could be expected to improve and provide di
 
 \subsection{Transformation - Version 1.1 - Prioritize Speed \& Complexity}
 
-This version of the transformation offers more speed less complexity. This is preferred to the previous option since version 1.0 contains potentially redundent/extra operations, FTP 1.0 is better suited for when speed doesn't matter as much as security, or when slower algorithms are appreciated.
+This version of the transformation offers more speed less complexity. This is preferred to the previous option since version 1.0 contains potentially redundant/extra operations, FTP 1.0 is better suited for when speed doesn't matter as much as security, or when slower algorithms are appreciated.
 
 \begin{algorithm}[H] % H is to make the algorithm stay HERE
 \caption{The key transformation operation per encryption}
@@ -1176,7 +1203,7 @@ This version of the transformation offers more speed less complexity. This is pr
 	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod}$
 	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod}$ \\
 
-	\COMMENT{Permutate the bytearray key}
+	\COMMENT{Permute the bytearray key}
 	\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
 \EndFor
 \State increment \texttt{encryption\_index} by 1 for each plaintext
@@ -1218,7 +1245,7 @@ This version of the transformation prioritizes speed. FTP 2.0 is preferred to FT
 	\State $k_\mathrm{i3mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i3mod}$
 	\State $k_\mathrm{i4mod} \gets A_\mathrm{imod8} \oplus k_\mathrm{i4mod}$ \\
 
-	\COMMENT{Permutate the bytearray key only 2 times, don't permute before last iteration}
+	\COMMENT{Permute the bytearray key only 2 times, don't permute before last iteration}
 	\If {$i \mod 4 = 0$ and $i \neq 8$} 
 		\State \texttt{key} $\gets$ dynamic\_permutation(\texttt{key}, i);
 	\EndIf
@@ -1234,7 +1261,7 @@ This version of the transformation prioritizes speed. FTP 2.0 is preferred to FT
 \caption{The dynamic\_permutation() in the transformation function}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} 32-byte bytearray ($B$), permutation matrix ($V$), iteration index ($i$)
-\State \textbf{Output:} 32-byte permutated bytearray ($B$)
+\State \textbf{Output:} 32-byte permuted bytearray ($B$)
 \State let $P$ be placeholder vector declared with length of 32-bytes
 \For{$j=0$ to $32$}
 		\State $P_j = B_{V_{i_j}}$
@@ -1243,7 +1270,7 @@ This version of the transformation prioritizes speed. FTP 2.0 is preferred to FT
 \end{algorithmic}
 \end{algorithm}
 
-dynamic permutation fucntion permutes the bytearray key using the permutation matrix found in section \ref{matrix}.
+dynamic permutation function permutes the bytearray key using the permutation matrix found in section \ref{matrix}.
 
 \subsection{endian\_8\_to\_32\_arr} \label{endian}
 
@@ -1251,7 +1278,7 @@ dynamic permutation fucntion permutes the bytearray key using the permutation ma
 \caption{The endian\_8\_to\_32\_arr() in the transformation function}
 \begin{algorithmic}[1]  % The [1] enables line numbering
 \State \textbf{Input:} 32-byte bytearray ($B$)
-\State \textbf{Output:} 32-byte bytearray ($B$) permutated to flip endiannes if necesarry
+\State \textbf{Output:} 32-byte bytearray ($B$) permuted to flip endianness if necessary
 \If {big endian system}
 	\For{$j=0$ to $32$}
 		\State swap $B_i$ with $B_{i+3}$
@@ -1262,13 +1289,13 @@ dynamic permutation fucntion permutes the bytearray key using the permutation ma
 \end{algorithmic}
 \end{algorithm}
 
-This endiannes conversion is designed to convert a little-endian reinterpret casted pointer into the big-endian version so that both little-endian and big-endian systems are compatible.
+This endianness conversion is designed to convert a little-endian reinterpret casted pointer into the big-endian version so that both little-endian and big-endian systems are compatible.
 
 \subsection {Key Reuse}
 
 A 64-bit nonce labeled an encryption index is used for key reusability. The difference between a nonce and encryption index is that an encryption index cannot be random. if a random nonce was used instead, this could lead to collisions since root $k$ for $g(2^{64}, k) = 5,056,937,540$ where $g$ is the solution to the birthday problem defined in section \ref{birthday_problem}. This means that there is
 a 50\% chance of collision when 5 billion 64-bit nonces are used.
-161,822,001,280 bytes of data would need to be encrypted for a succesful brute-force to be 50\% likely. In practice, using random nonces would increase chances of collisions
+161,822,001,280 bytes of data would need to be encrypted for a successful brute-force to be 50\% likely. In practice, using random nonces would increase chances of collisions
 significantly. Safest practice is to increment the encryption index.
 \\The first 2 values of A is the encryption index. Encryption index must be located in the first half of A to provide more iterations to diffuse in the encryption index.
 
@@ -1330,17 +1357,37 @@ Encryption operation is the same as decryption
 \EndFor\\
 \\
 \COMMENT{For the remainder:}
-\State $c \gets c \,||\, p \oplus \mathrm{transformation(copy, } \texttt{  encryption\_index})$
+% \State $c \gets c \,||\, p \oplus \mathrm{transformation(copy, } \texttt{  encryption\_index})$
+\State $c \gets c \parallel (p \oplus \mathrm{transformation}(\mathrm{copy}, \texttt{encryption\_index}))$
 \State \textbf{Return} $c$
 \end{algorithmic}
 \end{algorithm}
 
 \section {Conclusion}
 
-The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, bruteforce, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. Although all tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to be updated using improved implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competetive benchmarking tests that compete with industry standard algorithms.
+The algorithm proposed in this study that builds on cryptographic principles based on OTP, using byte-permutations and ARX operations is both introduced and tested for randomness, brute force, Joux's attack, related key attack, time-based attack, linear cryptoanalysis, differential cryptoanalysis and reverse engineering vulnerabilities. Although all tests successfully passed. This algorithm requires further tests to verify the security of FTP. The benchmark tests need to be updated using improved implementation of FTP 1.0 \& 1.1. FTP 2.0 offers competitive benchmarking tests that compete with industry standard algorithms.
 
+\appendix
+
+\section {Pre-requisite Terminology} \label{sec:term}
+ 
+\renewcommand{\arraystretch}{2} % Increases vertical space between rows 
+
+\begin{tabular}{l p{12cm}}  % left-aligned 2 columns
+		\textbf{Key}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 32-byte random array that's transformed, then hashed before XORed with the plaintext to encrypt \\
+		\textbf{Symmetric}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Same key is used for encryption and decryption \\
+		\textbf{Stream}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plaintext is encrypted without separating it into blocks \\
+		\textbf{Plaintext}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Plain data before encryption \\
+		\textbf{Ciphertext}       & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encrypted plaintext \\
+		\textbf{Cipher}           & \hangafter=1 \hangindent=1.19cm \hspace{1cm} Encryption algorithm. Plaintext is transformed into a ciphertext that can only be reversed with a key \\
+		\textbf{Diffusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} plaintext/key is spread out in the ciphertext \\
+		\textbf{Confusion}        & \hangafter=1 \hangindent=1.19cm \hspace{1cm} The ciphertext has no possible statistical analysis, or cryptoanalysis to determine the plaintext \\
+		\textbf{Bit}              & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 0 or 1. Smallest discrete unit for computation \\
+		\textbf{Byte}             & \hangafter=1 \hangindent=1.19cm \hspace{1cm} 8-bit number \\
+		\textbf{Avalanche Effect} & \hangafter=1 \hangindent=1.19cm \hspace{1cm} An aspect of diffusion. If smallest unit (1 bit) of data is changed, the ciphertext changes in an unrecognizable way.  \\
+		\textbf{Permutation}      & \hangafter=1 \hangindent=1.19cm \hspace{1cm} transposing (moving) elements of a vector without actually changing their values. A reversible operation \\
+\end{tabular}
 
 \printbibliography
 
 \end{document}
-
